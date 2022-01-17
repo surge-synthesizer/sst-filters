@@ -22,6 +22,7 @@ TEST_CASE("Basic")
 
     SECTION("Function") { REQUIRE(sst::filters::makeFilter(sst::filters::ft_off, 0) == nullptr); }
 }
+
 int main(int argc, char **argv)
 {
     int result = Catch::Session().run(argc, argv);
