@@ -31,5 +31,5 @@ jobs:
       - bash: |
           cmake -Bbuild -DCMAKE_BUILD_TYPE=Release
           cmake --build build --config Release
-          ./build/test-binary
+          ./build/test-binary/sst-filters-tests
         displayName: Run tests with cmake
