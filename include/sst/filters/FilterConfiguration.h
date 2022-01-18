@@ -1,37 +1,10 @@
 #ifndef SST_FILTERS_FILTERCONFIGURATION_H
 #define SST_FILTERS_FILTERCONFIGURATION_H
 
-namespace sst
+namespace sst::filters
 {
-namespace filters
-{
-
-enum fu_type_sv14
-{
-    fut_14_none = 0,
-    fut_14_lp12,
-    fut_14_lp24,
-    fut_14_lpmoog,
-    fut_14_hp12,
-    fut_14_hp24,
-    fut_14_bp12,
-    fut_14_notch12,
-    fut_14_comb,
-    fut_14_SNH,
-    fut_14_vintageladder,
-    fut_14_obxd_2pole,
-    fut_14_obxd_4pole,
-    fut_14_k35_lp,
-    fut_14_k35_hp,
-    fut_14_diode,
-    fut_14_cutoffwarp_lp,
-    fut_14_cutoffwarp_hp,
-    fut_14_cutoffwarp_n,
-    fut_14_cutoffwarp_bp,
-    n_fu_14_types,
-};
-
-enum fu_type
+/** These are the filter types we have to choose from! */
+enum FilterType
 {
     fut_none = 0,
     fut_lp12,
@@ -67,7 +40,7 @@ enum fu_type
     fut_resonancewarp_bp,
     fut_resonancewarp_ap,
     fut_tripole,
-    n_fu_types,
+    num_filter_types,
 };
 
 /*
@@ -76,7 +49,7 @@ enum fu_type
  * in the menu which generally strips out Lowpass and Highpass and stuff, since they are already
  * grouped in submenus, and this is in fut_menu array
  */
-const char fut_names[n_fu_types][32] = {
+const char filter_type_names[num_filter_types][32] = {
     "Off",               // fut_none
     "LP 12 dB",          // fut_lp12
     "LP 24 dB",          // fut_lp24
@@ -116,7 +89,7 @@ const char fut_names[n_fu_types][32] = {
     */
 };
 
-const char fut_menu_names[n_fu_types][32] = {
+const char filter_menu_names[num_filter_types][32] = {
     "Off",
     "12 dB", // LP
     "24 dB", // LP
@@ -233,7 +206,8 @@ const char fut_tripole_output_stage[4][16]{
     "Third",
 };
 
-const int fut_subcount[n_fu_types] = {
+/** The number of sub-types for each filter type */
+const int fut_subcount[num_filter_types] = {
     0,  // fut_none
     3,  // fut_lp12
     3,  // fut_lp24
@@ -280,7 +254,6 @@ enum fu_subtype
     st_NotchMild = 1,
 };
 
-} // namespace filters
 } // namespace sst
 
 #endif // SST_FILTERS_FILTERCONFIGURATION_H

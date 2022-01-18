@@ -24,7 +24,7 @@ struct alignas(16) QuadFilterUnitState
     int WP[4];     // comb write position
 };
 typedef __m128 (*FilterUnitQFPtr)(QuadFilterUnitState *__restrict, __m128 in);
-FilterUnitQFPtr GetQFPtrFilterUnit(int type, int subtype);
+FilterUnitQFPtr GetQFPtrFilterUnit(FilterType type, int subtype);
 
 /*
  * Subtypes are integers below 16 - maybe one day go as high as 32. So we have space in the

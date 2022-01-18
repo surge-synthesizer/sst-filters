@@ -590,12 +590,9 @@ __m128 SNHquad(QuadFilterUnitState *__restrict f, __m128 in)
 //    return _mm_add_ps(_mm_mul_ps(f->C[3], DBRead), _mm_mul_ps(f->C[2], in));
 //}
 
-FilterUnitQFPtr GetQFPtrFilterUnit(int type, int subtype)
+FilterUnitQFPtr GetQFPtrFilterUnit(FilterType type, int subtype)
 {
-    // Force compiler to error out if I miss one
-    fu_type fType = (fu_type)type;
-
-    switch (fType)
+    switch (type)
     {
     case fut_lp12:
     {
@@ -603,8 +600,6 @@ FilterUnitQFPtr GetQFPtrFilterUnit(int type, int subtype)
             return SVFLP12Aquad;
         else if (subtype == st_Rough)
             return IIR12CFCquad;
-        //			else if(subtype==st_Medium)
-        //				return IIR12CFLquad;
         return IIR12Bquad;
     }
     case fut_hp12:
@@ -613,8 +608,6 @@ FilterUnitQFPtr GetQFPtrFilterUnit(int type, int subtype)
             return SVFHP12Aquad;
         else if (subtype == st_Rough)
             return IIR12CFCquad;
-        //			else if(subtype==st_Medium)
-        //				return IIR12CFLquad;
         return IIR12Bquad;
     }
     case fut_bp12:
@@ -628,6 +621,7 @@ FilterUnitQFPtr GetQFPtrFilterUnit(int type, int subtype)
             return IIR12CFCquad;
             break;
         case st_Smooth:
+        default:
             return IIR12Bquad;
             break;
         }
@@ -644,6 +638,7 @@ FilterUnitQFPtr GetQFPtrFilterUnit(int type, int subtype)
             return IIR24CFCquad;
             break;
         case st_Smooth:
+        default:
             return IIR24Bquad;
             break;
         }
@@ -659,83 +654,78 @@ FilterUnitQFPtr GetQFPtrFilterUnit(int type, int subtype)
             return SVFLP24Aquad;
         else if (subtype == st_Rough)
             return IIR24CFCquad;
-        //		else if(subtype==st_Medium)
-        //			return IIR24CFLquad;
         return IIR24Bquad;
     case fut_hp24:
         if (subtype == st_SVF)
             return SVFHP24Aquad;
         else if (subtype == st_Rough)
             return IIR24CFCquad;
-        //		else if(subtype==st_Medium)
-        //			return IIR24CFLquad;
         return IIR24Bquad;
     case fut_lpmoog:
         return LPMOOGquad;
     case fut_SNH:
         return SNHquad;
-//    case fut_comb_pos:
-//    case fut_comb_neg:
-//        if (subtype & QFUSubtypeMasks::EXTENDED_COMB)
-//        {
-//            return COMBquad_SSE2<MAX_FB_COMB_EXTENDED>;
-//        }
-//        else
-//        {
-//            return COMBquad_SSE2<MAX_FB_COMB>;
-//        }
-//    case fut_vintageladder:
-//        switch (subtype)
-//        {
-//        case 0:
-//        case 1:
-//            return VintageLadder::RK::process;
-//        case 2:
-//        case 3:
-//            return VintageLadder::Huov::process;
-//        }
-//        break;
-//    case fut_obxd_2pole_lp:
-//    case fut_obxd_2pole_hp:
-//    case fut_obxd_2pole_bp:
-//    case fut_obxd_2pole_n:
-//        // All the differences are in subtype wrangling int he coefficnent maker
-//        return OBXDFilter::process_2_pole;
-//        break;
-//    case fut_obxd_4pole:
-//        return OBXDFilter::process_4_pole;
-//        break;
-//    case fut_k35_lp:
-//        return K35Filter::process_lp;
-//        break;
-//    case fut_k35_hp:
-//        return K35Filter::process_hp;
-//        break;
-//    case fut_diode:
-//        return DiodeLadderFilter::process;
-//        break;
-//    case fut_cutoffwarp_lp:
-//    case fut_cutoffwarp_hp:
-//    case fut_cutoffwarp_n:
-//    case fut_cutoffwarp_bp:
-//    case fut_cutoffwarp_ap:
-//        return NonlinearFeedbackFilter::process;
-//        break;
-//    case fut_resonancewarp_lp:
-//    case fut_resonancewarp_hp:
-//    case fut_resonancewarp_n:
-//    case fut_resonancewarp_bp:
-//    case fut_resonancewarp_ap:
-//        return NonlinearStatesFilter::process;
-//        break;
-//    case fut_tripole:
-//        return TriPoleFilter::process;
-//        break;
+        //    case fut_comb_pos:
+        //    case fut_comb_neg:
+        //        if (subtype & QFUSubtypeMasks::EXTENDED_COMB)
+        //        {
+        //            return COMBquad_SSE2<MAX_FB_COMB_EXTENDED>;
+        //        }
+        //        else
+        //        {
+        //            return COMBquad_SSE2<MAX_FB_COMB>;
+        //        }
+        //    case fut_vintageladder:
+        //        switch (subtype)
+        //        {
+        //        case 0:
+        //        case 1:
+        //            return VintageLadder::RK::process;
+        //        case 2:
+        //        case 3:
+        //            return VintageLadder::Huov::process;
+        //        }
+        //        break;
+        //    case fut_obxd_2pole_lp:
+        //    case fut_obxd_2pole_hp:
+        //    case fut_obxd_2pole_bp:
+        //    case fut_obxd_2pole_n:
+        //        // All the differences are in subtype wrangling int he coefficnent maker
+        //        return OBXDFilter::process_2_pole;
+        //        break;
+        //    case fut_obxd_4pole:
+        //        return OBXDFilter::process_4_pole;
+        //        break;
+        //    case fut_k35_lp:
+        //        return K35Filter::process_lp;
+        //        break;
+        //    case fut_k35_hp:
+        //        return K35Filter::process_hp;
+        //        break;
+        //    case fut_diode:
+        //        return DiodeLadderFilter::process;
+        //        break;
+        //    case fut_cutoffwarp_lp:
+        //    case fut_cutoffwarp_hp:
+        //    case fut_cutoffwarp_n:
+        //    case fut_cutoffwarp_bp:
+        //    case fut_cutoffwarp_ap:
+        //        return NonlinearFeedbackFilter::process;
+        //        break;
+        //    case fut_resonancewarp_lp:
+        //    case fut_resonancewarp_hp:
+        //    case fut_resonancewarp_n:
+        //    case fut_resonancewarp_bp:
+        //    case fut_resonancewarp_ap:
+        //        return NonlinearStatesFilter::process;
+        //        break;
+        //    case fut_tripole:
+        //        return TriPoleFilter::process;
+        //        break;
     case fut_none:
-    case n_fu_types:
-        return 0;
+    case num_filter_types:
+        return nullptr;
     }
-    return 0;
 }
 
 }

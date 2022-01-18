@@ -15,18 +15,6 @@ template <typename P> struct CoefficientMaker
     static float pitch(P *provider, int note) { return provider->note_to_pitch(note); }
 };
 
-struct FilterState
-{
-};
-typedef value_t (*FilterEvaluator)(FilterState *__restrict, value_t in);
-
-enum FilterTypes
-{
-    ft_off
-};
-
-FilterEvaluator *makeFilter(FilterTypes ft, int subtype) { return nullptr; }
-
 } // namespace filters
 } // namespace sst
 

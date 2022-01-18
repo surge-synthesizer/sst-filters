@@ -2,7 +2,6 @@
 #define SST_FILTERS_FILTERCOEFFICIENTMAKER_IMPL_H
 
 #include "FilterCoefficientMaker.h"
-#include "FilterConfiguration.h"
 #include "sst/utilities/basic_dsp.h"
 #include "QuadFilterUnit.h"
 
@@ -40,7 +39,25 @@ void FilterCoefficientMaker<TuningProvider>::setSampleRateAndBlockSize(float new
 }
 
 template <typename TuningProvider>
-void FilterCoefficientMaker<TuningProvider>::MakeCoeffs(float Freq, float Reso, int Type,
+void FilterCoefficientMaker<TuningProvider>::castCoefficients(__m128 (&C_)[n_cm_coeffs],
+                                                              __m128 (&dC_)[n_cm_coeffs])
+{
+    for (int i = 0; i < n_cm_coeffs; ++i)
+    {
+        C_[i] = _mm_set1_ps(C[i]);
+        dC_[i] = _mm_set1_ps(dC[i]);
+    }
+}
+
+template <typename TuningProvider>
+void FilterCoefficientMaker<TuningProvider>::MakeCoeffs(float Freq, float Reso, FilterType Type,
+                                                        int SubType)
+{
+    MakeCoeffs(Freq, Reso, Type, SubType, nullptr, false);
+}
+
+template <typename TuningProvider>
+void FilterCoefficientMaker<TuningProvider>::MakeCoeffs(float Freq, float Reso, FilterType Type,
                                                         int SubType, TuningProvider *providerI,
                                                         bool tuningAdjusted)
 {
@@ -50,7 +67,7 @@ void FilterCoefficientMaker<TuningProvider>::MakeCoeffs(float Freq, float Reso, 
         if (tuningAdjusted && provider->tuningApplicationMode == TuningProvider::RETUNE_ALL)
         {
             /*
-             * Modulations are not remapped and tuning is in efffect; remap the note
+             * Modulations are not remapped and tuning is in effect; remap the note
              */
             auto idx = (int)floor(Freq + 69);
             float frac =
@@ -64,10 +81,8 @@ void FilterCoefficientMaker<TuningProvider>::MakeCoeffs(float Freq, float Reso, 
             Freq = q - 69;
         }
     }
-    // Force compiler to error out if I miss one
-    auto fType = (fu_type)Type;
 
-    switch (fType)
+    switch (Type)
     {
     case fut_lp12:
         if (SubType == st_SVF)
@@ -196,7 +211,7 @@ void FilterCoefficientMaker<TuningProvider>::MakeCoeffs(float Freq, float Reso, 
         //        TriPoleFilter::makeCoefficients(this, Freq, Reso, Type, storageI);
         //        break;
 
-    case n_fu_types:
+    case num_filter_types:
         // This should really be an error condition of course
     case fut_none:
         break;
@@ -616,7 +631,7 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_SNH(float freq, float reso, i
 }
 
 template <typename TuningProvider>
-void FilterCoefficientMaker<TuningProvider>::FromDirect(float N[n_cm_coeffs])
+void FilterCoefficientMaker<TuningProvider>::FromDirect(const float (&N)[n_cm_coeffs])
 {
     if (FirstRun)
     {

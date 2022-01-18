@@ -1,7 +1,7 @@
 #define CATCH_CONFIG_RUNNER
 #include "catch2/catch2.hpp"
 
-#include <sst/filters.h>
+#include "BasicFiltersTest.h"
 
 /*
  * This entire file obviously will be replaced
@@ -20,7 +20,10 @@ TEST_CASE("Basic")
         REQUIRE(sst::filters::CoefficientMaker<SamplePitchMaker>::pitch(spm.get(), 60) == 32.0);
     }
 
-    SECTION("Function") { REQUIRE(sst::filters::makeFilter(sst::filters::ft_off, 0) == nullptr); }
+    SECTION("Function")
+    {
+        REQUIRE(sst::filters::GetQFPtrFilterUnit(sst::filters::fut_none, 0) == nullptr);
+    }
 }
 
 int main(int argc, char **argv)
