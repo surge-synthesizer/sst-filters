@@ -8,7 +8,7 @@
  */
 struct SamplePitchMaker
 {
-    float note_to_pitch(float note) { return pow(2.0, note / 12.f); }
+    float note_to_pitch(float note) { return pow(2.0f, note / 12.f); }
 };
 
 TEST_CASE("Basic")

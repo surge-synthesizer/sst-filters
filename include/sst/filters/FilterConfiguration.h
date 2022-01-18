@@ -1,6 +1,11 @@
 #ifndef SST_FILTERS_FILTERCONFIGURATION_H
 #define SST_FILTERS_FILTERCONFIGURATION_H
 
+namespace sst
+{
+namespace filters
+{
+
 enum fu_type_sv14
 {
     fut_14_none = 0,
@@ -274,5 +279,8 @@ enum fu_subtype
     st_Notch = 0,
     st_NotchMild = 1,
 };
+
+} // namespace filters
+} // namespace sst
 
 #endif // SST_FILTERS_FILTERCONFIGURATION_H

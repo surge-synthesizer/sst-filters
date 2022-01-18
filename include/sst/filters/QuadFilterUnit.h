@@ -2,20 +2,18 @@
 #define _SST_CPP_QUADFILTERUNIT_H
 
 #include "sst/utilities/globals.h"
-
-// @TODO: borrowed from FilterCoefficientMaker
-constexpr int n_cm_coeffs = 8;
+#include "FilterCoefficientMaker.h"
 
 namespace sst
 {
 namespace filters
 {
 
-const int n_filter_registers = 16;
-const int n_waveshaper_registers = 4;
+constexpr int n_filter_registers = 16;
+constexpr int n_waveshaper_registers = 4;
 
 /*
- * These are defined in QuadFilterUnit.cpp
+ * These are defined in QuadFilterUnit_Impl.h
  */
 struct alignas(16) QuadFilterUnitState
 {
@@ -52,14 +50,17 @@ enum QFUSubtypeMasks : int32_t
 //    __m128 R[n_waveshaper_registers];
 //    __m128 init;
 //};
-// typedef __m128 (*WaveshaperQFPtr)(QuadFilterWaveshaperState *__restrict, __m128 in, __m128 drive); WaveshaperQFPtr GetQFPtrWaveshaper(int type);
+// typedef __m128 (*WaveshaperQFPtr)(QuadFilterWaveshaperState *__restrict, __m128 in, __m128
+// drive); WaveshaperQFPtr GetQFPtrWaveshaper(int type);
 ///*
 // * Given the very first sample inbound to a new voice session, return the
 // * first set of registers for that voice.
 // */
 // void initializeWaveshaperRegister(int type, float R[n_waveshaper_registers]);
 
-}
-}
+} // namespace filters
+} // namespace sst
+
+#include "QuadFilterUnit_Impl.h"
 
 #endif // _SST_CPP_QUADFILTERUNIT_H

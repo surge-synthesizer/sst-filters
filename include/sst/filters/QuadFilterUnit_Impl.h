@@ -14,9 +14,7 @@
 //#include "filters/NonlinearStates.h"
 //#include "filters/TriPoleFilter.h"
 
-namespace sst
-{
-namespace filters
+namespace sst::filters
 {
 
 __m128 SVFLP12Aquad(QuadFilterUnitState *__restrict f, __m128 in)
@@ -740,5 +738,4 @@ FilterUnitQFPtr GetQFPtrFilterUnit(int type, int subtype)
     return 0;
 }
 
-}
 }

@@ -1,6 +1,7 @@
-
 #ifndef _SST_CPP_FILTERS_H
 #define _SST_CPP_FILTERS_H
+
+#include "sst/filters/QuadFilterUnit.h"
 
 namespace sst
 {
