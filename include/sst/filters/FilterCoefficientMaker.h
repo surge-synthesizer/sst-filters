@@ -2,6 +2,7 @@
 #define SST_FILTERS_FILTERCOEFFICIENTMAKER_H
 
 #include "FilterConfiguration.h"
+#include "TuningProvider.h"
 
 namespace sst
 {
@@ -10,7 +11,7 @@ namespace filters
 
 constexpr int n_cm_coeffs = 8;
 
-template <typename TuningProvider> class FilterCoefficientMaker
+template <typename TuningProvider = detail::BasicTuningProvider> class FilterCoefficientMaker
 {
   public:
     /** Default constructor */
@@ -65,7 +66,8 @@ template <typename TuningProvider> class FilterCoefficientMaker
 
     bool FirstRun = true;
 
-    TuningProvider *provider = nullptr;
+    TuningProvider initialProvider;
+    TuningProvider *provider = &initialProvider;
 
     float sampleRate = 48000.0f;
     float sampleRateInv = 1.0f / sampleRate;
