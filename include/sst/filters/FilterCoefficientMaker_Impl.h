@@ -49,12 +49,12 @@ void FilterCoefficientMaker<TuningProvider>::castCoefficients(__m128 (&C_)[n_cm_
     }
 }
 
-template <typename TuningProvider>
-void FilterCoefficientMaker<TuningProvider>::MakeCoeffs(float Freq, float Reso, FilterType Type,
-                                                        int SubType)
-{
-    MakeCoeffs(Freq, Reso, Type, SubType, nullptr, false);
-}
+// template <typename TuningProvider>
+// void FilterCoefficientMaker<TuningProvider>::MakeCoeffs(float Freq, float Reso, FilterType Type,
+//                                                         int SubType)
+//{
+//     MakeCoeffs(Freq, Reso, Type, SubType, nullptr, false);
+// }
 
 template <typename TuningProvider>
 void FilterCoefficientMaker<TuningProvider>::MakeCoeffs(float Freq, float Reso, FilterType Type,
