@@ -36,7 +36,8 @@ template <typename TuningProvider = detail::BasicTuningProvider> class FilterCoe
     void MakeCoeffs(float Freq, float Reso, FilterType Type, FilterSubType SubType,
                     TuningProvider *provider, bool tuningAdjusted);
 
-    void castCoefficients(__m128 (&C)[n_cm_coeffs], __m128 (&dC)[n_cm_coeffs]);
+    /** Update the coefficients in a filter state */
+    template <typename StateType> void updateState(StateType &state);
 
     /** Current filter coefficients */
     float C[n_cm_coeffs]{};
@@ -79,7 +80,5 @@ template <typename TuningProvider = detail::BasicTuningProvider> class FilterCoe
 
 } // namespace filters
 } // namespace sst
-
-#include "FilterCoefficientMaker_Impl.h"
 
 #endif // SST_FILTERS_FILTERCOEFFICIENTMAKER_H

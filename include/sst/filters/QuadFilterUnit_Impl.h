@@ -1,12 +1,9 @@
 #include "QuadFilterUnit.h"
 #include "FilterConfiguration.h"
 
-//#include "SurgeStorage.h"
-
 #include "sst/utilities/basic_dsp.h"
-#include <iostream>
 
-//#include "filters/VintageLadders.h"
+#include "VintageLadders.h"
 //#include "filters/OBXDFilter.h"
 //#include "filters/K35Filter.h"
 //#include "filters/DiodeLadder.h"
@@ -695,17 +692,17 @@ inline FilterUnitQFPtr GetQFPtrFilterUnit(FilterType type, FilterSubType subtype
         //        {
         //            return COMBquad_SSE2<MAX_FB_COMB>;
         //        }
-        //    case fut_vintageladder:
-        //        switch (subtype)
-        //        {
-        //        case 0:
-        //        case 1:
-        //            return VintageLadder::RK::process;
-        //        case 2:
-        //        case 3:
-        //            return VintageLadder::Huov::process;
-        //        }
-        //        break;
+    case fut_vintageladder:
+        switch (subtype)
+        {
+        case 0:
+        case 1:
+            return VintageLadder::RK::process;
+        case 2:
+        case 3:
+            return VintageLadder::Huov::process;
+        }
+        break;
         //    case fut_obxd_2pole_lp:
         //    case fut_obxd_2pole_hp:
         //    case fut_obxd_2pole_bp:

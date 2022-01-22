@@ -5,7 +5,7 @@
 #include "sst/utilities/basic_dsp.h"
 #include "QuadFilterUnit.h"
 
-//#include "filters/VintageLadders.h"
+#include "VintageLadders.h"
 //#include "filters/OBXDFilter.h"
 //#include "filters/K35Filter.h"
 //#include "filters/DiodeLadder.h"
@@ -39,14 +39,17 @@ void FilterCoefficientMaker<TuningProvider>::setSampleRateAndBlockSize(float new
 }
 
 template <typename TuningProvider>
-void FilterCoefficientMaker<TuningProvider>::castCoefficients(__m128 (&C_)[n_cm_coeffs],
-                                                              __m128 (&dC_)[n_cm_coeffs])
+template <typename StateType>
+void FilterCoefficientMaker<TuningProvider>::updateState(StateType &state)
 {
     for (int i = 0; i < n_cm_coeffs; ++i)
     {
-        C_[i] = _mm_set1_ps(C[i]);
-        dC_[i] = _mm_set1_ps(dC[i]);
+        state.C[i] = _mm_set1_ps(C[i]);
+        state.dC[i] = _mm_set1_ps(dC[i]);
     }
+
+    state.sampleRate = sampleRate;
+    state.sampleRateInv = sampleRateInv;
 }
 
 // template <typename TuningProvider>
@@ -139,22 +142,24 @@ void FilterCoefficientMaker<TuningProvider>::MakeCoeffs(float Freq, float Reso, 
     case fut_SNH:
         Coeff_SNH(Freq, Reso, SubType);
         break;
-        //    case fut_vintageladder:
-        //        switch (SubType)
-        //        {
-        //        case 0:
-        //        case 1:
-        //            VintageLadder::RK::makeCoefficients(this, Freq, Reso, SubType == 1, storageI);
-        //            break;
-        //        case 2:
-        //        case 3:
-        //            VintageLadder::Huov::makeCoefficients(this, Freq, Reso, SubType == 3,
-        //            storageI); break;
-        //        default:
-        //            // SOFTWARE ERROR
-        //            break;
-        //        }
-        //        break;
+    case fut_vintageladder:
+        switch (SubType)
+        {
+        case 0:
+        case 1:
+            VintageLadder::RK::makeCoefficients(this, Freq, Reso, sampleRate, SubType == 1,
+                                                providerI);
+            break;
+        case 2:
+        case 3:
+            VintageLadder::Huov::makeCoefficients(this, Freq, Reso, sampleRate, sampleRateInv,
+                                                  SubType == 3, providerI);
+            break;
+        default:
+            // SOFTWARE ERROR
+            break;
+        }
+        break;
         //        /* When we split OBXD we went from one filter with 8 settings (L, B, H, N, L+, B+,
         //        H+, N+)
         //         * to two subtypes (regular and +). So what used to be Highpass (value 2 and 6) is

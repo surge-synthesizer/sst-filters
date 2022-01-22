@@ -22,6 +22,11 @@ struct alignas(16) QuadFilterUnitState
     float *DB[4];                           // delay buffers
     int active[4]; // 0xffffffff if voice is active, 0 if not (usable as mask)
     int WP[4];     // comb write position
+
+    // @TODO: not sure about this: some filters need to know the sample rate in the processing
+    // methods
+    float sampleRate;
+    float sampleRateInv;
 };
 typedef __m128 (*FilterUnitQFPtr)(QuadFilterUnitState *__restrict, __m128 in);
 FilterUnitQFPtr GetQFPtrFilterUnit(FilterType type, FilterSubType subtype);
@@ -60,7 +65,5 @@ enum QFUSubtypeMasks : int32_t
 
 } // namespace filters
 } // namespace sst
-
-#include "QuadFilterUnit_Impl.h"
 
 #endif // _SST_CPP_QUADFILTERUNIT_H
