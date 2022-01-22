@@ -1,6 +1,7 @@
 #ifndef SST_FILTERS_FILTERCOEFFICIENTMAKER_H
 #define SST_FILTERS_FILTERCOEFFICIENTMAKER_H
 
+#include "sst/utilities/globals.h"
 #include "FilterConfiguration.h"
 #include "TuningProvider.h"
 
@@ -32,8 +33,8 @@ template <typename TuningProvider = detail::BasicTuningProvider> class FilterCoe
     //    void MakeCoeffs(float Freq, float Reso, FilterType Type, int SubType);
 
     /** Creates filter coefficients for a given set of filter parameters */
-    void MakeCoeffs(float Freq, float Reso, FilterType Type, int SubType, TuningProvider *provider,
-                    bool tuningAdjusted);
+    void MakeCoeffs(float Freq, float Reso, FilterType Type, FilterSubType SubType,
+                    TuningProvider *provider, bool tuningAdjusted);
 
     void castCoefficients(__m128 (&C)[n_cm_coeffs], __m128 (&dC)[n_cm_coeffs]);
 

@@ -17,7 +17,7 @@
 namespace sst::filters
 {
 
-__m128 SVFLP12Aquad(QuadFilterUnitState *__restrict f, __m128 in)
+inline __m128 SVFLP12Aquad(QuadFilterUnitState *__restrict f, __m128 in)
 {
     f->C[0] = _mm_add_ps(f->C[0], f->dC[0]); // F1
     f->C[1] = _mm_add_ps(f->C[1], f->dC[1]); // Q1
@@ -42,7 +42,7 @@ __m128 SVFLP12Aquad(QuadFilterUnitState *__restrict f, __m128 in)
     return _mm_mul_ps(L2, f->C[3]);
 }
 
-__m128 SVFLP24Aquad(QuadFilterUnitState *__restrict f, __m128 in)
+inline __m128 SVFLP24Aquad(QuadFilterUnitState *__restrict f, __m128 in)
 {
     f->C[0] = _mm_add_ps(f->C[0], f->dC[0]); // F1
     f->C[1] = _mm_add_ps(f->C[1], f->dC[1]); // Q1
@@ -80,7 +80,7 @@ __m128 SVFLP24Aquad(QuadFilterUnitState *__restrict f, __m128 in)
     return _mm_mul_ps(L, f->C[3]);
 }
 
-__m128 SVFHP24Aquad(QuadFilterUnitState *__restrict f, __m128 in)
+inline __m128 SVFHP24Aquad(QuadFilterUnitState *__restrict f, __m128 in)
 {
     f->C[0] = _mm_add_ps(f->C[0], f->dC[0]); // F1
     f->C[1] = _mm_add_ps(f->C[1], f->dC[1]); // Q1
@@ -118,7 +118,7 @@ __m128 SVFHP24Aquad(QuadFilterUnitState *__restrict f, __m128 in)
     return _mm_mul_ps(H, f->C[3]);
 }
 
-__m128 SVFBP24Aquad(QuadFilterUnitState *__restrict f, __m128 in)
+inline __m128 SVFBP24Aquad(QuadFilterUnitState *__restrict f, __m128 in)
 {
     f->C[0] = _mm_add_ps(f->C[0], f->dC[0]); // F1
     f->C[1] = _mm_add_ps(f->C[1], f->dC[1]); // Q1
@@ -156,7 +156,7 @@ __m128 SVFBP24Aquad(QuadFilterUnitState *__restrict f, __m128 in)
     return _mm_mul_ps(B, f->C[3]);
 }
 
-__m128 SVFHP12Aquad(QuadFilterUnitState *__restrict f, __m128 in)
+inline __m128 SVFHP12Aquad(QuadFilterUnitState *__restrict f, __m128 in)
 {
     f->C[0] = _mm_add_ps(f->C[0], f->dC[0]); // F1
     f->C[1] = _mm_add_ps(f->C[1], f->dC[1]); // Q1
@@ -181,7 +181,7 @@ __m128 SVFHP12Aquad(QuadFilterUnitState *__restrict f, __m128 in)
     return _mm_mul_ps(H2, f->C[3]);
 }
 
-__m128 SVFBP12Aquad(QuadFilterUnitState *__restrict f, __m128 in)
+inline __m128 SVFBP12Aquad(QuadFilterUnitState *__restrict f, __m128 in)
 {
     f->C[0] = _mm_add_ps(f->C[0], f->dC[0]); // F1
     f->C[1] = _mm_add_ps(f->C[1], f->dC[1]); // Q1
@@ -206,7 +206,7 @@ __m128 SVFBP12Aquad(QuadFilterUnitState *__restrict f, __m128 in)
     return _mm_mul_ps(B2, f->C[3]);
 }
 
-__m128 IIR12Aquad(QuadFilterUnitState *__restrict f, __m128 in)
+inline __m128 IIR12Aquad(QuadFilterUnitState *__restrict f, __m128 in)
 {
     f->C[1] = _mm_add_ps(f->C[1], f->dC[1]);                                       // K2
     f->C[3] = _mm_add_ps(f->C[3], f->dC[3]);                                       // Q2
@@ -230,7 +230,7 @@ __m128 IIR12Aquad(QuadFilterUnitState *__restrict f, __m128 in)
     return y;
 }
 
-__m128 IIR12Bquad(QuadFilterUnitState *__restrict f, __m128 in)
+inline __m128 IIR12Bquad(QuadFilterUnitState *__restrict f, __m128 in)
 {
     __m128 f2 = _mm_sub_ps(_mm_mul_ps(f->C[3], in), _mm_mul_ps(f->C[1], f->R[1])); // Q2*in - K2*R1
     f->C[1] = _mm_add_ps(f->C[1], f->dC[1]);                                       // K2
@@ -260,7 +260,7 @@ __m128 IIR12Bquad(QuadFilterUnitState *__restrict f, __m128 in)
     return y;
 }
 
-__m128 IIR12WDFquad(QuadFilterUnitState *__restrict f, __m128 in)
+inline __m128 IIR12WDFquad(QuadFilterUnitState *__restrict f, __m128 in)
 {
     f->C[0] = _mm_add_ps(f->C[0], f->dC[0]); // E1 * sc
     f->C[1] = _mm_add_ps(f->C[1], f->dC[1]); // E2 * sc
@@ -292,7 +292,7 @@ __m128 IIR12WDFquad(QuadFilterUnitState *__restrict f, __m128 in)
     return y;
 }
 
-__m128 IIR12CFCquad(QuadFilterUnitState *__restrict f, __m128 in)
+inline __m128 IIR12CFCquad(QuadFilterUnitState *__restrict f, __m128 in)
 {
     // State-space with clipgain (2nd order, limit within register)
 
@@ -324,7 +324,7 @@ __m128 IIR12CFCquad(QuadFilterUnitState *__restrict f, __m128 in)
     return y;
 }
 
-__m128 IIR12CFLquad(QuadFilterUnitState *__restrict f, __m128 in)
+inline __m128 IIR12CFLquad(QuadFilterUnitState *__restrict f, __m128 in)
 {
     // State-space with softer limiter
 
@@ -365,7 +365,7 @@ __m128 IIR12CFLquad(QuadFilterUnitState *__restrict f, __m128 in)
     return y;
 }
 
-__m128 IIR24CFCquad(QuadFilterUnitState *__restrict f, __m128 in)
+inline __m128 IIR24CFCquad(QuadFilterUnitState *__restrict f, __m128 in)
 {
     // State-space with clipgain (2nd order, limit within register)
 
@@ -403,7 +403,7 @@ __m128 IIR24CFCquad(QuadFilterUnitState *__restrict f, __m128 in)
     return y2;
 }
 
-__m128 IIR24CFLquad(QuadFilterUnitState *__restrict f, __m128 in)
+inline __m128 IIR24CFLquad(QuadFilterUnitState *__restrict f, __m128 in)
 {
     // State-space with softer limiter
 
@@ -450,7 +450,7 @@ __m128 IIR24CFLquad(QuadFilterUnitState *__restrict f, __m128 in)
     return y2;
 }
 
-__m128 IIR24Bquad(QuadFilterUnitState *__restrict f, __m128 in)
+inline __m128 IIR24Bquad(QuadFilterUnitState *__restrict f, __m128 in)
 {
     f->C[1] = _mm_add_ps(f->C[1], f->dC[1]); // K2
     f->C[3] = _mm_add_ps(f->C[3], f->dC[3]); // Q2
@@ -486,7 +486,7 @@ __m128 IIR24Bquad(QuadFilterUnitState *__restrict f, __m128 in)
     return y2;
 }
 
-__m128 LPMOOGquad(QuadFilterUnitState *__restrict f, __m128 in)
+inline __m128 LPMOOGquad(QuadFilterUnitState *__restrict f, __m128 in)
 {
     f->C[0] = _mm_add_ps(f->C[0], f->dC[0]);
     f->C[1] = _mm_add_ps(f->C[1], f->dC[1]);
@@ -506,7 +506,7 @@ __m128 LPMOOGquad(QuadFilterUnitState *__restrict f, __m128 in)
     return f->R[f->WP[0] & 3];
 }
 
-__m128 SNHquad(QuadFilterUnitState *__restrict f, __m128 in)
+inline __m128 SNHquad(QuadFilterUnitState *__restrict f, __m128 in)
 {
     f->C[0] = _mm_add_ps(f->C[0], f->dC[0]);
     f->C[1] = _mm_add_ps(f->C[1], f->dC[1]);
@@ -590,25 +590,62 @@ __m128 SNHquad(QuadFilterUnitState *__restrict f, __m128 in)
 //    return _mm_add_ps(_mm_mul_ps(f->C[3], DBRead), _mm_mul_ps(f->C[2], in));
 //}
 
-FilterUnitQFPtr GetQFPtrFilterUnit(FilterType type, int subtype)
+inline FilterUnitQFPtr GetQFPtrFilterUnit(FilterType type, FilterSubType subtype)
 {
     switch (type)
     {
+    // basic filter types
     case fut_lp12:
     {
-        if (subtype == st_SVF)
+        switch (subtype)
+        {
+        case st_SVF:
             return SVFLP12Aquad;
-        else if (subtype == st_Rough)
+        case st_Rough:
             return IIR12CFCquad;
-        return IIR12Bquad;
+        case st_Smooth:
+        default:
+            return IIR12Bquad;
+        }
+    }
+    case fut_lp24:
+    {
+        switch (subtype)
+        {
+        case st_SVF:
+            return SVFLP24Aquad;
+        case st_Rough:
+            return IIR24CFCquad;
+        case st_Smooth:
+        default:
+            return IIR24Bquad;
+        }
     }
     case fut_hp12:
     {
-        if (subtype == st_SVF)
+        switch (subtype)
+        {
+        case st_SVF:
             return SVFHP12Aquad;
-        else if (subtype == st_Rough)
+        case st_Rough:
             return IIR12CFCquad;
-        return IIR12Bquad;
+        case st_Smooth:
+        default:
+            return IIR12Bquad;
+        }
+    }
+    case fut_hp24:
+    {
+        switch (subtype)
+        {
+        case st_SVF:
+            return SVFHP24Aquad;
+        case st_Rough:
+            return IIR24CFCquad;
+        case st_Smooth:
+        default:
+            return IIR24Bquad;
+        }
     }
     case fut_bp12:
     {
@@ -616,16 +653,12 @@ FilterUnitQFPtr GetQFPtrFilterUnit(FilterType type, int subtype)
         {
         case st_SVF:
             return SVFBP12Aquad;
-            break;
         case st_Rough:
             return IIR12CFCquad;
-            break;
         case st_Smooth:
         default:
             return IIR12Bquad;
-            break;
         }
-        break;
     }
     case fut_bp24:
     {
@@ -633,14 +666,11 @@ FilterUnitQFPtr GetQFPtrFilterUnit(FilterType type, int subtype)
         {
         case st_SVF:
             return SVFBP24Aquad;
-            break;
         case st_Rough:
             return IIR24CFCquad;
-            break;
         case st_Smooth:
         default:
             return IIR24Bquad;
-            break;
         }
     }
     case fut_notch12:
@@ -649,18 +679,8 @@ FilterUnitQFPtr GetQFPtrFilterUnit(FilterType type, int subtype)
         return IIR24Bquad;
     case fut_apf:
         return IIR12Bquad;
-    case fut_lp24:
-        if (subtype == st_SVF)
-            return SVFLP24Aquad;
-        else if (subtype == st_Rough)
-            return IIR24CFCquad;
-        return IIR24Bquad;
-    case fut_hp24:
-        if (subtype == st_SVF)
-            return SVFHP24Aquad;
-        else if (subtype == st_Rough)
-            return IIR24CFCquad;
-        return IIR24Bquad;
+
+    // next filter types...
     case fut_lpmoog:
         return LPMOOGquad;
     case fut_SNH:

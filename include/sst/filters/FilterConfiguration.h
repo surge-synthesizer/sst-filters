@@ -244,12 +244,12 @@ const int fut_subcount[num_filter_types] = {
     12, // fut_tripole
 };
 
-enum fu_subtype
+enum FilterSubType
 {
     st_SVF = 0,
     st_Rough = 1,
     st_Smooth = 2,
-    st_Medium = 3, // disabled
+    st_Medium = 3,
     st_Notch = 0,
     st_NotchMild = 1,
 };

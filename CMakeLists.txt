@@ -18,8 +18,11 @@ if (SST_FILTERS_BUILD_TESTS)
     add_executable(sst-filters-tests)
     target_include_directories(sst-filters-tests PRIVATE tests)
     target_link_libraries(sst-filters-tests PRIVATE ${PROJECT_NAME})
-    target_sources(sst-filters-tests PRIVATE
-            tests/tests.cpp)
+    target_sources(sst-filters-tests
+        PRIVATE
+            tests/BasicFiltersTest.cpp
+            tests/tests.cpp
+    )
 
     add_custom_command(TARGET sst-filters-tests
             POST_BUILD

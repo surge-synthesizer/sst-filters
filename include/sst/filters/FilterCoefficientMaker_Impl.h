@@ -58,7 +58,8 @@ void FilterCoefficientMaker<TuningProvider>::castCoefficients(__m128 (&C_)[n_cm_
 
 template <typename TuningProvider>
 void FilterCoefficientMaker<TuningProvider>::MakeCoeffs(float Freq, float Reso, FilterType Type,
-                                                        int SubType, TuningProvider *providerI,
+                                                        FilterSubType SubType,
+                                                        TuningProvider *providerI,
                                                         bool tuningAdjusted)
 {
     provider = providerI;
@@ -218,7 +219,7 @@ void FilterCoefficientMaker<TuningProvider>::MakeCoeffs(float Freq, float Reso, 
     }
 }
 
-float clipscale(float freq, int subtype)
+inline float clipscale(float freq, int subtype)
 {
     switch (subtype)
     {
@@ -240,7 +241,7 @@ float clipscale(float freq, int subtype)
             (freq) = -55;                                                                          \
     }
 
-double Map2PoleResonance(double reso, double freq, int subtype)
+inline double Map2PoleResonance(double reso, double freq, int subtype)
 {
     using std::max;
     switch (subtype)
@@ -257,7 +258,7 @@ double Map2PoleResonance(double reso, double freq, int subtype)
     }
 }
 
-double Map2PoleResonance_noboost(double reso, double /*freq*/, int subtype)
+inline double Map2PoleResonance_noboost(double reso, double /*freq*/, int subtype)
 {
     if (subtype == st_Rough)
         return (1.0 - 0.99 * limit_range((double)(1 - (1 - reso) * (1 - reso)), 0.001, 1.0));
@@ -265,7 +266,7 @@ double Map2PoleResonance_noboost(double reso, double /*freq*/, int subtype)
         return (0.99 - 0.98 * limit_range((double)(1 - (1 - reso) * (1 - reso)), 0.0, 1.0));
 }
 
-double Map4PoleResonance(double reso, double freq, int subtype)
+inline double Map4PoleResonance(double reso, double freq, int subtype)
 {
     using std::max;
     switch (subtype)
@@ -282,7 +283,7 @@ double Map4PoleResonance(double reso, double freq, int subtype)
     }
 }
 
-template <typename T> T resoscale(T reso, int subtype)
+template <typename T> inline T resoscale(T reso, int subtype)
 {
     switch (subtype)
     {
@@ -297,7 +298,7 @@ template <typename T> T resoscale(T reso, int subtype)
     }
 }
 
-template <typename T> T resoscale4Pole(T reso, int subtype)
+template <typename T> inline T resoscale4Pole(T reso, int subtype)
 {
     switch (subtype)
     {
