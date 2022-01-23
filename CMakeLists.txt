@@ -6,6 +6,19 @@ set(CMAKE_CXX_STANDARD 17)
 add_library(${PROJECT_NAME} INTERFACE)
 target_include_directories(${PROJECT_NAME} INTERFACE include)
 
+if(MSVC)
+    target_compile_definitions(${PROJECT_NAME}
+        INTERFACE
+            _USE_MATH_DEFINES=1 # So that we can have M_PI on MSVC
+    )
+
+    target_compile_options(${PROJECT_NAME}
+        INTERFACE
+            /wd4244 # float to double (@TODO)
+            /wd4305 # truncation of variable (@TODO)
+    )
+endif()
+
 get_directory_property(parent_dir PARENT_DIRECTORY)
 if ("${parent_dir}" STREQUAL "")
     set(is_toplevel 1)

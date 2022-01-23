@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <algorithm>
+#include <cstring> // needed for memset/memcpy on GCC
 
 #if MAC
 
