@@ -5,7 +5,7 @@
 
 #include "VintageLadders.h"
 #include "OBXDFilter.h"
-//#include "filters/K35Filter.h"
+#include "K35Filter.h"
 //#include "filters/DiodeLadder.h"
 //#include "filters/NonlinearFeedback.h"
 //#include "filters/NonlinearStates.h"
@@ -713,12 +713,12 @@ inline FilterUnitQFPtr GetQFPtrFilterUnit(FilterType type, FilterSubType subtype
     case fut_obxd_4pole:
         return OBXDFilter::process_4_pole;
         break;
-        //    case fut_k35_lp:
-        //        return K35Filter::process_lp;
-        //        break;
-        //    case fut_k35_hp:
-        //        return K35Filter::process_hp;
-        //        break;
+    case fut_k35_lp:
+        return K35Filter::process_lp;
+        break;
+    case fut_k35_hp:
+        return K35Filter::process_hp;
+        break;
         //    case fut_diode:
         //        return DiodeLadderFilter::process;
         //        break;

@@ -5,14 +5,6 @@
 #include "sst/utilities/basic_dsp.h"
 #include "QuadFilterUnit.h"
 
-#include "VintageLadders.h"
-//#include "filters/OBXDFilter.h"
-//#include "filters/K35Filter.h"
-//#include "filters/DiodeLadder.h"
-//#include "filters/NonlinearFeedback.h"
-//#include "filters/NonlinearStates.h"
-//#include "filters/TriPoleFilter.h"
-
 namespace sst::filters
 {
 
@@ -184,13 +176,14 @@ void FilterCoefficientMaker<TuningProvider>::MakeCoeffs(float Freq, float Reso, 
         OBXDFilter::makeCoefficients(this, OBXDFilter::FOUR_POLE, Freq, Reso, SubType,
                                      sampleRateInv, providerI);
         break;
-        //    case fut_k35_lp:
-        //        K35Filter::makeCoefficients(this, Freq, Reso, true, fut_k35_saturations[SubType],
-        //        storageI); break;
-        //    case fut_k35_hp:
-        //        K35Filter::makeCoefficients(this, Freq, Reso, false, fut_k35_saturations[SubType],
-        //                                    storageI);
-        //        break;
+    case fut_k35_lp:
+        K35Filter::makeCoefficients(this, Freq, Reso, true, fut_k35_saturations[SubType],
+                                    sampleRate, sampleRateInv, providerI);
+        break;
+    case fut_k35_hp:
+        K35Filter::makeCoefficients(this, Freq, Reso, false, fut_k35_saturations[SubType],
+                                    sampleRate, sampleRateInv, providerI);
+        break;
         //    case fut_diode:
         //        DiodeLadderFilter::makeCoefficients(this, Freq, Reso, storageI);
         //        break;
