@@ -117,7 +117,7 @@ inline void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, float f
     lc[rkm_cutoff] = pitch * 2.0 * M_PI;
     lc[rkm_reso] =
         limit_range(reso, 0.f, 1.f) *
-        4.5; // code says 0-10 is value but above 4 or so it's just out of tune self-oscillation
+        4.5f; // code says 0-10 is value but above 4 or so it's just out of tune self-oscillation
     lc[rkm_gComp] = 0.0;
 
     if (applyGainCompensation)
@@ -133,33 +133,31 @@ inline void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, float f
 #define A(a, b) _mm_add_ps(a, b)
 #define S(a, b) _mm_sub_ps(a, b)
 
-inline __m128 clip(__m128 value, __m128 saturation, __m128 saturationinverse)
+inline __m128 clip(__m128 value, __m128 _saturation, __m128 _saturationinverse)
 {
     static const __m128 minusone = F(-1), one = F(1), onethird = F(1.f / 3.f);
-    auto vtsi = M(value, saturationinverse);
+    auto vtsi = M(value, _saturationinverse);
     auto v2 = _mm_min_ps(one, _mm_max_ps(minusone, vtsi));
     auto v23 = M(v2, M(v2, v2));
     auto vkern = S(v2, M(onethird, v23));
-    auto res = M(saturation, vkern);
+    auto res = M(_saturation, vkern);
 
     return res;
 }
 
-// void calculateDerivatives(float input, double * dstate, double * state, float cutoff, float
-// resonance, float saturation, float saturationInv )
 inline void calculateDerivatives(__m128 input, __m128 *dstate, __m128 *state, __m128 cutoff,
-                                 __m128 resonance, __m128 saturation, __m128 saturationInv,
+                                 __m128 resonance, __m128 _saturation, __m128 _saturationInv,
                                  __m128 gComp)
 {
-    auto satstate0 = clip(state[0], saturation, saturationInv);
-    auto satstate1 = clip(state[1], saturation, saturationInv);
-    auto satstate2 = clip(state[2], saturation, saturationInv);
+    auto satstate0 = clip(state[0], _saturation, _saturationInv);
+    auto satstate1 = clip(state[1], _saturation, _saturationInv);
+    auto satstate2 = clip(state[2], _saturation, _saturationInv);
 
     // dstate[0] = cutoff * (clip(input - resonance * state[3], saturation, saturationInv) -
     // satstate0); Modify dstate[0] = cutoff * (clip(input - resonance * (state[3] - gComp * input),
     // saturation, saturationInv) - satstate0);
     auto startstate =
-        clip(S(input, M(resonance, S(state[3], M(gComp, input)))), saturation, saturationInv);
+        clip(S(input, M(resonance, S(state[3], M(gComp, input)))), _saturation, _saturationInv);
     dstate[0] = M(cutoff, S(startstate, satstate0));
 
     // dstate[1] = cutoff * (satstate0 - satstate1);
@@ -169,7 +167,7 @@ inline void calculateDerivatives(__m128 input, __m128 *dstate, __m128 *state, __
     dstate[2] = M(cutoff, S(satstate1, satstate2));
 
     // dstate[3] = cutoff * (satstate2 - clip(state[3], saturation, saturationInv));
-    dstate[3] = M(cutoff, S(satstate2, clip(state[3], saturation, saturationInv)));
+    dstate[3] = M(cutoff, S(satstate2, clip(state[3], _saturation, _saturationInv)));
 }
 
 inline __m128 process(QuadFilterUnitState *__restrict f, __m128 input)
@@ -251,9 +249,9 @@ inline __m128 process(QuadFilterUnitState *__restrict f, __m128 input)
     windowFactors[2] = F(0.57315917);
     windowFactors[3] = F(1);
 
-    for (int i = 0; i < extraOversample; ++i)
+    for (int k = 0; k < extraOversample; ++k)
     {
-        ov = A(ov, M(outputOS[i], windowFactors[i]));
+        ov = A(ov, M(outputOS[k], windowFactors[k]));
     }
 
     return M(F(1.5), ov);
@@ -325,9 +323,7 @@ inline void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, float f
 
     reso = limit_range(limit_range(reso, 0.0f, 0.9925f), 0.0f, 0.994f - co - gctrim);
     lC[h_res] = reso;
-
-    double fc = cutoff * sampleRateInv;
-    lC[h_fc] = fc;
+    lC[h_fc] = cutoff * sampleRateInv;
 
     lC[h_gComp] = 0.0;
 

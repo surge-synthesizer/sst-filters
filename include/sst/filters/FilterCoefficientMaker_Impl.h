@@ -5,19 +5,10 @@
 #include "sst/utilities/basic_dsp.h"
 #include "QuadFilterUnit.h"
 
-#include "VintageLadders.h"
-//#include "filters/OBXDFilter.h"
-//#include "filters/K35Filter.h"
-//#include "filters/DiodeLadder.h"
-//#include "filters/NonlinearFeedback.h"
-//#include "filters/NonlinearStates.h"
-//#include "filters/TriPoleFilter.h"
-
 namespace sst::filters
 {
 
-// @TODO replace these with LUT methods from SurgeStorage
-template <typename T> inline T linear_to_db(T in) { return (T)20 * log10(in); }
+// @TODO: In Surge this is implemented with a LUT. I think it's probably okay to use full precision.
 template <typename T> inline T db_to_linear(T in) { return pow((T)10, (T)0.05 * in); }
 
 constexpr float smooth = 0.2f;
@@ -160,41 +151,39 @@ void FilterCoefficientMaker<TuningProvider>::MakeCoeffs(float Freq, float Reso, 
             break;
         }
         break;
-        //        /* When we split OBXD we went from one filter with 8 settings (L, B, H, N, L+, B+,
-        //        H+, N+)
-        //         * to two subtypes (regular and +). So what used to be Highpass (value 2 and 6) is
-        //         now 1 and
-        //         * 2 on a new type. But don't rewrite the filter for now. Just reconstruct the
-        //         subtypes
-        //         * */
-        //    case fut_obxd_2pole_lp:
-        //        OBXDFilter::makeCoefficients(this, OBXDFilter::TWO_POLE, Freq, Reso, SubType * 4,
-        //        storageI); break;
-        //    case fut_obxd_2pole_bp:
-        //        OBXDFilter::makeCoefficients(this, OBXDFilter::TWO_POLE, Freq, Reso, SubType * 4 +
-        //        1,
-        //                                     storageI);
-        //        break;
-        //    case fut_obxd_2pole_hp:
-        //        OBXDFilter::makeCoefficients(this, OBXDFilter::TWO_POLE, Freq, Reso, SubType * 4 +
-        //        2,
-        //                                     storageI);
-        //        break;
-        //    case fut_obxd_2pole_n:
-        //        OBXDFilter::makeCoefficients(this, OBXDFilter::TWO_POLE, Freq, Reso, SubType * 4 +
-        //        3,
-        //                                     storageI);
-        //        break;
-        //    case fut_obxd_4pole:
-        //        OBXDFilter::makeCoefficients(this, OBXDFilter::FOUR_POLE, Freq, Reso, SubType,
-        //        storageI); break;
-        //    case fut_k35_lp:
-        //        K35Filter::makeCoefficients(this, Freq, Reso, true, fut_k35_saturations[SubType],
-        //        storageI); break;
-        //    case fut_k35_hp:
-        //        K35Filter::makeCoefficients(this, Freq, Reso, false, fut_k35_saturations[SubType],
-        //                                    storageI);
-        //        break;
+    /**
+     * When we split OBXD we went from one filter with 8 settings (L, B, H, N, L+, B+, H+, N+)
+     * to two subtypes (regular and +). So what used to be Highpass (value 2 and 6) is now 1 and
+     * 2 on a new type. But don't rewrite the filter for now. Just reconstruct the subtypes.
+     */
+    case fut_obxd_2pole_lp:
+        OBXDFilter::makeCoefficients(this, OBXDFilter::TWO_POLE, Freq, Reso, SubType * 4,
+                                     sampleRateInv, providerI);
+        break;
+    case fut_obxd_2pole_bp:
+        OBXDFilter::makeCoefficients(this, OBXDFilter::TWO_POLE, Freq, Reso, SubType * 4 + 1,
+                                     sampleRateInv, providerI);
+        break;
+    case fut_obxd_2pole_hp:
+        OBXDFilter::makeCoefficients(this, OBXDFilter::TWO_POLE, Freq, Reso, SubType * 4 + 2,
+                                     sampleRateInv, providerI);
+        break;
+    case fut_obxd_2pole_n:
+        OBXDFilter::makeCoefficients(this, OBXDFilter::TWO_POLE, Freq, Reso, SubType * 4 + 3,
+                                     sampleRateInv, providerI);
+        break;
+    case fut_obxd_4pole:
+        OBXDFilter::makeCoefficients(this, OBXDFilter::FOUR_POLE, Freq, Reso, SubType,
+                                     sampleRateInv, providerI);
+        break;
+    case fut_k35_lp:
+        K35Filter::makeCoefficients(this, Freq, Reso, true, fut_k35_saturations[SubType],
+                                    sampleRate, sampleRateInv, providerI);
+        break;
+    case fut_k35_hp:
+        K35Filter::makeCoefficients(this, Freq, Reso, false, fut_k35_saturations[SubType],
+                                    sampleRate, sampleRateInv, providerI);
+        break;
         //    case fut_diode:
         //        DiodeLadderFilter::makeCoefficients(this, Freq, Reso, storageI);
         //        break;
@@ -237,14 +226,7 @@ inline float clipscale(float freq, int subtype)
     }
 }
 
-// @TODO: figure out what this macro does?
-#define boundfreq(freq)                                                                            \
-    {                                                                                              \
-        if ((freq) > 75)                                                                           \
-            (freq) = 75;                                                                           \
-        if ((freq) < -55)                                                                          \
-            (freq) = -55;                                                                          \
-    }
+inline float boundFreq(float freq) { return std::clamp(freq, -55.0f, 75.0f); }
 
 inline double Map2PoleResonance(double reso, double freq, int subtype)
 {
@@ -352,7 +334,8 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_LP12(float freq, float reso, 
     float cosi, sinu;
     float gain = resoscale(reso, subtype);
 
-    boundfreq(freq) provider->note_to_omega_ignoring_tuning(freq, sinu, cosi, sampleRate);
+    boundFreq(freq);
+    provider->note_to_omega_ignoring_tuning(freq, sinu, cosi, sampleRate);
 
     double alpha = sinu * Map2PoleResonance(reso, freq, subtype);
 
@@ -377,7 +360,8 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_LP24(float freq, float reso, 
     float cosi, sinu;
     float gain = resoscale(reso, subtype);
 
-    boundfreq(freq) provider->note_to_omega_ignoring_tuning(freq, sinu, cosi, sampleRate);
+    boundFreq(freq);
+    provider->note_to_omega_ignoring_tuning(freq, sinu, cosi, sampleRate);
 
     double Q2inv = Map4PoleResonance((double)reso, (double)freq, subtype);
     double alpha = sinu * Q2inv;
@@ -403,7 +387,8 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_HP12(float freq, float reso, 
     float cosi, sinu;
     float gain = resoscale(reso, subtype);
 
-    boundfreq(freq) provider->note_to_omega_ignoring_tuning(freq, sinu, cosi, sampleRate);
+    boundFreq(freq);
+    provider->note_to_omega_ignoring_tuning(freq, sinu, cosi, sampleRate);
 
     double Q2inv = Map2PoleResonance(reso, freq, subtype);
     double alpha = sinu * Q2inv;
@@ -429,7 +414,8 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_HP24(float freq, float reso, 
     float cosi, sinu;
     float gain = resoscale(reso, subtype);
 
-    boundfreq(freq) provider->note_to_omega_ignoring_tuning(freq, sinu, cosi, sampleRate);
+    boundFreq(freq);
+    provider->note_to_omega_ignoring_tuning(freq, sinu, cosi, sampleRate);
 
     double Q2inv = Map4PoleResonance((double)reso, (double)freq, subtype);
     double alpha = sinu * Q2inv;
@@ -460,7 +446,8 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_BP12(float freq, float reso, 
         gain *= 2.f;
     }
 
-    boundfreq(freq) provider->note_to_omega_ignoring_tuning(freq, sinu, cosi, sampleRate);
+    boundFreq(freq);
+    provider->note_to_omega_ignoring_tuning(freq, sinu, cosi, sampleRate);
 
     double Q2inv = Map2PoleResonance(reso, freq, subtype);
     double Q = 0.5 / Q2inv;
@@ -497,7 +484,8 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_BP24(float freq, float reso, 
         gain *= 2.f;
     }
 
-    boundfreq(freq) provider->note_to_omega_ignoring_tuning(freq, sinu, cosi, sampleRate);
+    boundFreq(freq);
+    provider->note_to_omega_ignoring_tuning(freq, sinu, cosi, sampleRate);
 
     double Q2inv = Map4PoleResonance(reso, freq, subtype);
     double Q = 0.5 / Q2inv;
@@ -529,7 +517,8 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_Notch(float Freq, float Reso,
     float cosi, sinu;
     double Q2inv;
 
-    boundfreq(Freq) provider->note_to_omega_ignoring_tuning(Freq, sinu, cosi, sampleRate);
+    boundFreq(Freq);
+    provider->note_to_omega_ignoring_tuning(Freq, sinu, cosi, sampleRate);
 
     if (SubType == st_NotchMild)
     {
@@ -554,7 +543,8 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_APF(float Freq, float Reso, i
     float cosi, sinu;
     double Q2inv;
 
-    boundfreq(Freq) provider->note_to_omega_ignoring_tuning(Freq, sinu, cosi, sampleRate);
+    boundFreq(Freq);
+    provider->note_to_omega_ignoring_tuning(Freq, sinu, cosi, sampleRate);
 
     Q2inv = (2.5 - 2.49 * limit_range((double)(1 - (1 - Reso) * (1 - Reso)), 0.0, 1.0));
 
