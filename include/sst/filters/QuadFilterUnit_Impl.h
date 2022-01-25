@@ -4,7 +4,7 @@
 #include "sst/utilities/basic_dsp.h"
 
 #include "VintageLadders.h"
-//#include "filters/OBXDFilter.h"
+#include "OBXDFilter.h"
 //#include "filters/K35Filter.h"
 //#include "filters/DiodeLadder.h"
 //#include "filters/NonlinearFeedback.h"
@@ -523,7 +523,7 @@ inline __m128 SNHquad(QuadFilterUnitState *__restrict f, __m128 in)
 }
 
 // @TODO: get this to compile
-//template <int COMB_SIZE> // COMB_SIZE must be a power of 2
+// template <int COMB_SIZE> // COMB_SIZE must be a power of 2
 //__m128 COMBquad_SSE2(QuadFilterUnitState *__restrict f, __m128 in)
 //{
 //    assert(FIRipol_M == 256); // changing the constant requires updating the code below
@@ -703,16 +703,16 @@ inline FilterUnitQFPtr GetQFPtrFilterUnit(FilterType type, FilterSubType subtype
             return VintageLadder::Huov::process;
         }
         break;
-        //    case fut_obxd_2pole_lp:
-        //    case fut_obxd_2pole_hp:
-        //    case fut_obxd_2pole_bp:
-        //    case fut_obxd_2pole_n:
-        //        // All the differences are in subtype wrangling int he coefficnent maker
-        //        return OBXDFilter::process_2_pole;
-        //        break;
-        //    case fut_obxd_4pole:
-        //        return OBXDFilter::process_4_pole;
-        //        break;
+    case fut_obxd_2pole_lp:
+    case fut_obxd_2pole_hp:
+    case fut_obxd_2pole_bp:
+    case fut_obxd_2pole_n:
+        // All the differences are in subtype wrangling in the coefficient maker
+        return OBXDFilter::process_2_pole;
+        break;
+    case fut_obxd_4pole:
+        return OBXDFilter::process_4_pole;
+        break;
         //    case fut_k35_lp:
         //        return K35Filter::process_lp;
         //        break;
@@ -745,4 +745,4 @@ inline FilterUnitQFPtr GetQFPtrFilterUnit(FilterType type, FilterSubType subtype
     }
 }
 
-}
+} // namespace sst::filters

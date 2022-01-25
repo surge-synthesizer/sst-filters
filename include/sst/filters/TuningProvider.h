@@ -33,6 +33,11 @@ struct BasicTuningProvider
         return powf(2.f, (x - 69.f) * (1.f / 12.f));
     }
 
+    static float note_to_pitch(float x)
+    {
+        return note_to_pitch_ignoring_tuning(x);
+    }
+
     struct CurrentTuning
     {
         static double logScaledFrequencyForMidiNote(int mn) { return (double)mn / 12.0; }
