@@ -38,6 +38,7 @@ if (SST_FILTERS_BUILD_TESTS)
             tests/DiodeLadderTest.cpp
             tests/K35FilterTest.cpp
             tests/OBXDFilterTest.cpp
+            tests/ResonanceWarpTest.cpp
             tests/VintageLaddersTest.cpp
             tests/tests.cpp
     )
