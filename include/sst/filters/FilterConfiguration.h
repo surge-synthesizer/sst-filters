@@ -252,8 +252,18 @@ enum FilterSubType
     st_Medium = 3,
     st_Notch = 0,
     st_NotchMild = 1,
+
+    st_lpmoog_6dB = 0,
+    st_lpmoog_12dB = 1,
+    st_lpmoog_18dB = 2,
+    st_lpmoog_24dB = 3,
+
+    st_diode_6dB = 0,
+    st_diode_12dB = 1,
+    st_diode_18dB = 2,
+    st_diode_24dB = 3,
 };
 
-} // namespace sst
+} // namespace sst::filters
 
 #endif // SST_FILTERS_FILTERCONFIGURATION_H

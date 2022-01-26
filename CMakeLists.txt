@@ -34,6 +34,7 @@ if (SST_FILTERS_BUILD_TESTS)
     target_sources(sst-filters-tests
         PRIVATE
             tests/BasicFiltersTest.cpp
+            tests/DiodeLadderTest.cpp
             tests/K35FilterTest.cpp
             tests/OBXDFilterTest.cpp
             tests/VintageLaddersTest.cpp
