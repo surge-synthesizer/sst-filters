@@ -187,13 +187,13 @@ void FilterCoefficientMaker<TuningProvider>::MakeCoeffs(float Freq, float Reso, 
     case fut_diode:
         DiodeLadderFilter::makeCoefficients(this, Freq, Reso, sampleRate, sampleRateInv, providerI);
         break;
-        //    case fut_cutoffwarp_lp:
-        //    case fut_cutoffwarp_hp:
-        //    case fut_cutoffwarp_n:
-        //    case fut_cutoffwarp_bp:
-        //    case fut_cutoffwarp_ap:
-        //        NonlinearFeedbackFilter::makeCoefficients(this, Freq, Reso, Type, SubType,
-        //        storageI); break;
+    case fut_cutoffwarp_lp:
+    case fut_cutoffwarp_hp:
+    case fut_cutoffwarp_n:
+    case fut_cutoffwarp_bp:
+    case fut_cutoffwarp_ap:
+        CutoffWarp::makeCoefficients(this, Freq, Reso, Type, SubType, sampleRate, providerI);
+        break;
         //    case fut_resonancewarp_lp:
         //    case fut_resonancewarp_hp:
         //    case fut_resonancewarp_n:

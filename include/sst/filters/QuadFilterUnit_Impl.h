@@ -7,7 +7,7 @@
 #include "OBXDFilter.h"
 #include "K35Filter.h"
 #include "DiodeLadder.h"
-//#include "filters/NonlinearFeedback.h"
+#include "CutoffWarp.h"
 //#include "filters/NonlinearStates.h"
 //#include "filters/TriPoleFilter.h"
 
@@ -746,13 +746,40 @@ inline FilterUnitQFPtr GetQFPtrFilterUnit(FilterType type, FilterSubType subtype
             return DiodeLadderFilter::process<st_diode_24dB>;
         }
         break;
-        //    case fut_cutoffwarp_lp:
-        //    case fut_cutoffwarp_hp:
-        //    case fut_cutoffwarp_n:
-        //    case fut_cutoffwarp_bp:
-        //    case fut_cutoffwarp_ap:
-        //        return NonlinearFeedbackFilter::process;
-        //        break;
+    case fut_cutoffwarp_lp:
+    case fut_cutoffwarp_hp:
+    case fut_cutoffwarp_n:
+    case fut_cutoffwarp_bp:
+    case fut_cutoffwarp_ap:
+        switch (subtype)
+        {
+        case st_cutoffwarp_tanh1:
+            return CutoffWarp::process<st_cutoffwarp_tanh1>;
+        case st_cutoffwarp_tanh2:
+            return CutoffWarp::process<st_cutoffwarp_tanh2>;
+        case st_cutoffwarp_tanh3:
+            return CutoffWarp::process<st_cutoffwarp_tanh3>;
+        case st_cutoffwarp_tanh4:
+            return CutoffWarp::process<st_cutoffwarp_tanh3>;
+        case st_cutoffwarp_softclip1:
+            return CutoffWarp::process<st_cutoffwarp_softclip1>;
+        case st_cutoffwarp_softclip2:
+            return CutoffWarp::process<st_cutoffwarp_softclip2>;
+        case st_cutoffwarp_softclip3:
+            return CutoffWarp::process<st_cutoffwarp_softclip3>;
+        case st_cutoffwarp_softclip4:
+            return CutoffWarp::process<st_cutoffwarp_softclip4>;
+        case st_cutoffwarp_ojd1:
+            return CutoffWarp::process<st_cutoffwarp_ojd1>;
+        case st_cutoffwarp_ojd2:
+            return CutoffWarp::process<st_cutoffwarp_ojd2>;
+        case st_cutoffwarp_ojd3:
+            return CutoffWarp::process<st_cutoffwarp_ojd3>;
+        case st_cutoffwarp_ojd4:
+        default:
+            return CutoffWarp::process<st_cutoffwarp_ojd4>;
+        }
+        break;
         //    case fut_resonancewarp_lp:
         //    case fut_resonancewarp_hp:
         //    case fut_resonancewarp_n:
