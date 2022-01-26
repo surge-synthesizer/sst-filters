@@ -262,6 +262,19 @@ enum FilterSubType
     st_diode_12dB = 1,
     st_diode_18dB = 2,
     st_diode_24dB = 3,
+
+    st_cutoffwarp_tanh1 = 0,
+    st_cutoffwarp_tanh2 = 1,
+    st_cutoffwarp_tanh3 = 2,
+    st_cutoffwarp_tanh4 = 3,
+    st_cutoffwarp_softclip1 = 4,
+    st_cutoffwarp_softclip2 = 5,
+    st_cutoffwarp_softclip3 = 6,
+    st_cutoffwarp_softclip4 = 7,
+    st_cutoffwarp_ojd1 = 8,
+    st_cutoffwarp_ojd2 = 9,
+    st_cutoffwarp_ojd3 = 10,
+    st_cutoffwarp_ojd4 = 11,
 };
 
 } // namespace sst::filters

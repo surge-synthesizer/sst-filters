@@ -43,11 +43,12 @@ auto runSine = [](auto &filterState, auto &filterUnitPtr, float testFreq, int nu
     return 20.0f * std::log10 (rms);
 };
 
+using RMSSet = std::array<float, numTestFreqs>;
 struct TestConfig
 {
     FilterType type;
     FilterSubType subType;
-    std::array<float, numTestFreqs> expRmsDBs;
+    RMSSet expRmsDBs;
 };
 
 auto runTest = [] (const TestConfig& testConfig)
