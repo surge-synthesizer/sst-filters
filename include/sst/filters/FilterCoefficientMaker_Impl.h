@@ -184,9 +184,9 @@ void FilterCoefficientMaker<TuningProvider>::MakeCoeffs(float Freq, float Reso, 
         K35Filter::makeCoefficients(this, Freq, Reso, false, fut_k35_saturations[SubType],
                                     sampleRate, sampleRateInv, providerI);
         break;
-        //    case fut_diode:
-        //        DiodeLadderFilter::makeCoefficients(this, Freq, Reso, storageI);
-        //        break;
+    case fut_diode:
+        DiodeLadderFilter::makeCoefficients(this, Freq, Reso, sampleRate, sampleRateInv, providerI);
+        break;
         //    case fut_cutoffwarp_lp:
         //    case fut_cutoffwarp_hp:
         //    case fut_cutoffwarp_n:
@@ -319,7 +319,7 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_SVF(float Freq, float Reso, b
     const double a = 0.65;
     double Gain = 1 - a * Reso;
 
-    float c[n_cm_coeffs] {};
+    float c[n_cm_coeffs]{};
     memset(c, 0, sizeof(float) * n_cm_coeffs);
     c[0] = (float)F1;
     c[1] = (float)Q1;
@@ -566,7 +566,7 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_LP4L(float freq, float reso, 
     float t_b1 = 1.f - (float)exp(-2 * M_PI * gg);
     float q = std::min(2.15f * limit_range(reso, 0.f, 1.f), 0.5f / (t_b1 * t_b1 * t_b1 * t_b1));
 
-    float c[n_cm_coeffs] {};
+    float c[n_cm_coeffs]{};
     memset(c, 0, sizeof(float) * n_cm_coeffs);
     c[0] = (3.f / (3.f - q));
     c[1] = t_b1;
@@ -619,7 +619,7 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_SNH(float freq, float reso, i
     float dtime = (1.f / 440.f) * provider->note_to_pitch_ignoring_tuning(-freq) * sampleRate;
     float v1 = 1.0f / dtime;
 
-    float c[n_cm_coeffs] {};
+    float c[n_cm_coeffs]{};
     memset(c, 0, sizeof(float) * n_cm_coeffs);
     c[0] = v1;
     c[1] = reso;
@@ -670,7 +670,7 @@ void FilterCoefficientMaker<TuningProvider>::ToNormalizedLattice(double a0inv, d
     double v2 = (b1 - a1 * v3) / q2;
     double v1 = (b0 - k1 * v2 * q2 - k2 * v3) / (q1 * q2);
 
-    float N[n_cm_coeffs] {};
+    float N[n_cm_coeffs]{};
     memset(N, 0, sizeof(float) * n_cm_coeffs);
     N[0] = (float)k1;
     N[1] = (float)k2;
@@ -710,7 +710,7 @@ void FilterCoefficientMaker<TuningProvider>::ToCoupledForm(double a0inv, double 
     double c1 = bb1;
     double c2 = (bb1 * ar + bb2) / ai;
 
-    float N[n_cm_coeffs] {};
+    float N[n_cm_coeffs]{};
     memset(N, 0, sizeof(float) * n_cm_coeffs);
     N[0] = (float)ar;
     N[1] = (float)ai;

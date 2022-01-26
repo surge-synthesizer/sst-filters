@@ -127,8 +127,20 @@ TEST_CASE("Basic Filters")
     {
         // @TODO: according to FilterConfigurations, lpmoog has 4 sub-types... but what are they??
         runTest({FilterType::fut_lpmoog,
-                 FilterSubType{},
+                 FilterSubType::st_lpmoog_6dB,
                  {-8.26648f, -4.43419f, 4.17682f, -6.93047f, -25.634f}});
+
+        runTest({FilterType::fut_lpmoog,
+                 FilterSubType::st_lpmoog_12dB,
+                 {-8.42218f, -5.29444f, 1.17737f, -14.6702f, -48.285f}});
+
+        runTest({FilterType::fut_lpmoog,
+                 FilterSubType::st_lpmoog_18dB,
+                 {-8.58346f, -6.12644f, -1.80083f, -22.0866f, -53.0664f}});
+
+        runTest({FilterType::fut_lpmoog,
+                 FilterSubType::st_lpmoog_24dB,
+                 {-8.75385f, -6.95123f, -4.80331f, -28.5335f, -55.2077f}});
     }
 
     SECTION("SNH")

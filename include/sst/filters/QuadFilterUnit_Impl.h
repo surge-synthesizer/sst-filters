@@ -6,7 +6,7 @@
 #include "VintageLadders.h"
 #include "OBXDFilter.h"
 #include "K35Filter.h"
-//#include "filters/DiodeLadder.h"
+#include "DiodeLadder.h"
 //#include "filters/NonlinearFeedback.h"
 //#include "filters/NonlinearStates.h"
 //#include "filters/TriPoleFilter.h"
@@ -483,6 +483,7 @@ inline __m128 IIR24Bquad(QuadFilterUnitState *__restrict f, __m128 in)
     return y2;
 }
 
+template <FilterSubType subtype>
 inline __m128 LPMOOGquad(QuadFilterUnitState *__restrict f, __m128 in)
 {
     f->C[0] = _mm_add_ps(f->C[0], f->dC[0]);
@@ -500,7 +501,7 @@ inline __m128 LPMOOGquad(QuadFilterUnitState *__restrict f, __m128 in)
     f->R[4] = f->R[3];
     f->R[3] = _mm_add_ps(f->R[3], _mm_mul_ps(f->C[1], _mm_sub_ps(f->R[2], f->R[3])));
 
-    return f->R[f->WP[0] & 3];
+    return f->R[subtype];
 }
 
 inline __m128 SNHquad(QuadFilterUnitState *__restrict f, __m128 in)
@@ -679,7 +680,19 @@ inline FilterUnitQFPtr GetQFPtrFilterUnit(FilterType type, FilterSubType subtype
 
     // next filter types...
     case fut_lpmoog:
-        return LPMOOGquad;
+        switch (subtype)
+        {
+        case st_lpmoog_6dB:
+            return LPMOOGquad<st_lpmoog_6dB>;
+        case st_lpmoog_12dB:
+            return LPMOOGquad<st_lpmoog_12dB>;
+        case st_lpmoog_18dB:
+            return LPMOOGquad<st_lpmoog_18dB>;
+        case st_lpmoog_24dB:
+        default:
+            return LPMOOGquad<st_lpmoog_24dB>;
+        }
+        break;
     case fut_SNH:
         return SNHquad;
         //    case fut_comb_pos:
@@ -719,9 +732,20 @@ inline FilterUnitQFPtr GetQFPtrFilterUnit(FilterType type, FilterSubType subtype
     case fut_k35_hp:
         return K35Filter::process_hp;
         break;
-        //    case fut_diode:
-        //        return DiodeLadderFilter::process;
-        //        break;
+    case fut_diode:
+        switch (subtype)
+        {
+        case st_diode_6dB:
+            return DiodeLadderFilter::process<st_diode_6dB>;
+        case st_diode_12dB:
+            return DiodeLadderFilter::process<st_diode_12dB>;
+        case st_diode_18dB:
+            return DiodeLadderFilter::process<st_diode_18dB>;
+        case st_diode_24dB:
+        default:
+            return DiodeLadderFilter::process<st_diode_24dB>;
+        }
+        break;
         //    case fut_cutoffwarp_lp:
         //    case fut_cutoffwarp_hp:
         //    case fut_cutoffwarp_n:
