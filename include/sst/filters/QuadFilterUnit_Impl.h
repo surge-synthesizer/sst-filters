@@ -780,13 +780,32 @@ inline FilterUnitQFPtr GetQFPtrFilterUnit(FilterType type, FilterSubType subtype
             return CutoffWarp::process<st_cutoffwarp_ojd4>;
         }
         break;
-        //    case fut_resonancewarp_lp:
-        //    case fut_resonancewarp_hp:
-        //    case fut_resonancewarp_n:
-        //    case fut_resonancewarp_bp:
-        //    case fut_resonancewarp_ap:
-        //        return NonlinearStatesFilter::process;
-        //        break;
+    case fut_resonancewarp_lp:
+    case fut_resonancewarp_hp:
+    case fut_resonancewarp_n:
+    case fut_resonancewarp_bp:
+    case fut_resonancewarp_ap:
+        switch (subtype)
+        {
+        case st_resonancewarp_tanh1:
+            return ResonanceWarp::process<st_resonancewarp_tanh1>;
+        case st_resonancewarp_tanh2:
+            return ResonanceWarp::process<st_resonancewarp_tanh2>;
+        case st_resonancewarp_tanh3:
+            return ResonanceWarp::process<st_resonancewarp_tanh3>;
+        case st_resonancewarp_tanh4:
+            return ResonanceWarp::process<st_resonancewarp_tanh3>;
+        case st_resonancewarp_softclip1:
+            return ResonanceWarp::process<st_resonancewarp_softclip1>;
+        case st_resonancewarp_softclip2:
+            return ResonanceWarp::process<st_resonancewarp_softclip2>;
+        case st_resonancewarp_softclip3:
+            return ResonanceWarp::process<st_resonancewarp_softclip3>;
+        case st_resonancewarp_softclip4:
+        default:
+            return ResonanceWarp::process<st_resonancewarp_softclip4>;
+        }
+        break;
         //    case fut_tripole:
         //        return TriPoleFilter::process;
         //        break;

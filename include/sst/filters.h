@@ -6,6 +6,7 @@
 #include "sst/filters/K35Filter.h"
 #include "sst/filters/DiodeLadder.h"
 #include "sst/filters/CutoffWarp.h"
+#include "sst/filters/ResonanceWarp.h"
 
 #include "sst/filters/QuadFilterUnit_Impl.h"
 #include "sst/filters/FilterCoefficientMaker_Impl.h"

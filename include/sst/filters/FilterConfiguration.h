@@ -275,6 +275,15 @@ enum FilterSubType
     st_cutoffwarp_ojd2 = 9,
     st_cutoffwarp_ojd3 = 10,
     st_cutoffwarp_ojd4 = 11,
+
+    st_resonancewarp_tanh1 = 0,
+    st_resonancewarp_tanh2 = 1,
+    st_resonancewarp_tanh3 = 2,
+    st_resonancewarp_tanh4 = 3,
+    st_resonancewarp_softclip1 = 4,
+    st_resonancewarp_softclip2 = 5,
+    st_resonancewarp_softclip3 = 6,
+    st_resonancewarp_softclip4 = 7,
 };
 
 } // namespace sst::filters

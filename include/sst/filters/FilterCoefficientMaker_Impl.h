@@ -194,14 +194,13 @@ void FilterCoefficientMaker<TuningProvider>::MakeCoeffs(float Freq, float Reso, 
     case fut_cutoffwarp_ap:
         CutoffWarp::makeCoefficients(this, Freq, Reso, Type, SubType, sampleRate, providerI);
         break;
-        //    case fut_resonancewarp_lp:
-        //    case fut_resonancewarp_hp:
-        //    case fut_resonancewarp_n:
-        //    case fut_resonancewarp_bp:
-        //    case fut_resonancewarp_ap:
-        //        NonlinearStatesFilter::makeCoefficients(this, Freq, Reso, Type, storageI);
-        //        break;
-        //
+    case fut_resonancewarp_lp:
+    case fut_resonancewarp_hp:
+    case fut_resonancewarp_n:
+    case fut_resonancewarp_bp:
+    case fut_resonancewarp_ap:
+        ResonanceWarp::makeCoefficients(this, Freq, Reso, Type, sampleRate, providerI);
+        break;
         //    case fut_tripole:
         //        TriPoleFilter::makeCoefficients(this, Freq, Reso, Type, storageI);
         //        break;
