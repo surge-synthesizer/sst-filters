@@ -168,7 +168,7 @@ inline __m128 process(QuadFilterUnitState *__restrict f, __m128 input)
     f->R[dlf_feedback1] = feedback1;
 
     // gain compensation
-    const __m128 comp = M(A(M(F(0.3), f->C[dlf_km]), one), input);
+    const __m128 comp = M(A(M(F(0.3f), f->C[dlf_km]), one), input);
 
     // (comp - km * sigma) / (km * gamma + 1.0)
     const __m128 u = D(S(comp, M(f->C[dlf_km], sigma)), A(M(f->C[dlf_km], f->C[dlf_gamma]), one));
@@ -190,14 +190,14 @@ inline __m128 process(QuadFilterUnitState *__restrict f, __m128 input)
     switch (subtype)
     {
     case st_diode_6dB:
-        return M(result1, F(0.125)); // 6dB/oct
+        return M(result1, F(0.125f)); // 6dB/oct
     case st_diode_12dB:
-        return M(result2, F(0.3)); // 12dB/oct
+        return M(result2, F(0.3f)); // 12dB/oct
     case st_diode_18dB:
-        return M(result3, F(0.6)); // 18dB/oct
+        return M(result3, F(0.6f)); // 18dB/oct
     case st_diode_24dB:
     default:
-        return M(result4, F(1.2)); // 24dB/oct
+        return M(result4, F(1.2f)); // 24dB/oct
     }
 }
 } // namespace sst::filters::DiodeLadderFilter
