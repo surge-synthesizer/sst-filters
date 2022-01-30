@@ -121,11 +121,11 @@ int main(int argc, char* argv[])
 
     float pitch = 69.0f;
     if (argc > 1)
-        pitch = std::atof(argv[1]);
+        pitch = (float) std::atof(argv[1]);
 
     float res = 0.5f;
     if (argc > 2)
-        res = std::atof(argv[2]);
+        res = (float) std::atof(argv[2]);
 
     auto filterType = sst::filters::FilterType::fut_lp24;
     if (argc > 3)

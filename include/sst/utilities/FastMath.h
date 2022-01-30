@@ -117,25 +117,25 @@ inline __m128 fastcosSSE(__m128 x) noexcept
 */
 inline float clampToPiRange(float x)
 {
-    if (x <= M_PI && x >= -M_PI)
+    if (x <= (float)M_PI && x >= -(float)M_PI)
         return x;
-    float y = x + M_PI; // so now I am 0,2PI
+    float y = x + (float)M_PI; // so now I am 0,2PI
 
     // float p = fmod( y, 2.0 * M_PI );
 
-    constexpr float oo2p = 1.0 / (2.0 * M_PI);
-    float p = y - 2.0 * M_PI * (int)(y * oo2p);
+    constexpr float oo2p = 1.0f / (2.0f * (float)M_PI);
+    float p = y - 2.0f * (float)M_PI * (int)(y * oo2p);
 
     if (p < 0)
-        p += 2.0 * M_PI;
-    return p - M_PI;
+        p += 2.0f * (float)M_PI;
+    return p - (float)M_PI;
 }
 
 inline __m128 clampToPiRangeSSE(__m128 x)
 {
-    const auto mpi = _mm_set1_ps(M_PI);
-    const auto m2pi = _mm_set1_ps(2.0 * M_PI);
-    const auto oo2p = _mm_set1_ps(1.0 / (2.0 * M_PI));
+    const auto mpi = _mm_set1_ps((float)M_PI);
+    const auto m2pi = _mm_set1_ps(2.0f * (float)M_PI);
+    const auto oo2p = _mm_set1_ps(1.0f / (2.0f * (float)M_PI));
     const auto mz = _mm_setzero_ps();
 
     auto y = _mm_add_ps(x, mpi);

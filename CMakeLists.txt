@@ -11,12 +11,6 @@ if(MSVC)
         INTERFACE
             _USE_MATH_DEFINES=1 # So that we can have M_PI on MSVC
     )
-
-    target_compile_options(${PROJECT_NAME}
-        INTERFACE
-            /wd4244 # float to double (@TODO)
-            /wd4305 # truncation of variable (@TODO)
-    )
 endif()
 
 get_directory_property(parent_dir PARENT_DIRECTORY)

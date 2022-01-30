@@ -97,7 +97,7 @@ void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, float freq, fl
 
     const float q = ((reso * reso * reso) * 18.0f + 0.1f);
 
-    const float wc = 2.0f * M_PI * clampedFrequency(freq, sampleRate, provider) / sampleRate;
+    const float wc = 2.0f * (float)M_PI * clampedFrequency(freq, sampleRate, provider) / sampleRate;
 
     const float wsin = Surge::DSP::fastsin(wc);
     const float wcos = Surge::DSP::fastcos(wc);

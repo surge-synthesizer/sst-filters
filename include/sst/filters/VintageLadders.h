@@ -100,11 +100,11 @@ enum rkm_coeffs
 };
 
 static constexpr int extraOversample = 4;
-static constexpr float extraOversampleInv = 0.25;
+static constexpr float extraOversampleInv = 0.25f;
 
-static constexpr float saturation = 3, saturationInverse = 0.333333333333;
+static constexpr float saturation = 3.0f, saturationInverse = 0.333333333333f;
 
-static constexpr float gainCompensation = 0.666;
+static constexpr float gainCompensation = 0.666f;
 
 template <typename TuningProvider>
 inline void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, float freq, float reso,
@@ -114,7 +114,7 @@ inline void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, float f
     float lc[n_cm_coeffs];
     auto pitch = VintageLadder::Common::clampedFrequency(freq, sampleRate, provider);
 
-    lc[rkm_cutoff] = pitch * 2.0 * M_PI;
+    lc[rkm_cutoff] = pitch * 2.0f * (float)M_PI;
     lc[rkm_reso] =
         limit_range(reso, 0.f, 1.f) *
         4.5f; // code says 0-10 is value but above 4 or so it's just out of tune self-oscillation
@@ -178,7 +178,7 @@ inline __m128 process(QuadFilterUnitState *__restrict f, __m128 input)
     __m128 *state = &(f->R[0]);
 
     auto stepSize = F(f->sampleRateInv * extraOversampleInv),
-         halfStepSize = F(0.5 * f->sampleRateInv * extraOversampleInv);
+         halfStepSize = F(0.5f * f->sampleRateInv * extraOversampleInv);
 
     static const __m128 oneoversix = F(1.f / 6.f), two = F(2.f), dFac = F(extraOversampleInv),
                         sat = F(saturation), satInv = F(saturationInverse);
@@ -244,9 +244,9 @@ inline __m128 process(QuadFilterUnitState *__restrict f, __m128 input)
     */
     auto ov = _mm_setzero_ps();
     __m128 windowFactors[4];
-    windowFactors[0] = F(-0.0636844);
+    windowFactors[0] = F(-0.0636844f);
     windowFactors[1] = _mm_setzero_ps();
-    windowFactors[2] = F(0.57315917);
+    windowFactors[2] = F(0.57315917f);
     windowFactors[3] = F(1);
 
     for (int k = 0; k < extraOversample; ++k)
@@ -318,8 +318,8 @@ inline void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, float f
 
     // Heuristically, at higher cutoffs the resonance becomes less stable. This is purely ear tuned
     // at 48kHz with noise input
-    float co = std::max(cutoff - sampleRate * 0.33333, 0.0) * 0.1 * sampleRateInv;
-    float gctrim = applyGainCompensation ? 0.05 : 0.0;
+    float co = std::max(cutoff - sampleRate * 0.33333f, 0.0f) * 0.1f * sampleRateInv;
+    float gctrim = applyGainCompensation ? 0.05f : 0.0f;
 
     reso = limit_range(limit_range(reso, 0.0f, 0.9925f), 0.0f, 0.994f - co - gctrim);
     lC[h_res] = reso;
@@ -342,11 +342,11 @@ inline __m128 process(QuadFilterUnitState *__restrict f, __m128 in)
 #define A(a, b) _mm_add_ps(a, b)
 #define S(a, b) _mm_sub_ps(a, b)
 
-    static const __m128 dFac = F(0.5), half = F(0.5), one = F(1.0), four = F(4.0),
-                        m18730 = F(1.8730), m04955 = F(0.4995), mneg06490 = F(-0.6490),
-                        m09988 = F(0.9988), mneg39364 = F(-3.9364), m18409 = F(1.8409),
-                        m09968 = F(0.9968), thermal = F(1.f / 70.f), oneoverthermal = F(70),
-                        neg2pi = F(-2.0 * M_PI);
+    static const __m128 dFac = F(0.5f), half = F(0.5f), one = F(1.0f), four = F(4.0f),
+                        m18730 = F(1.8730f), m04955 = F(0.4995f), mneg06490 = F(-0.6490f),
+                        m09988 = F(0.9988f), mneg39364 = F(-3.9364f), m18409 = F(1.8409f),
+                        m09968 = F(0.9968f), thermal = F(1.f / 70.f), oneoverthermal = F(70.0f),
+                        neg2pi = F(-2.0f * (float)M_PI);
 
     __m128 outputOS[2];
 

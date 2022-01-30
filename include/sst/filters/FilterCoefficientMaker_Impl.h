@@ -68,8 +68,8 @@ void FilterCoefficientMaker<TuningProvider>::MakeCoeffs(float Freq, float Reso, 
             float frac =
                 (Freq + 69) - (float)idx; // frac is 0 means use idx; frac is 1 means use idx+1
 
-            float b0 = provider->currentTuning.logScaledFrequencyForMidiNote(idx) * 12;
-            float b1 = provider->currentTuning.logScaledFrequencyForMidiNote(idx + 1) * 12;
+            float b0 = (float)provider->currentTuning.logScaledFrequencyForMidiNote(idx) * 12.0f;
+            float b1 = (float)provider->currentTuning.logScaledFrequencyForMidiNote(idx + 1) * 12.0f;
 
             auto q = (1.f - frac) * b0 + frac * b1;
 

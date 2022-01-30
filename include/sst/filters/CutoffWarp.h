@@ -135,7 +135,7 @@ void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, float freq, fl
     const float q = ((reso * reso * reso) * 18.0f + 0.1f);
 
     const float normalisedFreq = 2.0f * clampedFrequency(freq, sampleRate, provider) / sampleRate;
-    const float wc = M_PI * normalisedFreq;
+    const float wc = (float)M_PI * normalisedFreq;
 
     const float wsin = Surge::DSP::fastsin(wc);
     const float wcos = Surge::DSP::fastcos(wc);
@@ -157,8 +157,8 @@ void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, float freq, fl
 
     // tweaked these by hand/ear after the RMS measuring program did its thing... this world still
     // needs humans! :) - EvilDragon
-    constexpr float lpNormTable[12] = {1.53273,  1.33407,  1.08197,  0.958219, 1.27374,  0.932342,
-                                       0.761765, 0.665462, 0.776856, 0.597575, 0.496207, 0.471714};
+    constexpr float lpNormTable[12] = {1.53273f,  1.33407f,  1.08197f,  0.958219f, 1.27374f,  0.932342f,
+                                       0.761765f, 0.665462f, 0.776856f, 0.597575f, 0.496207f, 0.471714f};
 
     // extra resonance makeup term for OJD subtypes
     float expMin = type == fut_cutoffwarp_lp ? 0.1f : 0.35f;

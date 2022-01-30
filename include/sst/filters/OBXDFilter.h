@@ -73,8 +73,8 @@ const __m128 one = _mm_set1_ps(1.0f);
 const __m128 one_three_five = _mm_set1_ps(1.035f);
 const __m128 two = _mm_set1_ps(2.0f);
 const __m128 three = _mm_set1_ps(3.0f);
-const __m128 gainAdjustment2Pole = _mm_set1_ps(0.74);
-const __m128 gainAdjustment4Pole = _mm_set1_ps(0.6);
+const __m128 gainAdjustment2Pole = _mm_set1_ps(0.74f);
+const __m128 gainAdjustment4Pole = _mm_set1_ps(0.6f);
 
 template <typename TuningProvider>
 inline void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, Poles p, float freq, float reso, int sub,
@@ -82,7 +82,7 @@ inline void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, Poles p
 {
     float lC[n_cm_coeffs];
     float rcrate = sqrt(44000.0f * sampleRateInv);
-    float cutoff = fmin(provider->note_to_pitch(freq + 69) * (float)TuningProvider::MIDI_0_FREQ, 22000.0) *
+    float cutoff = fmin(provider->note_to_pitch(freq + 69) * (float)TuningProvider::MIDI_0_FREQ, 22000.0f) *
                    sampleRateInv * (float) M_PI;
 
     if (p == TWO_POLE)
