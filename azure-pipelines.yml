@@ -54,8 +54,7 @@ jobs:
       - checkout: self
         fetchDepth: 1
 
-      - bash: cmake -Bbuild -DCMAKE_BUILD_TYPE=Release -DSST_FILTERS_BUILD_EXAMPLES=ON
-        displayName: Run cmake configure
-
-      - bash: cmake --build build --config Release --target filter_plot_tool
-        displayName: Build filter_plot_tool
+      - bash: |
+          cmake -Bbuild -DCMAKE_BUILD_TYPE=Release -DSST_FILTERS_BUILD_EXAMPLES=ON
+          cmake --build build --config Release --target filter_plot_tool
+        displayName: Build examples with cmake
