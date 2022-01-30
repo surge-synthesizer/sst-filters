@@ -50,3 +50,8 @@ if (SST_FILTERS_BUILD_TESTS)
             COMMAND ${CMAKE_COMMAND} -E make_directory test-binary
             COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:sst-filters-tests>" test-binary)
 endif ()
+
+option(SST_FILTERS_BUILD_EXAMPLES "Add targets for building and running sst-filters tests" OFF)
+if(SST_FILTERS_BUILD_EXAMPLES)
+    add_subdirectory(examples EXCLUDE_FROM_ALL)
+endif()
