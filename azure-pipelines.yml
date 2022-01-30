@@ -58,4 +58,4 @@ jobs:
         displayName: Run cmake configure
 
       - bash: cmake --build build --config Release filter_plot_tool
-        displayname: Build filter_plot_tool
+        displayName: Build filter_plot_tool
