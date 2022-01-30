@@ -713,6 +713,7 @@ inline FilterUnitQFPtr GetQFPtrFilterUnit(FilterType type, FilterSubType subtype
             return VintageLadder::RK::process;
         case 2:
         case 3:
+        default:
             return VintageLadder::Huov::process;
         }
         break;
