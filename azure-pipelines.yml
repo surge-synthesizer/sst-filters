@@ -34,7 +34,7 @@ jobs:
           ./build/test-binary/sst-filters-tests
         displayName: Run tests with cmake
 
-  - job: Build Examples
+  - job: Examples
     strategy:
       matrix:
         mac:
