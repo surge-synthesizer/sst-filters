@@ -53,5 +53,5 @@ endif ()
 
 option(SST_FILTERS_BUILD_EXAMPLES "Add targets for building and running sst-filters tests" OFF)
 if(SST_FILTERS_BUILD_EXAMPLES)
-    add_subdirectory(examples EXCLUDE_FROM_ALL)
+    add_subdirectory(examples)
 endif()
