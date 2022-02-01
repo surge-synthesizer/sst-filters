@@ -284,6 +284,19 @@ enum FilterSubType
     st_resonancewarp_softclip2 = 5,
     st_resonancewarp_softclip3 = 6,
     st_resonancewarp_softclip4 = 7,
+
+    st_tripole_LLL1 = 0,
+    st_tripole_LHL1 = 1,
+    st_tripole_HLH1 = 2,
+    st_tripole_HHH1 = 3,
+    st_tripole_LLL2 = 4,
+    st_tripole_LHL2 = 5,
+    st_tripole_HLH2 = 6,
+    st_tripole_HHH2 = 7,
+    st_tripole_LLL3 = 8,
+    st_tripole_LHL3 = 9,
+    st_tripole_HLH3 = 10,
+    st_tripole_HHH3 = 11,
 };
 
 } // namespace sst::filters

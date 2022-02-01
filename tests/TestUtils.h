@@ -13,7 +13,7 @@ namespace TestUtils
 {
 using sst::filters::FilterType, sst::filters::FilterSubType;
 
-constexpr bool printRMSs = false;
+constexpr bool printRMSs = false; // change this to true when geenrating test data
 
 constexpr auto sampleRate = 48000.0f;
 constexpr int blockSize = 2048;

@@ -22,27 +22,7 @@ endif ()
 option(SST_FILTERS_BUILD_TESTS "Add targets for building and running sst-filters tests" ${is_toplevel})
 
 if (SST_FILTERS_BUILD_TESTS)
-    add_executable(sst-filters-tests)
-    target_include_directories(sst-filters-tests PRIVATE tests)
-    target_link_libraries(sst-filters-tests PRIVATE ${PROJECT_NAME})
-    target_sources(sst-filters-tests
-        PRIVATE
-            tests/BasicFiltersTest.cpp
-            tests/CutoffWarpTest.cpp
-            tests/DiodeLadderTest.cpp
-            tests/K35FilterTest.cpp
-            tests/OBXDFilterTest.cpp
-            tests/ResonanceWarpTest.cpp
-            tests/VintageLaddersTest.cpp
-            tests/tests.cpp
-    )
-
-    add_custom_command(TARGET sst-filters-tests
-            POST_BUILD
-            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-            COMMAND ${CMAKE_COMMAND} -E echo "Copying $<TARGET_FILE:sst-filters-tests> to test-binary"
-            COMMAND ${CMAKE_COMMAND} -E make_directory test-binary
-            COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:sst-filters-tests>" test-binary)
+    add_subdirectory(tests)
 endif ()
 
 option(SST_FILTERS_BUILD_EXAMPLES "Add targets for building and running sst-filters tests" OFF)
