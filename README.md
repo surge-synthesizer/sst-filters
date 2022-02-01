@@ -9,3 +9,5 @@ List of API changes:
 - LPMoog filter uses sub-type template argument instead of f->WP
 - DiodeLadder filter uses sub-type template argument instead of f->WP
 - CutoffWarp filter uses sub-type template argument instead of f->WP
+- ResonanceWarp filter uses sub-type template argument instead of f->WP
+- TriPole filter uses sub-type template argument instead of f->WP

@@ -8,8 +8,8 @@
 #include "K35Filter.h"
 #include "DiodeLadder.h"
 #include "CutoffWarp.h"
-//#include "filters/NonlinearStates.h"
-//#include "filters/TriPoleFilter.h"
+#include "ResonanceWarp.h"
+#include "TriPoleFilter.h"
 
 namespace sst::filters
 {
@@ -602,8 +602,9 @@ inline FilterUnitQFPtr GetQFPtrFilterUnit(FilterType type, FilterSubType subtype
         case st_Rough:
             return IIR12CFCquad;
         case st_Smooth:
-        default:
             return IIR12Bquad;
+        default:
+            break;
         }
     }
     case fut_lp24:
@@ -615,9 +616,11 @@ inline FilterUnitQFPtr GetQFPtrFilterUnit(FilterType type, FilterSubType subtype
         case st_Rough:
             return IIR24CFCquad;
         case st_Smooth:
-        default:
             return IIR24Bquad;
+        default:
+            break;
         }
+        break;
     }
     case fut_hp12:
     {
@@ -628,9 +631,11 @@ inline FilterUnitQFPtr GetQFPtrFilterUnit(FilterType type, FilterSubType subtype
         case st_Rough:
             return IIR12CFCquad;
         case st_Smooth:
-        default:
             return IIR12Bquad;
+        default:
+            break;
         }
+        break;
     }
     case fut_hp24:
     {
@@ -641,9 +646,11 @@ inline FilterUnitQFPtr GetQFPtrFilterUnit(FilterType type, FilterSubType subtype
         case st_Rough:
             return IIR24CFCquad;
         case st_Smooth:
-        default:
             return IIR24Bquad;
+        default:
+            break;
         }
+        break;
     }
     case fut_bp12:
     {
@@ -654,9 +661,11 @@ inline FilterUnitQFPtr GetQFPtrFilterUnit(FilterType type, FilterSubType subtype
         case st_Rough:
             return IIR12CFCquad;
         case st_Smooth:
-        default:
             return IIR12Bquad;
+        default:
+            break;
         }
+        break;
     }
     case fut_bp24:
     {
@@ -667,9 +676,11 @@ inline FilterUnitQFPtr GetQFPtrFilterUnit(FilterType type, FilterSubType subtype
         case st_Rough:
             return IIR24CFCquad;
         case st_Smooth:
-        default:
             return IIR24Bquad;
+        default:
+            break;
         }
+        break;
     }
     case fut_notch12:
         return IIR12Bquad;
@@ -677,8 +688,6 @@ inline FilterUnitQFPtr GetQFPtrFilterUnit(FilterType type, FilterSubType subtype
         return IIR24Bquad;
     case fut_apf:
         return IIR12Bquad;
-
-    // next filter types...
     case fut_lpmoog:
         switch (subtype)
         {
@@ -689,14 +698,16 @@ inline FilterUnitQFPtr GetQFPtrFilterUnit(FilterType type, FilterSubType subtype
         case st_lpmoog_18dB:
             return LPMOOGquad<st_lpmoog_18dB>;
         case st_lpmoog_24dB:
-        default:
             return LPMOOGquad<st_lpmoog_24dB>;
+        default:
+            break;
         }
         break;
     case fut_SNH:
         return SNHquad;
-        //    case fut_comb_pos:
-        //    case fut_comb_neg:
+    case fut_comb_pos:
+    case fut_comb_neg:
+        return nullptr; // @TODO
         //        if (subtype & QFUSubtypeMasks::EXTENDED_COMB)
         //        {
         //            return COMBquad_SSE2<MAX_FB_COMB_EXTENDED>;
@@ -713,8 +724,9 @@ inline FilterUnitQFPtr GetQFPtrFilterUnit(FilterType type, FilterSubType subtype
             return VintageLadder::RK::process;
         case 2:
         case 3:
-        default:
             return VintageLadder::Huov::process;
+        default:
+            break;
         }
         break;
     case fut_obxd_2pole_lp:
@@ -743,8 +755,9 @@ inline FilterUnitQFPtr GetQFPtrFilterUnit(FilterType type, FilterSubType subtype
         case st_diode_18dB:
             return DiodeLadderFilter::process<st_diode_18dB>;
         case st_diode_24dB:
-        default:
             return DiodeLadderFilter::process<st_diode_24dB>;
+        default:
+            break;
         }
         break;
     case fut_cutoffwarp_lp:
@@ -761,7 +774,7 @@ inline FilterUnitQFPtr GetQFPtrFilterUnit(FilterType type, FilterSubType subtype
         case st_cutoffwarp_tanh3:
             return CutoffWarp::process<st_cutoffwarp_tanh3>;
         case st_cutoffwarp_tanh4:
-            return CutoffWarp::process<st_cutoffwarp_tanh3>;
+            return CutoffWarp::process<st_cutoffwarp_tanh4>;
         case st_cutoffwarp_softclip1:
             return CutoffWarp::process<st_cutoffwarp_softclip1>;
         case st_cutoffwarp_softclip2:
@@ -777,8 +790,9 @@ inline FilterUnitQFPtr GetQFPtrFilterUnit(FilterType type, FilterSubType subtype
         case st_cutoffwarp_ojd3:
             return CutoffWarp::process<st_cutoffwarp_ojd3>;
         case st_cutoffwarp_ojd4:
-        default:
             return CutoffWarp::process<st_cutoffwarp_ojd4>;
+        default:
+            break;
         }
         break;
     case fut_resonancewarp_lp:
@@ -795,7 +809,7 @@ inline FilterUnitQFPtr GetQFPtrFilterUnit(FilterType type, FilterSubType subtype
         case st_resonancewarp_tanh3:
             return ResonanceWarp::process<st_resonancewarp_tanh3>;
         case st_resonancewarp_tanh4:
-            return ResonanceWarp::process<st_resonancewarp_tanh3>;
+            return ResonanceWarp::process<st_resonancewarp_tanh4>;
         case st_resonancewarp_softclip1:
             return ResonanceWarp::process<st_resonancewarp_softclip1>;
         case st_resonancewarp_softclip2:
@@ -803,17 +817,49 @@ inline FilterUnitQFPtr GetQFPtrFilterUnit(FilterType type, FilterSubType subtype
         case st_resonancewarp_softclip3:
             return ResonanceWarp::process<st_resonancewarp_softclip3>;
         case st_resonancewarp_softclip4:
-        default:
             return ResonanceWarp::process<st_resonancewarp_softclip4>;
+        default:
+            break;
         }
         break;
-        //    case fut_tripole:
-        //        return TriPoleFilter::process;
-        //        break;
+    case fut_tripole:
+        switch (subtype)
+        {
+        case st_tripole_LLL1:
+            return TriPoleFilter::process<st_tripole_LLL1>;
+        case st_tripole_LHL1:
+            return TriPoleFilter::process<st_tripole_LHL1>;
+        case st_tripole_HLH1:
+            return TriPoleFilter::process<st_tripole_HLH1>;
+        case st_tripole_HHH1:
+            return TriPoleFilter::process<st_tripole_HHH1>;
+        case st_tripole_LLL2:
+            return TriPoleFilter::process<st_tripole_LLL2>;
+        case st_tripole_LHL2:
+            return TriPoleFilter::process<st_tripole_LHL2>;
+        case st_tripole_HLH2:
+            return TriPoleFilter::process<st_tripole_HLH2>;
+        case st_tripole_HHH2:
+            return TriPoleFilter::process<st_tripole_HHH2>;
+        case st_tripole_LLL3:
+            return TriPoleFilter::process<st_tripole_LLL3>;
+        case st_tripole_LHL3:
+            return TriPoleFilter::process<st_tripole_LHL3>;
+        case st_tripole_HLH3:
+            return TriPoleFilter::process<st_tripole_HLH3>;
+        case st_tripole_HHH3:
+            return TriPoleFilter::process<st_tripole_HHH3>;
+        default:
+            break;
+        }
+        break;
     case fut_none:
     case num_filter_types:
-        return nullptr;
+        break;
     }
+
+    // assert here
+    return nullptr;
 }
 
 } // namespace sst::filters

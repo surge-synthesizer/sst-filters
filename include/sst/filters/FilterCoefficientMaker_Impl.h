@@ -69,7 +69,8 @@ void FilterCoefficientMaker<TuningProvider>::MakeCoeffs(float Freq, float Reso, 
                 (Freq + 69) - (float)idx; // frac is 0 means use idx; frac is 1 means use idx+1
 
             float b0 = (float)provider->currentTuning.logScaledFrequencyForMidiNote(idx) * 12.0f;
-            float b1 = (float)provider->currentTuning.logScaledFrequencyForMidiNote(idx + 1) * 12.0f;
+            float b1 =
+                (float)provider->currentTuning.logScaledFrequencyForMidiNote(idx + 1) * 12.0f;
 
             auto q = (1.f - frac) * b0 + frac * b1;
 
@@ -201,9 +202,9 @@ void FilterCoefficientMaker<TuningProvider>::MakeCoeffs(float Freq, float Reso, 
     case fut_resonancewarp_ap:
         ResonanceWarp::makeCoefficients(this, Freq, Reso, Type, sampleRate, providerI);
         break;
-        //    case fut_tripole:
-        //        TriPoleFilter::makeCoefficients(this, Freq, Reso, Type, storageI);
-        //        break;
+    case fut_tripole:
+        TriPoleFilter::makeCoefficients(this, Freq, Reso, Type, sampleRate, providerI);
+        break;
 
     case num_filter_types:
         // This should really be an error condition of course
