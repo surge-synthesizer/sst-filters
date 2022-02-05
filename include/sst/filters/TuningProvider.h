@@ -33,15 +33,22 @@ struct BasicTuningProvider
         return powf(2.f, (x - 69.f) * (1.f / 12.f));
     }
 
-    static float note_to_pitch(float x)
+    static float note_to_pitch_inv_ignoring_tuning(float x)
     {
-        return note_to_pitch_ignoring_tuning(x);
+        return 1.0f / note_to_pitch_ignoring_tuning(x);
     }
+
+    static float note_to_pitch(float x) { return note_to_pitch_ignoring_tuning(x); }
 
     struct CurrentTuning
     {
         static double logScaledFrequencyForMidiNote(int mn) { return (double)mn / 12.0; }
     } currentTuning;
+
+    struct Patch
+    {
+        static constexpr bool correctlyTuneCombFilter = true;
+    } patch;
 };
 } // namespace sst::filters::detail
 

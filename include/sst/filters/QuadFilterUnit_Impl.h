@@ -2,6 +2,7 @@
 #include "FilterConfiguration.h"
 
 #include "sst/utilities/basic_dsp.h"
+#include "sst/utilities/SincTable.h"
 
 #include "VintageLadders.h"
 #include "OBXDFilter.h"
@@ -523,70 +524,69 @@ inline __m128 SNHquad(QuadFilterUnitState *__restrict f, __m128 in)
     return f->R[1];
 }
 
-// @TODO: get this to compile
-// template <int COMB_SIZE> // COMB_SIZE must be a power of 2
-//__m128 COMBquad_SSE2(QuadFilterUnitState *__restrict f, __m128 in)
-//{
-//    assert(FIRipol_M == 256); // changing the constant requires updating the code below
-//    const __m128 m256 = _mm_set1_ps(256.f);
-//    const __m128i m0xff = _mm_set1_epi32(0xff);
-//
-//    f->C[0] = _mm_add_ps(f->C[0], f->dC[0]);
-//    f->C[1] = _mm_add_ps(f->C[1], f->dC[1]);
-//
-//    __m128 a = _mm_mul_ps(f->C[0], m256);
-//    __m128i e = _mm_cvtps_epi32(a);
-//    int DTi alignas(16)[4], SEi alignas(16)[4];
-//    __m128i DT = _mm_srli_epi32(e, 8);
-//    _mm_store_si128((__m128i *)DTi, DT);
-//    __m128i SE = _mm_and_si128(e, m0xff);
-//    SE = _mm_sub_epi32(m0xff, SE);
-//    _mm_store_si128((__m128i *)SEi, SE);
-//    __m128 DBRead = _mm_setzero_ps();
-//
-//    for (int i = 0; i < 4; i++)
-//    {
-//        if (f->active[i])
-//        {
-//            int RP = (f->WP[i] - DTi[i] - FIRoffset) & (COMB_SIZE - 1);
-//
-//            // SINC interpolation (12 samples)
-//            __m128 a = _mm_loadu_ps(&f->DB[i][RP]);
-//            SEi[i] *= (FIRipol_N << 1);
-//            __m128 b = _mm_load_ps(&sinctable[SEi[i]]);
-//            __m128 o = _mm_mul_ps(a, b);
-//
-//            a = _mm_loadu_ps(&f->DB[i][RP + 4]);
-//            b = _mm_load_ps(&sinctable[SEi[i] + 4]);
-//            o = _mm_add_ps(o, _mm_mul_ps(a, b));
-//
-//            a = _mm_loadu_ps(&f->DB[i][RP + 8]);
-//            b = _mm_load_ps(&sinctable[SEi[i] + 8]);
-//            o = _mm_add_ps(o, _mm_mul_ps(a, b));
-//
-//            _mm_store_ss((float *)&DBRead + i, sum_ps_to_ss(o));
-//        }
-//    }
-//
-//    __m128 d = _mm_add_ps(in, _mm_mul_ps(DBRead, f->C[1]));
-//    d = softclip_ps(d);
-//
-//    for (int i = 0; i < 4; i++)
-//    {
-//        if (f->active[i])
-//        {
-//            // Write to delaybuffer (with "anti-wrapping")
-//            __m128 t = _mm_load_ss((float *)&d + i);
-//            _mm_store_ss(&f->DB[i][f->WP[i]], t);
-//            if (f->WP[i] < FIRipol_N)
-//                _mm_store_ss(&f->DB[i][f->WP[i] + COMB_SIZE], t);
-//
-//            // Increment write position
-//            f->WP[i] = (f->WP[i] + 1) & (COMB_SIZE - 1);
-//        }
-//    }
-//    return _mm_add_ps(_mm_mul_ps(f->C[3], DBRead), _mm_mul_ps(f->C[2], in));
-//}
+ template <int COMB_SIZE> // COMB_SIZE must be a power of 2
+__m128 COMBquad_SSE2(QuadFilterUnitState *__restrict f, __m128 in)
+{
+    static_assert(SincTable::FIRipol_M == 256); // changing the constant requires updating the code below
+    const __m128 m256 = _mm_set1_ps(256.f);
+    const __m128i m0xff = _mm_set1_epi32(0xff);
+
+    f->C[0] = _mm_add_ps(f->C[0], f->dC[0]);
+    f->C[1] = _mm_add_ps(f->C[1], f->dC[1]);
+
+    __m128 a = _mm_mul_ps(f->C[0], m256);
+    __m128i e = _mm_cvtps_epi32(a);
+    int DTi alignas(16)[4], SEi alignas(16)[4];
+    __m128i DT = _mm_srli_epi32(e, 8);
+    _mm_store_si128((__m128i *)DTi, DT);
+    __m128i SE = _mm_and_si128(e, m0xff);
+    SE = _mm_sub_epi32(m0xff, SE);
+    _mm_store_si128((__m128i *)SEi, SE);
+    __m128 DBRead = _mm_setzero_ps();
+
+    for (int i = 0; i < 4; i++)
+    {
+        if (f->active[i])
+        {
+            int RP = (f->WP[i] - DTi[i] - SincTable::FIRoffset) & (COMB_SIZE - 1);
+
+            // SINC interpolation (12 samples)
+            __m128 a = _mm_loadu_ps(&f->DB[i][RP]);
+            SEi[i] *= (SincTable::FIRipol_N << 1);
+            __m128 b = _mm_load_ps(&globalSincTable.sinctable[SEi[i]]);
+            __m128 o = _mm_mul_ps(a, b);
+
+            a = _mm_loadu_ps(&f->DB[i][RP + 4]);
+            b = _mm_load_ps(&globalSincTable.sinctable[SEi[i] + 4]);
+            o = _mm_add_ps(o, _mm_mul_ps(a, b));
+
+            a = _mm_loadu_ps(&f->DB[i][RP + 8]);
+            b = _mm_load_ps(&globalSincTable.sinctable[SEi[i] + 8]);
+            o = _mm_add_ps(o, _mm_mul_ps(a, b));
+
+            _mm_store_ss((float *)&DBRead + i, sum_ps_to_ss(o));
+        }
+    }
+
+    __m128 d = _mm_add_ps(in, _mm_mul_ps(DBRead, f->C[1]));
+    d = softclip_ps(d);
+
+    for (int i = 0; i < 4; i++)
+    {
+        if (f->active[i])
+        {
+            // Write to delaybuffer (with "anti-wrapping")
+            __m128 t = _mm_load_ss((float *)&d + i);
+            _mm_store_ss(&f->DB[i][f->WP[i]], t);
+            if (f->WP[i] < SincTable::FIRipol_N)
+                _mm_store_ss(&f->DB[i][f->WP[i] + COMB_SIZE], t);
+
+            // Increment write position
+            f->WP[i] = (f->WP[i] + 1) & (COMB_SIZE - 1);
+        }
+    }
+    return _mm_add_ps(_mm_mul_ps(f->C[3], DBRead), _mm_mul_ps(f->C[2], in));
+}
 
 inline FilterUnitQFPtr GetQFPtrFilterUnit(FilterType type, FilterSubType subtype)
 {
@@ -707,15 +707,14 @@ inline FilterUnitQFPtr GetQFPtrFilterUnit(FilterType type, FilterSubType subtype
         return SNHquad;
     case fut_comb_pos:
     case fut_comb_neg:
-        return nullptr; // @TODO
-        //        if (subtype & QFUSubtypeMasks::EXTENDED_COMB)
-        //        {
-        //            return COMBquad_SSE2<MAX_FB_COMB_EXTENDED>;
-        //        }
-        //        else
-        //        {
-        //            return COMBquad_SSE2<MAX_FB_COMB>;
-        //        }
+        if (subtype & QFUSubtypeMasks::EXTENDED_COMB)
+        {
+            return COMBquad_SSE2<MAX_FB_COMB_EXTENDED>;
+        }
+        else
+        {
+            return COMBquad_SSE2<MAX_FB_COMB>;
+        }
     case fut_vintageladder:
         switch (subtype)
         {

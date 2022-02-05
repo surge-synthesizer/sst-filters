@@ -13,7 +13,7 @@ namespace TestUtils
 {
 using sst::filters::FilterType, sst::filters::FilterSubType;
 
-constexpr bool printRMSs = false; // change this to true when geenrating test data
+constexpr bool printRMSs = false; // change this to true when generating test data
 
 constexpr auto sampleRate = 48000.0f;
 constexpr int blockSize = 2048;
@@ -51,9 +51,19 @@ struct TestConfig
     RMSSet expRmsDBs;
 };
 
+static float delayBufferData[4][MAX_FB_COMB] {};
+
 auto runTest = [] (const TestConfig& testConfig)
 {
     auto filterState = sst::filters::QuadFilterUnitState{};
+    for (int i = 0; i < 4; ++i)
+    {
+        std::fill (delayBufferData[i], delayBufferData[i] + MAX_FB_COMB, 0.0f);
+        filterState.DB[i] = delayBufferData[i];
+        filterState.active[i] = (int) 0xffffffff;
+        filterState.WP[i] = 0;
+    }
+
     auto filterUnitPtr = sst::filters::GetQFPtrFilterUnit(testConfig.type, testConfig.subType);
 
     sst::filters::FilterCoefficientMaker coefMaker;

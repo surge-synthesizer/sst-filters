@@ -3,6 +3,7 @@
 
 #include "FilterCoefficientMaker.h"
 #include "sst/utilities/basic_dsp.h"
+#include "sst/utilities/SincTable.h"
 #include "QuadFilterUnit.h"
 
 namespace sst::filters
@@ -578,39 +579,39 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_LP4L(float freq, float reso, 
 template <typename TuningProvider>
 void FilterCoefficientMaker<TuningProvider>::Coeff_COMB(float freq, float reso, int isubtype)
 {
-    // @TODO
-    //    int subtype = isubtype & QFUSubtypeMasks::UNMASK_SUBTYPE;
-    //    bool extended = isubtype & QFUSubtypeMasks::EXTENDED_COMB;
-    //
-    //    int comb_length = extended ? MAX_FB_COMB_EXTENDED : MAX_FB_COMB;
-    //
-    //    float dtime = (1.f / 440.f) * provider->note_to_pitch_inv_ignoring_tuning(freq);
-    //    dtime = dtime * (double)sampleRateInv;
-    //
-    //    // See comment in SurgeStorage and issue #3248
-    //    if (!provider->_patch->correctlyTuneCombFilter)
-    //    {
-    //        dtime -= FIRoffset;
-    //    }
-    //
-    //    dtime = limit_range(dtime, (float)FIRipol_N, (float)comb_length - FIRipol_N);
-    //    if (extended)
-    //    {
-    //        // extended use is not from the filter bank so allow greater feedback range
-    //        reso = limit_range(reso, -2.f, 2.f);
-    //    }
-    //    else
-    //    {
-    //        reso = ((subtype & 2) ? -1.0f : 1.0f) * limit_range(reso, 0.f, 1.f);
-    //    }
-    //
-    //    float c[n_cm_coeffs];
-    //    memset(c, 0, sizeof(float) * n_cm_coeffs);
-    //    c[0] = dtime;
-    //    c[1] = reso;
-    //    c[2] = (subtype & 1) ? 0.0f : 0.5f; // combmix
-    //    c[3] = 1.f - c[2];
-    //    FromDirect(c);
+    int subtype = isubtype & QFUSubtypeMasks::UNMASK_SUBTYPE;
+    bool extended = isubtype & QFUSubtypeMasks::EXTENDED_COMB;
+
+    int comb_length = extended ? MAX_FB_COMB_EXTENDED : MAX_FB_COMB;
+
+    float dtime = (1.f / 440.f) * provider->note_to_pitch_inv_ignoring_tuning(freq);
+    dtime = dtime * sampleRate;
+
+    // See comment in SurgeStorage and issue #3248
+    if (!provider->patch.correctlyTuneCombFilter)
+    {
+        dtime -= SincTable::FIRoffset;
+    }
+
+    dtime =
+        limit_range(dtime, (float)SincTable::FIRipol_N, (float)comb_length - SincTable::FIRipol_N);
+    if (extended)
+    {
+        // extended use is not from the filter bank so allow greater feedback range
+        reso = limit_range(reso, -2.f, 2.f);
+    }
+    else
+    {
+        reso = ((subtype & 2) ? -1.0f : 1.0f) * limit_range(reso, 0.f, 1.f);
+    }
+
+    float c[n_cm_coeffs];
+    memset(c, 0, sizeof(float) * n_cm_coeffs);
+    c[0] = dtime;
+    c[1] = reso;
+    c[2] = (subtype & 1) ? 0.0f : 0.5f; // combmix
+    c[3] = 1.f - c[2];
+    FromDirect(c);
 }
 
 template <typename TuningProvider>

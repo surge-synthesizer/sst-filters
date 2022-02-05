@@ -125,7 +125,6 @@ TEST_CASE("Basic Filters")
 
     SECTION("LP_MOOG")
     {
-        // @TODO: according to FilterConfigurations, lpmoog has 4 sub-types... but what are they??
         runTest({FilterType::fut_lpmoog,
                  FilterSubType::st_lpmoog_6dB,
                  {-8.26648f, -4.43419f, 4.17682f, -6.93047f, -25.634f}});
@@ -148,5 +147,24 @@ TEST_CASE("Basic Filters")
         runTest({FilterType::fut_SNH,
                  FilterSubType{},
                  {-6.75229f, -6.85575f, -6.83264f, -6.83216f, -5.31153f}});
+    }
+
+    SECTION("COMB")
+    {
+        runTest({FilterType::fut_comb_pos,
+                 static_cast<FilterSubType>(0),
+                 {-6.08834f, -12.7629f, -2.50065f, -9.49002f, -9.36519f}});
+
+        runTest({FilterType::fut_comb_pos,
+                 static_cast<FilterSubType>(1),
+                 {-3.68299f, -5.76509f, -1.83625f, -4.67708f, -8.57929f}});
+
+        runTest({FilterType::fut_comb_neg,
+                 static_cast<FilterSubType>(0),
+                 {-4.93593f, -12.857f, -4.65075f, -5.64365f, -7.50512f}});
+
+        runTest({FilterType::fut_comb_neg,
+                 static_cast<FilterSubType>(1),
+                 {-5.81567f, -2.17117f, -6.19879f, -4.28433f, -8.0815f}});
     }
 }

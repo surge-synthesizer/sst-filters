@@ -52,18 +52,18 @@ TEST_CASE("OBXD Filter")
     {
         runTest({FilterType::fut_obxd_4pole,
                  static_cast<FilterSubType>(0),
-                 {-33.7138f, -33.5791f, -33.3525f, -33.4417f, -33.4612f}});
+                 {-10.3241f, -6.48075f, -0.536573f, -10.2352f, -30.8738f}});
 
         runTest({FilterType::fut_obxd_4pole,
                  static_cast<FilterSubType>(1),
-                 {-33.8773f, -34.386f, -36.3865f, -41.315f, -61.9396f}});
+                 {-10.4795f, -7.32661f, -3.53102f, -18.0087f, -53.1575f}});
 
         runTest({FilterType::fut_obxd_4pole,
                  static_cast<FilterSubType>(2),
-                 {-34.0529f, -35.1998f, -39.3673f, -49.108f, -84.5386f}});
+                 {-10.6428f, -8.15069f, -6.50921f, -25.4671f, -56.6591f}});
 
         runTest({FilterType::fut_obxd_4pole,
                  static_cast<FilterSubType>(3),
-                 {-28.1586f, -29.7779f, -35.3439f, -47.2227f, -80.2969f}});
+                 {-4.7424f, -2.72974f, -2.51195f, -23.2202f, -51.9861f}});
     }
 }
