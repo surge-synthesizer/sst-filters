@@ -3,6 +3,7 @@ target_include_directories(sst-filters-tests PRIVATE .)
 target_link_libraries(sst-filters-tests PRIVATE ${PROJECT_NAME})
 target_sources(sst-filters-tests
     PRIVATE
+        BasicFiltersTest.cpp
         CutoffWarpTest.cpp
         DiodeLadderTest.cpp
         K35FilterTest.cpp
@@ -10,7 +11,6 @@ target_sources(sst-filters-tests
         ResonanceWarpTest.cpp
         TriPoleFilterTest.cpp
         VintageLaddersTest.cpp
-        BasicFiltersTest.cpp
         tests.cpp
 )
 
