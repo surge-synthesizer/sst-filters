@@ -23,7 +23,7 @@ static float clampedFrequency(float pitch, float sampleRate, TuningProvider *pro
 {
     auto freq =
         provider->note_to_pitch_ignoring_tuning(pitch + 69) * (float)TuningProvider::MIDI_0_FREQ;
-    freq = limit_range(freq, 5.f, sampleRate * 0.3f);
+    freq = utilities::limit_range(freq, 5.f, sampleRate * 0.3f);
     return freq;
 }
 
@@ -54,12 +54,12 @@ static inline __m128 doNLFilter(const __m128 input, const __m128 a1, const __m12
     switch (sat)
     {
     case SAT_TANH:
-        z1 = Surge::DSP::fasttanhSSEclamped(z1);
-        z2 = Surge::DSP::fasttanhSSEclamped(z2);
+        z1 = utilities::DSP::fasttanhSSEclamped(z1);
+        z2 = utilities::DSP::fasttanhSSEclamped(z2);
         break;
     default:
-        z1 = softclip_ps(z1); // note, this is a bit different to Jatin's softclipper
-        z2 = softclip_ps(z2);
+        z1 = utilities::softclip_ps(z1); // note, this is a bit different to Jatin's softclipper
+        z2 = utilities::softclip_ps(z2);
         break;
     }
     return out;
@@ -93,14 +93,14 @@ void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, float freq, fl
 {
     float C[n_cm_coeffs];
 
-    reso = limit_range(reso, 0.f, 1.f);
+    reso = utilities::limit_range(reso, 0.f, 1.f);
 
     const float q = ((reso * reso * reso) * 18.0f + 0.1f);
 
     const float wc = 2.0f * (float)M_PI * clampedFrequency(freq, sampleRate, provider) / sampleRate;
 
-    const float wsin = Surge::DSP::fastsin(wc);
-    const float wcos = Surge::DSP::fastcos(wc);
+    const float wsin = utilities::DSP::fastsin(wc);
+    const float wcos = utilities::DSP::fastcos(wc);
     const float alpha = wsin / (2.0f * q);
 
     // note we actually calculate the reciprocal of a0 because we only use a0 to normalize the

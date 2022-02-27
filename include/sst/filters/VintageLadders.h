@@ -27,7 +27,7 @@ inline float clampedFrequency(float pitch, float sampleRate, TuningProvider *pro
 {
     auto freq =
         provider->note_to_pitch_ignoring_tuning(pitch + 69.0f) * (float)TuningProvider::MIDI_0_FREQ;
-    freq = limit_range(freq, 5.f, sampleRate * 0.3f);
+    freq = utilities::limit_range(freq, 5.f, sampleRate * 0.3f);
     return freq;
 }
 } // namespace Common
@@ -116,7 +116,7 @@ inline void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, float f
 
     lc[rkm_cutoff] = pitch * 2.0f * (float)M_PI;
     lc[rkm_reso] =
-        limit_range(reso, 0.f, 1.f) *
+        utilities::limit_range(reso, 0.f, 1.f) *
         4.5f; // code says 0-10 is value but above 4 or so it's just out of tune self-oscillation
     lc[rkm_gComp] = 0.0;
 
@@ -321,7 +321,8 @@ inline void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, float f
     float co = std::max(cutoff - sampleRate * 0.33333f, 0.0f) * 0.1f * sampleRateInv;
     float gctrim = applyGainCompensation ? 0.05f : 0.0f;
 
-    reso = limit_range(limit_range(reso, 0.0f, 0.9925f), 0.0f, 0.994f - co - gctrim);
+    reso = utilities::limit_range(utilities::limit_range(reso, 0.0f, 0.9925f), 0.0f,
+                                  0.994f - co - gctrim);
     lC[h_res] = reso;
     lC[h_fc] = cutoff * sampleRateInv;
 
@@ -365,7 +366,7 @@ inline __m128 process(QuadFilterUnitState *__restrict f, __m128 in)
         auto acr = A(M(mneg39364, fc2), A(M(m18409, fc), m09968));
 
         // auto tune = (1.0 - exp(-((2 * M_PI) * f * fcr))) / thermal;
-        auto tune = M(S(one, Surge::DSP::fastexpSSE(M(neg2pi, M(fr, fcr)))), oneoverthermal);
+        auto tune = M(S(one, utilities::DSP::fastexpSSE(M(neg2pi, M(fr, fcr)))), oneoverthermal);
         // auto resquad = 4.0 * res * arc;
         auto resquad = M(four, M(res, acr));
 
@@ -380,8 +381,8 @@ inline __m128 process(QuadFilterUnitState *__restrict f, __m128 in)
 
         // delay[0] = stage[0] = delay[0] + tune * (tanh(input * thermal) - stageTanh[0]);
         f->R[h_stage + 0] =
-            A(f->R[h_delay + 0],
-              M(tune, S(Surge::DSP::fasttanhSSEclamped(M(input, thermal)), f->R[h_stageTanh + 0])));
+            A(f->R[h_delay + 0], M(tune, S(utilities::DSP::fasttanhSSEclamped(M(input, thermal)),
+                                           f->R[h_stageTanh + 0])));
         f->R[h_delay + 0] = f->R[h_stage + 0];
 
         for (int k = 1; k < 4; k++)
@@ -391,13 +392,12 @@ inline __m128 process(QuadFilterUnitState *__restrict f, __m128 in)
 
             // stage[k] = delay[k] + tune * ((stageTanh[k-1] = tanh(input * thermal)) - (k != 3 ?
             // stageTanh[k] : tanh(delay[k] * thermal)));
-            f->R[h_stageTanh + k - 1] = Surge::DSP::fasttanhSSEclamped(M(input, thermal));
+            f->R[h_stageTanh + k - 1] = utilities::DSP::fasttanhSSEclamped(M(input, thermal));
             f->R[h_stage + k] =
-                A(f->R[h_delay + k],
-                  M(tune,
-                    S(f->R[h_stageTanh + k - 1],
-                      (k != 3 ? f->R[h_stageTanh + k]
-                              : Surge::DSP::fasttanhSSEclamped(M(f->R[h_delay + k], thermal))))));
+                A(f->R[h_delay + k], M(tune, S(f->R[h_stageTanh + k - 1],
+                                               (k != 3 ? f->R[h_stageTanh + k]
+                                                       : utilities::DSP::fasttanhSSEclamped(
+                                                             M(f->R[h_delay + k], thermal))))));
 
             // delay[k] = stage[k];
             f->R[h_delay + k] = f->R[h_stage + k];

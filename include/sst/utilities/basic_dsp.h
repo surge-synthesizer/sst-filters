@@ -3,6 +3,9 @@
 
 #include "shared.h"
 
+namespace sst::filters::utilities
+{
+
 template <typename T> inline T limit_range(const T &x, const T &low, const T &high)
 {
     return std::clamp(x, low, high);
@@ -248,5 +251,7 @@ inline float megapanR(float pos)
         pos = -2.f;
     return (1 + 0.75f * pos - 0.25f * pos * pos);
 }
+
+} // namespace sst::filters::utilities
 
 #endif // SST_FILTERS_BASIC_DSP_H

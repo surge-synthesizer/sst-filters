@@ -12,6 +12,7 @@
 namespace TestUtils
 {
 using sst::filters::FilterType, sst::filters::FilterSubType;
+namespace utilities = sst::filters::utilities;
 
 constexpr bool printRMSs = false; // change this to true when generating test data
 
@@ -51,14 +52,14 @@ struct TestConfig
     RMSSet expRmsDBs;
 };
 
-static float delayBufferData[4][MAX_FB_COMB + SincTable::FIRipol_N] {};
+static float delayBufferData[4][utilities::MAX_FB_COMB + utilities::SincTable::FIRipol_N] {};
 
 auto runTest = [] (const TestConfig& testConfig)
 {
     auto filterState = sst::filters::QuadFilterUnitState{};
     for (int i = 0; i < 4; ++i)
     {
-        std::fill (delayBufferData[i], delayBufferData[i] + MAX_FB_COMB + SincTable::FIRipol_N, 0.0f);
+        std::fill (delayBufferData[i], delayBufferData[i] + utilities::MAX_FB_COMB + utilities::SincTable::FIRipol_N, 0.0f);
         filterState.DB[i] = delayBufferData[i];
         filterState.active[i] = (int) 0xffffffff;
         filterState.WP[i] = 0;
