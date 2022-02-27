@@ -12,8 +12,7 @@ struct BasicTuningProvider
 
     enum TuningMode
     {
-        RETUNE_NONE,
-        RETUNE_ALL,
+        RETUNE_ALL = 0,
     };
 
     TuningMode tuningApplicationMode = RETUNE_ALL;
