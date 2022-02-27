@@ -13,7 +13,7 @@
 ** https://github.com/ddiakopoulos/MoogLadders/blob/master/src/RKSimulationModel.h
 **
 ** Modifications include
-** 1. Modifying to make Surge compatible with state managenemt
+** 1. Modifying to make Surge compatible with state management
 ** 2. SSE and so on
 ** 3. Model specific changes
 */
