@@ -80,7 +80,7 @@ void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, float freq, fl
                       float sampleRate, float sampleRateInv, TuningProvider *provider)
 {
     const float wd = clampedFrequency(freq, sampleRate, provider) * 2.0f * (float)M_PI;
-    const float wa = (2.0f * sampleRate) * Surge::DSP::fasttan(wd * sampleRateInv * 0.5f);
+    const float wa = (2.0f * sampleRate) * utilities::DSP::fasttan(wd * sampleRateInv * 0.5f);
     const float g = wa * sampleRateInv * 0.5f;
 
     const float G4 = 0.5f * g / (1.0f + g);

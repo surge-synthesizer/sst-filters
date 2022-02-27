@@ -357,7 +357,7 @@ inline __m128 IIR12CFLquad(QuadFilterUnitState *__restrict f, __m128 in)
     const __m128 m1 = _mm_set1_ps(1.0f);
     const __m128 m2 = _mm_set1_ps(2.0f);
 
-    __m128 m = _mm_rsqrt_ps(_mm_max_ps(m1, _mm_mul_ps(m2, _mm_and_ps(y, m128_mask_absval))));
+    __m128 m = _mm_rsqrt_ps(_mm_max_ps(m1, _mm_mul_ps(m2, _mm_and_ps(y, utilities::m128_mask_absval))));
     f->R[2] = _mm_add_ps(_mm_mul_ps(f->R[2], m099), _mm_mul_ps(m, m001));
 
     return y;
@@ -442,7 +442,7 @@ inline __m128 IIR24CFLquad(QuadFilterUnitState *__restrict f, __m128 in)
     const __m128 m1 = _mm_set1_ps(1.0f);
     const __m128 m2 = _mm_set1_ps(2.0f);
 
-    __m128 m = _mm_rsqrt_ps(_mm_max_ps(m1, _mm_mul_ps(m2, _mm_and_ps(y2, m128_mask_absval))));
+    __m128 m = _mm_rsqrt_ps(_mm_max_ps(m1, _mm_mul_ps(m2, _mm_and_ps(y2, utilities::m128_mask_absval))));
     f->R[2] = _mm_add_ps(_mm_mul_ps(f->R[2], m099), _mm_mul_ps(m, m001));
 
     return y2;
@@ -491,7 +491,7 @@ inline __m128 LPMOOGquad(QuadFilterUnitState *__restrict f, __m128 in)
     f->C[1] = _mm_add_ps(f->C[1], f->dC[1]);
     f->C[2] = _mm_add_ps(f->C[2], f->dC[2]);
 
-    f->R[0] = softclip8_ps(_mm_add_ps(
+    f->R[0] = utilities::softclip8_ps(_mm_add_ps(
         f->R[0],
         _mm_mul_ps(f->C[1],
                    _mm_sub_ps(_mm_sub_ps(_mm_mul_ps(in, f->C[0]),
@@ -516,7 +516,7 @@ inline __m128 SNHquad(QuadFilterUnitState *__restrict f, __m128 in)
 
     f->R[1] =
         _mm_or_ps(_mm_andnot_ps(mask, f->R[1]),
-                  _mm_and_ps(mask, softclip_ps(_mm_sub_ps(in, _mm_mul_ps(f->C[1], f->R[1])))));
+                  _mm_and_ps(mask, utilities::softclip_ps(_mm_sub_ps(in, _mm_mul_ps(f->C[1], f->R[1])))));
 
     const __m128 m1 = _mm_set1_ps(-1.f);
     f->R[0] = _mm_add_ps(f->R[0], _mm_and_ps(m1, mask));
@@ -527,7 +527,7 @@ inline __m128 SNHquad(QuadFilterUnitState *__restrict f, __m128 in)
  template <int COMB_SIZE> // COMB_SIZE must be a power of 2
 __m128 COMBquad_SSE2(QuadFilterUnitState *__restrict f, __m128 in)
 {
-    static_assert(SincTable::FIRipol_M == 256); // changing the constant requires updating the code below
+    static_assert(utilities::SincTable::FIRipol_M == 256); // changing the constant requires updating the code below
     const __m128 m256 = _mm_set1_ps(256.f);
     const __m128i m0xff = _mm_set1_epi32(0xff);
 
@@ -548,28 +548,28 @@ __m128 COMBquad_SSE2(QuadFilterUnitState *__restrict f, __m128 in)
     {
         if (f->active[i])
         {
-            int RP = (f->WP[i] - DTi[i] - SincTable::FIRoffset) & (COMB_SIZE - 1);
+            int RP = (f->WP[i] - DTi[i] - utilities::SincTable::FIRoffset) & (COMB_SIZE - 1);
 
             // SINC interpolation (12 samples)
             __m128 a = _mm_loadu_ps(&f->DB[i][RP]);
-            SEi[i] *= (SincTable::FIRipol_N << 1);
-            __m128 b = _mm_load_ps(&globalSincTable.sinctable[SEi[i]]);
+            SEi[i] *= (utilities::SincTable::FIRipol_N << 1);
+            __m128 b = _mm_load_ps(&utilities::globalSincTable.sinctable[SEi[i]]);
             __m128 o = _mm_mul_ps(a, b);
 
             a = _mm_loadu_ps(&f->DB[i][RP + 4]);
-            b = _mm_load_ps(&globalSincTable.sinctable[SEi[i] + 4]);
+            b = _mm_load_ps(&utilities::globalSincTable.sinctable[SEi[i] + 4]);
             o = _mm_add_ps(o, _mm_mul_ps(a, b));
 
             a = _mm_loadu_ps(&f->DB[i][RP + 8]);
-            b = _mm_load_ps(&globalSincTable.sinctable[SEi[i] + 8]);
+            b = _mm_load_ps(&utilities::globalSincTable.sinctable[SEi[i] + 8]);
             o = _mm_add_ps(o, _mm_mul_ps(a, b));
 
-            _mm_store_ss((float *)&DBRead + i, sum_ps_to_ss(o));
+            _mm_store_ss((float *)&DBRead + i, utilities::sum_ps_to_ss(o));
         }
     }
 
     __m128 d = _mm_add_ps(in, _mm_mul_ps(DBRead, f->C[1]));
-    d = softclip_ps(d);
+    d = utilities::softclip_ps(d);
 
     for (int i = 0; i < 4; i++)
     {
@@ -578,7 +578,7 @@ __m128 COMBquad_SSE2(QuadFilterUnitState *__restrict f, __m128 in)
             // Write to delaybuffer (with "anti-wrapping")
             __m128 t = _mm_load_ss((float *)&d + i);
             _mm_store_ss(&f->DB[i][f->WP[i]], t);
-            if (f->WP[i] < SincTable::FIRipol_N)
+            if (f->WP[i] < utilities::SincTable::FIRipol_N)
                 _mm_store_ss(&f->DB[i][f->WP[i] + COMB_SIZE], t);
 
             // Increment write position

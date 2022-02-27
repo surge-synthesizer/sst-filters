@@ -3,6 +3,9 @@
 
 #include <cmath>
 
+namespace sst::filters::utilities
+{
+
 /** Lookup table for evaluating the Sinc function */
 struct SincTable
 {
@@ -13,9 +16,9 @@ struct SincTable
     static constexpr int FIRipolI16_N = 8;
     static constexpr int FIRoffsetI16 = FIRipolI16_N >> 1;
 
-    float sinctable alignas(16)[(FIRipol_M + 1) * FIRipol_N * 2] {};
-    float sinctable1X alignas(16)[(FIRipol_M + 1) * FIRipol_N] {};
-    short sinctableI16 alignas(16)[(FIRipol_M + 1) * FIRipolI16_N] {};
+    float sinctable alignas(16)[(FIRipol_M + 1) * FIRipol_N * 2]{};
+    float sinctable1X alignas(16)[(FIRipol_M + 1) * FIRipol_N]{};
+    short sinctableI16 alignas(16)[(FIRipol_M + 1) * FIRipolI16_N]{};
 
     static inline double sincf(double x)
     {
@@ -41,7 +44,8 @@ struct SincTable
         {
             for (int i = 0; i < FIRipol_N; i++)
             {
-                double t = -double(i) + double(FIRipol_N / 2.0) + double(j) / double(FIRipol_M) - 1.0;
+                double t =
+                    -double(i) + double(FIRipol_N / 2.0) + double(j) / double(FIRipol_M) - 1.0;
                 double val = (float)(symmetric_blackman(t, FIRipol_N) * cutoff * sincf(cutoff * t));
                 double val1X =
                     (float)(symmetric_blackman(t, FIRipol_N) * cutoff1X * sincf(cutoff1X * t));
@@ -77,5 +81,7 @@ struct SincTable
 
 // TODO: is this safe??
 const static SincTable globalSincTable;
+
+} // namespace sst::filters::utilities
 
 #endif // SST_FILTERS_SINCTABLE_H

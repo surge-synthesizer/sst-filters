@@ -30,6 +30,9 @@
 #include "simde/x86/sse2.h"
 #endif
 
+namespace sst::filters::utilities
+{
+
 #if MAC || LINUX
 #include <strings.h>
 
@@ -38,5 +41,6 @@ static inline int _stricmp(const char *s1, const char *s2) { return strcasecmp(s
 
 constexpr int MAX_FB_COMB = 2048; // must be 2^n
 constexpr int MAX_FB_COMB_EXTENDED = 2048 * 64;
+} // namespace sst::filters::utilities
 
 #endif // SST_FILTERS_GLOBALS_H

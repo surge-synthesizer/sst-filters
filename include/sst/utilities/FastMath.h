@@ -16,9 +16,7 @@
 ** acknowledge it
 */
 
-namespace Surge
-{
-namespace DSP
+namespace sst::filters::utilities::DSP
 {
 
 // JUCE6 Pade approximation of sin valid from -PI to PI with max error of 1e-5 and average error of
@@ -221,5 +219,4 @@ inline __m128 fastexpSSE(__m128 x) noexcept
 #undef F
 }
 
-} // namespace DSP
-} // namespace Surge
+} // namespace sst::filters::utilities::DSP

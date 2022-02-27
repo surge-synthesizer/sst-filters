@@ -72,7 +72,7 @@ void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, float freq, fl
     float C[n_cm_coeffs];
 
     const float wd = clampedFrequency(freq, sampleRate, provider) * 2.0f * (float)M_PI;
-    const float wa = (2.0f * sampleRate) * Surge::DSP::fasttan(wd * sampleRateInv * 0.5f);
+    const float wa = (2.0f * sampleRate) * utilities::DSP::fasttan(wd * sampleRateInv * 0.5f);
     const float g = wa * sampleRateInv * 0.5f;
     const float gp1 = (1.0f + g); // g plus 1
     const float G = g / gp1;
@@ -120,7 +120,7 @@ inline __m128 process_lp(QuadFilterUnitState *__restrict f, __m128 input)
     const __m128 s35 = A(M(f->C[k35_lb], f->R[k35_2z]), M(f->C[k35_hb], f->R[k35_hz]));
     // alpha * (y1 + s35)
     const __m128 u_clean = M(f->C[k35_alpha], A(y1, s35));
-    const __m128 u_driven = Surge::DSP::fasttanhSSEclamped(M(u_clean, f->C[k35_saturation]));
+    const __m128 u_driven = utilities::DSP::fasttanhSSEclamped(M(u_clean, f->C[k35_saturation]));
     const __m128 u =
         A(M(u_clean, f->C[k35_saturation_blend_inv]), M(u_driven, f->C[k35_saturation_blend]));
 
@@ -145,7 +145,7 @@ inline __m128 process_hp(QuadFilterUnitState *__restrict f, __m128 input)
 
     // mk * lpf2(u)
     const __m128 y_clean = M(f->C[k35_k], u);
-    const __m128 y_driven = Surge::DSP::fasttanhSSEclamped(M(y_clean, f->C[k35_saturation]));
+    const __m128 y_driven = utilities::DSP::fasttanhSSEclamped(M(y_clean, f->C[k35_saturation]));
     const __m128 y =
         A(M(y_clean, f->C[k35_saturation_blend_inv]), M(y_driven, f->C[k35_saturation_blend]));
 

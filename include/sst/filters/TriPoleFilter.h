@@ -258,10 +258,11 @@ static inline __m128 res_func_ps(__m128 x)
 {
     x = M(F(mult), x);
 
-    auto x_abs = abs_ps(x);
+    auto x_abs = utilities::abs_ps(x);
     auto x_less_than = _mm_cmplt_ps(x_abs, F(max_val));
 
-    auto y = A(N(Surge::DSP::fastexpSSE(M(F(beta_exp), N(abs_ps(A(x, F(c))))))), F(bias));
+    auto y =
+        A(N(utilities::DSP::fastexpSSE(M(F(beta_exp), N(utilities::abs_ps(A(x, F(c))))))), F(bias));
     y = M(sign_ps(x), M(y, F(oneOverMult)));
 
     return _mm_or_ps(_mm_and_ps(x_less_than, M(x, F(oneOverMult))), _mm_andnot_ps(x_less_than, y));
@@ -271,10 +272,11 @@ static inline __m128 res_deriv_ps(__m128 x)
 {
     x = M(F(mult), x);
 
-    auto x_abs = abs_ps(x);
+    auto x_abs = utilities::abs_ps(x);
     auto x_less_than = _mm_cmplt_ps(x_abs, F(max_val));
 
-    auto y = A(Surge::DSP::fastexpSSE(M(F(beta_exp), N(abs_ps(A(x, F(c)))))), F(betaExpOverMult));
+    auto y = A(utilities::DSP::fastexpSSE(M(F(beta_exp), N(utilities::abs_ps(A(x, F(c)))))),
+               F(betaExpOverMult));
 
     return _mm_or_ps(_mm_and_ps(x_less_than, F(one)), _mm_andnot_ps(x_less_than, y));
 }
@@ -329,7 +331,7 @@ void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, float freq, fl
     C[thr_a2] = 1.0f / (1.0f + C[thr_b2]);
 
     // resonance
-    reso = limit_range(reso, 0.f, 1.f);
+    reso = utilities::limit_range(reso, 0.f, 1.f);
     C[thr_k] = -(std::pow(10.0f, res_factor_db * reso) + 1.0f);
 
     cm->FromDirect(C);

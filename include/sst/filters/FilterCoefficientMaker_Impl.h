@@ -44,13 +44,6 @@ void FilterCoefficientMaker<TuningProvider>::updateState(StateType &state)
     state.sampleRateInv = sampleRateInv;
 }
 
-// template <typename TuningProvider>
-// void FilterCoefficientMaker<TuningProvider>::MakeCoeffs(float Freq, float Reso, FilterType Type,
-//                                                         int SubType)
-//{
-//     MakeCoeffs(Freq, Reso, Type, SubType, nullptr, false);
-// }
-
 template <typename TuningProvider>
 void FilterCoefficientMaker<TuningProvider>::MakeCoeffs(float Freq, float Reso, FilterType Type,
                                                         FilterSubType SubType,
@@ -236,22 +229,27 @@ inline double Map2PoleResonance(double reso, double freq, int subtype)
     {
     case st_Medium:
         reso *= max(0.0, 1.0 - max(0.0, (freq - 58) * 0.05));
-        return (0.99 - 1.0 * limit_range((double)(1 - (1 - reso) * (1 - reso)), 0.0, 1.0));
+        return (0.99 -
+                1.0 * utilities::limit_range((double)(1 - (1 - reso) * (1 - reso)), 0.0, 1.0));
     case st_Rough:
         reso *= max(0.0, 1.0 - max(0.0, (freq - 58) * 0.05));
-        return (1.0 - 1.05 * limit_range((double)(1 - (1 - reso) * (1 - reso)), 0.001, 1.0));
+        return (1.0 -
+                1.05 * utilities::limit_range((double)(1 - (1 - reso) * (1 - reso)), 0.001, 1.0));
     default:
     case st_Smooth:
-        return (2.5 - 2.45 * limit_range((double)(1 - (1 - reso) * (1 - reso)), 0.0, 1.0));
+        return (2.5 -
+                2.45 * utilities::limit_range((double)(1 - (1 - reso) * (1 - reso)), 0.0, 1.0));
     }
 }
 
 inline double Map2PoleResonance_noboost(double reso, double /*freq*/, int subtype)
 {
     if (subtype == st_Rough)
-        return (1.0 - 0.99 * limit_range((double)(1 - (1 - reso) * (1 - reso)), 0.001, 1.0));
+        return (1.0 -
+                0.99 * utilities::limit_range((double)(1 - (1 - reso) * (1 - reso)), 0.001, 1.0));
     else
-        return (0.99 - 0.98 * limit_range((double)(1 - (1 - reso) * (1 - reso)), 0.0, 1.0));
+        return (0.99 -
+                0.98 * utilities::limit_range((double)(1 - (1 - reso) * (1 - reso)), 0.0, 1.0));
 }
 
 inline double Map4PoleResonance(double reso, double freq, int subtype)
@@ -261,13 +259,13 @@ inline double Map4PoleResonance(double reso, double freq, int subtype)
     {
     case st_Medium:
         reso *= max(0.0, 1.0 - max(0.0, (freq - 58) * 0.05));
-        return 0.99 - 0.9949 * limit_range((double)reso, 0.0, 1.0);
+        return 0.99 - 0.9949 * utilities::limit_range((double)reso, 0.0, 1.0);
     case st_Rough:
         reso *= max(0.0, 1.0 - max(0.0, (freq - 58) * 0.05));
-        return (1.0 - 1.05 * limit_range((double)reso, 0.001, 1.0));
+        return (1.0 - 1.05 * utilities::limit_range((double)reso, 0.001, 1.0));
     default:
     case st_Smooth:
-        return (2.5 - 2.3 * limit_range((double)reso, 0.0, 1.0));
+        return (2.5 - 2.3 * utilities::limit_range((double)reso, 0.0, 1.0));
     }
 }
 
@@ -309,7 +307,7 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_SVF(float Freq, float Reso, b
     double f = 440.f * provider->note_to_pitch_ignoring_tuning(Freq);
     double F1 = 2.0 * sin(M_PI * min(0.11, f * (0.5 * sampleRateInv))); // 2x oversampling
 
-    Reso = sqrt(limit_range(Reso, 0.f, 1.f));
+    Reso = sqrt(utilities::limit_range(Reso, 0.f, 1.f));
 
     double overshoot = FourPole ? 0.1 : 0.15;
     double Q1 = 2.0 - Reso * (2.0 + overshoot) + F1 * F1 * overshoot * 0.9;
@@ -523,11 +521,13 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_Notch(float Freq, float Reso,
 
     if (SubType == st_NotchMild)
     {
-        Q2inv = (1.00 - 0.99 * limit_range((double)(1 - (1 - Reso) * (1 - Reso)), 0.0, 1.0));
+        Q2inv =
+            (1.00 - 0.99 * utilities::limit_range((double)(1 - (1 - Reso) * (1 - Reso)), 0.0, 1.0));
     }
     else
     {
-        Q2inv = (2.5 - 2.49 * limit_range((double)(1 - (1 - Reso) * (1 - Reso)), 0.0, 1.0));
+        Q2inv =
+            (2.5 - 2.49 * utilities::limit_range((double)(1 - (1 - Reso) * (1 - Reso)), 0.0, 1.0));
     }
 
     double alpha = sinu * Q2inv;
@@ -547,7 +547,7 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_APF(float Freq, float Reso, i
     boundFreq(Freq);
     provider->note_to_omega_ignoring_tuning(Freq, sinu, cosi, sampleRate);
 
-    Q2inv = (2.5 - 2.49 * limit_range((double)(1 - (1 - Reso) * (1 - Reso)), 0.0, 1.0));
+    Q2inv = (2.5 - 2.49 * utilities::limit_range((double)(1 - (1 - Reso) * (1 - Reso)), 0.0, 1.0));
 
     double alpha = sinu * Q2inv;
 
@@ -560,12 +560,13 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_APF(float Freq, float Reso, i
 template <typename TuningProvider>
 void FilterCoefficientMaker<TuningProvider>::Coeff_LP4L(float freq, float reso, int /*subtype*/)
 {
-    double gg = limit_range(
+    double gg = utilities::limit_range(
         ((double)440 * provider->note_to_pitch_ignoring_tuning(freq) * (double)sampleRateInv), 0.0,
         0.187); // gg
 
     float t_b1 = 1.f - (float)exp(-2 * M_PI * gg);
-    float q = std::min(2.15f * limit_range(reso, 0.f, 1.f), 0.5f / (t_b1 * t_b1 * t_b1 * t_b1));
+    float q = std::min(2.15f * utilities::limit_range(reso, 0.f, 1.f),
+                       0.5f / (t_b1 * t_b1 * t_b1 * t_b1));
 
     float c[n_cm_coeffs]{};
     memset(c, 0, sizeof(float) * n_cm_coeffs);
@@ -590,19 +591,19 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_COMB(float freq, float reso, 
     // See comment in SurgeStorage and issue #3248
     if (!provider->patch.correctlyTuneCombFilter)
     {
-        dtime -= SincTable::FIRoffset;
+        dtime -= utilities::SincTable::FIRoffset;
     }
 
-    dtime =
-        limit_range(dtime, (float)SincTable::FIRipol_N, (float)comb_length - SincTable::FIRipol_N);
+    dtime = utilities::limit_range(dtime, (float)utilities::SincTable::FIRipol_N,
+                                   (float)comb_length - utilities::SincTable::FIRipol_N);
     if (extended)
     {
         // extended use is not from the filter bank so allow greater feedback range
-        reso = limit_range(reso, -2.f, 2.f);
+        reso = utilities::limit_range(reso, -2.f, 2.f);
     }
     else
     {
-        reso = ((subtype & 2) ? -1.0f : 1.0f) * limit_range(reso, 0.f, 1.f);
+        reso = ((subtype & 2) ? -1.0f : 1.0f) * utilities::limit_range(reso, 0.f, 1.f);
     }
 
     float c[n_cm_coeffs];

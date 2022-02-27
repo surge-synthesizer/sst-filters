@@ -84,13 +84,13 @@ static inline __m128 doNLFilter(const __m128 input, const __m128 a1, const __m12
     switch (sat)
     {
     case SAT_SOFT:
-        nf = softclip_ps(out); // note, this is a bit different to Jatin's softclipper
+        nf = utilities::softclip_ps(out); // note, this is a bit different to Jatin's softclipper
         break;
     case SAT_OJD:
         nf = ojd_waveshaper_ps(out);
         break;
     default: // SAT_TANH; the removed SAT_SINE and others are also caught here
-        nf = Surge::DSP::fasttanhSSEclamped(out);
+        nf = utilities::DSP::fasttanhSSEclamped(out);
         break;
     }
 
@@ -130,15 +130,15 @@ void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, float freq, fl
 {
     float C[n_cm_coeffs];
 
-    reso = limit_range(reso, 0.f, 1.f);
+    reso = utilities::limit_range(reso, 0.f, 1.f);
 
     const float q = ((reso * reso * reso) * 18.0f + 0.1f);
 
     const float normalisedFreq = 2.0f * clampedFrequency(freq, sampleRate, provider) / sampleRate;
     const float wc = (float)M_PI * normalisedFreq;
 
-    const float wsin = Surge::DSP::fastsin(wc);
-    const float wcos = Surge::DSP::fastcos(wc);
+    const float wsin = utilities::DSP::fastsin(wc);
+    const float wcos = utilities::DSP::fastcos(wc);
     const float alpha = wsin / (2.0f * q);
 
     // note we actually calculate the reciprocal of a0 because we only use a0 to normalize the
