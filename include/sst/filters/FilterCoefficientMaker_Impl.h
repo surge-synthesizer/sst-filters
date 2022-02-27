@@ -589,7 +589,7 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_COMB(float freq, float reso, 
     dtime = dtime * sampleRate;
 
     // See comment in SurgeStorage and issue #3248
-    if (!provider->patch.correctlyTuneCombFilter)
+    if (!provider->_patch->correctlyTuneCombFilter)
     {
         dtime -= utilities::SincTable::FIRoffset;
     }
