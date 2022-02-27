@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <memory>
 
 namespace sst::filters::detail
 {
