@@ -709,11 +709,11 @@ inline FilterUnitQFPtr GetQFPtrFilterUnit(FilterType type, FilterSubType subtype
     case fut_comb_neg:
         if (subtype & QFUSubtypeMasks::EXTENDED_COMB)
         {
-            return COMBquad_SSE2<MAX_FB_COMB_EXTENDED>;
+            return COMBquad_SSE2<utilities::MAX_FB_COMB_EXTENDED>;
         }
         else
         {
-            return COMBquad_SSE2<MAX_FB_COMB>;
+            return COMBquad_SSE2<utilities::MAX_FB_COMB>;
         }
     case fut_vintageladder:
         switch (subtype)

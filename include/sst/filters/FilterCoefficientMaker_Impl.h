@@ -583,7 +583,7 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_COMB(float freq, float reso, 
     int subtype = isubtype & QFUSubtypeMasks::UNMASK_SUBTYPE;
     bool extended = isubtype & QFUSubtypeMasks::EXTENDED_COMB;
 
-    int comb_length = extended ? MAX_FB_COMB_EXTENDED : MAX_FB_COMB;
+    int comb_length = extended ? utilities::MAX_FB_COMB_EXTENDED : utilities::MAX_FB_COMB;
 
     float dtime = (1.f / 440.f) * provider->note_to_pitch_inv_ignoring_tuning(freq);
     dtime = dtime * sampleRate;

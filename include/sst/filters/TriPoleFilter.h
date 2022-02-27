@@ -47,7 +47,7 @@ static float clampedFrequency(float pitch, float sampleRate, TuningProvider *pro
 {
     auto freq =
         provider->note_to_pitch_ignoring_tuning(pitch + 69) * (float)TuningProvider::MIDI_0_FREQ;
-    freq = limit_range(freq, 5.f, sampleRate * 0.3f);
+    freq = utilities::limit_range(freq, 5.f, sampleRate * 0.3f);
     return freq;
 }
 
