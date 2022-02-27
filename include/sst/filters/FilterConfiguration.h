@@ -244,6 +244,7 @@ const int fut_subcount[num_filter_types] = {
     12, // fut_tripole
 };
 
+/** Sub-types for each filter are defined here */
 enum FilterSubType
 {
     st_SVF = 0,

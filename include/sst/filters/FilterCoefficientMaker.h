@@ -29,9 +29,6 @@ template <typename TuningProvider = detail::BasicTuningProvider> class FilterCoe
     /** Creates filter coefficients directly from an array */
     void FromDirect(const float (&N)[n_cm_coeffs]);
 
-    //    /** Creates filter coefficients for a given set of filter parameters */
-    //    void MakeCoeffs(float Freq, float Reso, FilterType Type, int SubType);
-
     /** Creates filter coefficients for a given set of filter parameters */
     void MakeCoeffs(float Freq, float Reso, FilterType Type, FilterSubType SubType,
                     TuningProvider *provider, bool tuningAdjusted);

@@ -3,6 +3,7 @@
 
 #include <cmath>
 
+/** Lookup table for evaluating the Sinc function */
 struct SincTable
 {
     static constexpr int FIRipol_M = 256;
@@ -12,9 +13,9 @@ struct SincTable
     static constexpr int FIRipolI16_N = 8;
     static constexpr int FIRoffsetI16 = FIRipolI16_N >> 1;
 
-    float sinctable alignas(16)[(FIRipol_M + 1) * FIRipol_N * 2];
-    float sinctable1X alignas(16)[(FIRipol_M + 1) * FIRipol_N];
-    short sinctableI16 alignas(16)[(FIRipol_M + 1) * FIRipolI16_N];
+    float sinctable alignas(16)[(FIRipol_M + 1) * FIRipol_N * 2] {};
+    float sinctable1X alignas(16)[(FIRipol_M + 1) * FIRipol_N] {};
+    short sinctableI16 alignas(16)[(FIRipol_M + 1) * FIRipolI16_N] {};
 
     static inline double sincf(double x)
     {

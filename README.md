@@ -4,7 +4,7 @@ Work in progress... Come back soon!
 
 ---
 
-List of API changes:
+List of API changes (relative to original Surge code):
 - Pitch: A440 = 69 instead of 0?
 - FilterCoefficientMaker uses a full precision method for db_to_linear, in place of a lookup table
 - LPMoog filter uses sub-type template argument instead of f->WP

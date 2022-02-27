@@ -25,7 +25,7 @@ if (SST_FILTERS_BUILD_TESTS)
     add_subdirectory(tests)
 endif ()
 
-option(SST_FILTERS_BUILD_EXAMPLES "Add targets for building and running sst-filters tests" OFF)
+option(SST_FILTERS_BUILD_EXAMPLES "Add targets for building and running sst-filters examples" OFF)
 if(SST_FILTERS_BUILD_EXAMPLES)
     add_subdirectory(examples)
 endif()

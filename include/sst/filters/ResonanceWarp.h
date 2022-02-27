@@ -164,6 +164,12 @@ inline __m128 process(QuadFilterUnitState *__restrict f, __m128 input)
 
     return input;
 }
+
+#undef F
+#undef M
+#undef A
+#undef S
+
 } // namespace sst::filters::ResonanceWarp
 
 #endif // SST_FILTERS_RESONANCEWARP_H

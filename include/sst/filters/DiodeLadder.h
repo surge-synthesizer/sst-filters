@@ -36,6 +36,7 @@ static inline __m128 getFO(const __m128 beta, const __m128 delta, const __m128 f
     return M(A(M(feedback, delta), z), beta);
 }
 
+// @TODO: it looks like the `beta` and `delta` arguments are not being used?
 static inline __m128 doLpf(const __m128 input, const __m128 alpha, const __m128 beta,
                            const __m128 gamma, const __m128 delta, const __m128 epsilon,
                            const __m128 ma0, const __m128 feedback, const __m128 feedback_output,
@@ -200,6 +201,14 @@ inline __m128 process(QuadFilterUnitState *__restrict f, __m128 input)
         return M(result4, F(1.2f)); // 24dB/oct
     }
 }
+
+#undef F
+#undef M
+#undef D
+#undef A
+#undef S
+#undef reci
+
 } // namespace sst::filters::DiodeLadderFilter
 
 #endif // SST_FILTERS_DIODELADDER_H

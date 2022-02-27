@@ -277,16 +277,9 @@ inline __m128 process_4_pole(QuadFilterUnitState *__restrict f, __m128 sample)
     s1_rcor24 = _mm_load_ps(s1_rcor24_arr);
     f->R[s1] = _mm_mul_ps(s1_rcor24, f->C[rcor24inv]);
 
-    // float y1 = res;
     __m128 y1 = res;
-
-    // float y2 = tptpc(f->R[s2],y1,f->C[g24]);
     __m128 y2 = tptpc(f->R[s2], y1, f->C[g24]);
-
-    // float y3 = tptpc(f->R[s3],y2,f->C[g24]);
     __m128 y3 = tptpc(f->R[s3], y2, f->C[g24]);
-
-    // float y4 = tptpc(f->R[s4],y3,f->C[g24]);
     __m128 y4 = tptpc(f->R[s4], y3, f->C[g24]);
 
     __m128 mc;

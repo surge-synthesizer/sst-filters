@@ -474,6 +474,14 @@ template <FilterSubType subtype> inline __m128 process(QuadFilterUnitState *__re
         return M(F(out_gain), estimate);
     };
 }
+
+#undef F
+#undef M
+#undef D
+#undef A
+#undef S
+#undef N
+
 } // namespace sst::filters::TriPoleFilter
 
 #endif // SST_FILTERS_TRIPOLEFILTER_H
