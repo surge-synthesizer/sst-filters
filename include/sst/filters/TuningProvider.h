@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <memory>
 
 namespace sst::filters::detail
 {
@@ -47,7 +48,8 @@ struct BasicTuningProvider
     struct Patch
     {
         static constexpr bool correctlyTuneCombFilter = true;
-    } patch;
+    };
+    std::unique_ptr<Patch> _patch = std::make_unique<Patch>();
 };
 } // namespace sst::filters::detail
 

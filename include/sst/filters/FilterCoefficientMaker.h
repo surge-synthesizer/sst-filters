@@ -64,9 +64,8 @@ template <typename TuningProvider = detail::BasicTuningProvider> class FilterCoe
     void Coeff_SVF(float Freq, float Reso, bool);
 
     bool FirstRun = true;
-
-    TuningProvider initialProvider;
-    TuningProvider *provider = &initialProvider;
+    
+    TuningProvider *provider = nullptr;
 
     float sampleRate = 48000.0f;
     float sampleRateInv = 1.0f / sampleRate;
