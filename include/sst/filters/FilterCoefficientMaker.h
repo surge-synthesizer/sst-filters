@@ -33,8 +33,13 @@ template <typename TuningProvider = detail::BasicTuningProvider> class FilterCoe
     void MakeCoeffs(float Freq, float Reso, FilterType Type, FilterSubType SubType,
                     TuningProvider *provider, bool tuningAdjusted);
 
-    /** Update the coefficients in a filter state */
-    template <typename StateType> void updateState(StateType &state);
+    /**
+     * Update the coefficients in a filter state.
+     * To update the coefficients for a single channel, pass a channel
+     * index to the channel argument, otherwise the same coefficients
+     * will be used for all channels.
+     */
+    template <typename StateType> void updateState(StateType &state, int channel = -1);
 
     /** Current filter coefficients */
     float C[n_cm_coeffs]{};
@@ -64,7 +69,7 @@ template <typename TuningProvider = detail::BasicTuningProvider> class FilterCoe
     void Coeff_SVF(float Freq, float Reso, bool);
 
     bool FirstRun = true;
-    
+
     TuningProvider *provider = nullptr;
 
     float sampleRate = 48000.0f;

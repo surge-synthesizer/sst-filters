@@ -30,14 +30,30 @@ void FilterCoefficientMaker<TuningProvider>::setSampleRateAndBlockSize(float new
     blockSizeInv = 1.0f / (float)blockSize;
 }
 
+namespace detail
+{
+inline void set1f(__m128 &m, int i, float f) { *((float *)&m + i) = f; }
+} // namespace detail
+
 template <typename TuningProvider>
 template <typename StateType>
-void FilterCoefficientMaker<TuningProvider>::updateState(StateType &state)
+void FilterCoefficientMaker<TuningProvider>::updateState(StateType &state, int channel)
 {
-    for (int i = 0; i < n_cm_coeffs; ++i)
+    if (channel < 0) // set for all channels
     {
-        state.C[i] = _mm_set1_ps(C[i]);
-        state.dC[i] = _mm_set1_ps(dC[i]);
+        for (int i = 0; i < n_cm_coeffs; ++i)
+        {
+            state.C[i] = _mm_set1_ps(C[i]);
+            state.dC[i] = _mm_set1_ps(dC[i]);
+        }
+    }
+    else
+    {
+        for (int i = 0; i < n_cm_coeffs; ++i)
+        {
+            detail::set1f(state.C[i], channel, C[i]);
+            detail::set1f(state.dC[i], channel, dC[i]);
+        }
     }
 
     state.sampleRate = sampleRate;
