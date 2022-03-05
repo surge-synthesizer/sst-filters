@@ -61,15 +61,15 @@ jobs:
         displayName: Build filter_plot_tool
 
   - job: Mac-ARM
-      pool:
-        vmImage: 'macos-10.15'
+    pool:
+      vmImage: 'macos-10.15'
 
-      steps:
-        - checkout: self
-          fetchDepth: 1
+    steps:
+      - checkout: self
+        fetchDepth: 1
 
-        - bash: cmake -Bbuild -GXcode -DSST_FILTERS_BUILD_TESTS=ON -D\"CMAKE_OSX_ARCHITECTURES=arm64\"
-          displayName: Run cmake configure
+      - bash: cmake -Bbuild -GXcode -DSST_FILTERS_BUILD_TESTS=ON -D\"CMAKE_OSX_ARCHITECTURES=arm64\"
+        displayName: Run cmake configure
 
-        - bash: cmake --build build --config Debug --parallel --target sst-filters-tests | xcpretty
-          displayName: Build tests
+      - bash: cmake --build build --config Debug --parallel --target sst-filters-tests | xcpretty
+        displayName: Build tests
