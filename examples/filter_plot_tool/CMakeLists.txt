@@ -19,7 +19,7 @@ target_compile_definitions(filter_plot_tool
 )
 
 target_include_directories(filter_plot_tool PRIVATE ${Python3_INCLUDE_DIRS})
-target_link_libraries(filter_plot_tool PRIVATE Python3::Python sst-filters)
+target_link_libraries(filter_plot_tool PRIVATE Python3::Python sst-filters simde)
 
 add_custom_command(TARGET filter_plot_tool
         POST_BUILD

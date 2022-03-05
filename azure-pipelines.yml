@@ -39,12 +39,19 @@ jobs:
       matrix:
         mac:
           imageName: 'macos-10.15'
+          cmakeArguments: "-DCMAKE_BUILD_TYPE=Release -DSST_FILTERS_BUILD_EXAMPLES=ON"
+          isMac: True
+        mac-arm:
+          imageName: 'macos-10.15'
+          cmakeArguments: "-GXcode -DCMAKE_BUILD_TYPE=Release -DSST_FILTERS_BUILD_EXAMPLES=ON -D\"CMAKE_OSX_ARCHITECTURES=arm64\""
           isMac: True
         win:
           imageName: 'windows-2019'
+          cmakeArguments: "-DCMAKE_BUILD_TYPE=Release -DSST_FILTERS_BUILD_EXAMPLES=ON"
           isWindows: True
         lin:
           imageName: 'ubuntu-20.04'
+          cmakeArguments: "-DCMAKE_BUILD_TYPE=Release -DSST_FILTERS_BUILD_EXAMPLES=ON"
           isLinux: True
 
     pool:
@@ -54,7 +61,7 @@ jobs:
       - checkout: self
         fetchDepth: 1
 
-      - bash: cmake -Bbuild -DCMAKE_BUILD_TYPE=Release -DSST_FILTERS_BUILD_EXAMPLES=ON
+      - bash: cmake -Bbuild $(cmakeArguments)
         displayName: Run cmake configure
 
       - bash: cmake --build build --config Release --target filter_plot_tool

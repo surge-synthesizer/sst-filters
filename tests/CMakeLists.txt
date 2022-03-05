@@ -1,6 +1,6 @@
 add_executable(sst-filters-tests)
 target_include_directories(sst-filters-tests PRIVATE .)
-target_link_libraries(sst-filters-tests PRIVATE ${PROJECT_NAME})
+target_link_libraries(sst-filters-tests PRIVATE ${PROJECT_NAME} simde)
 target_sources(sst-filters-tests
     PRIVATE
         BasicFiltersTest.cpp

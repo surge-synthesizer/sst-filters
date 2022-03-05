@@ -3,6 +3,8 @@ project(sst-filters VERSION 0.5 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 
+include(cmake/CPM.cmake)
+
 add_library(${PROJECT_NAME} INTERFACE)
 target_include_directories(${PROJECT_NAME} INTERFACE include)
 
@@ -20,12 +22,22 @@ else ()
     set(is_toplevel 0)
 endif ()
 option(SST_FILTERS_BUILD_TESTS "Add targets for building and running sst-filters tests" ${is_toplevel})
+option(SST_FILTERS_BUILD_EXAMPLES "Add targets for building and running sst-filters examples" OFF)
+
+if (SST_FILTERS_BUILD_TESTS OR SST_FILTERS_BUILD_EXAMPLES)
+    message(STATUS "Importing SIMDE with CPM")
+    CPMAddPackage(NAME simde
+            GITHUB_REPOSITORY simd-everywhere/simde
+            VERSION 0.7.2
+            )
+    add_library(simde INTERFACE)
+    target_include_directories(simde INTERFACE ${simde_SOURCE_DIR})
+endif ()
 
 if (SST_FILTERS_BUILD_TESTS)
     add_subdirectory(tests)
 endif ()
 
-option(SST_FILTERS_BUILD_EXAMPLES "Add targets for building and running sst-filters examples" OFF)
 if(SST_FILTERS_BUILD_EXAMPLES)
     add_subdirectory(examples)
 endif()
