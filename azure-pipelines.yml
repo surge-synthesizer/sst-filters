@@ -60,7 +60,7 @@ jobs:
       - bash: cmake --build build --config Release --target filter_plot_tool
         displayName: Build filter_plot_tool
 
-  - job: Mac ARM
+  - job: Mac-ARM
       pool:
         vmImage: 'macos-10.15'
 
