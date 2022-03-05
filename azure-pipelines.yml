@@ -61,14 +61,8 @@ jobs:
         displayName: Build filter_plot_tool
 
   - job: Mac ARM
-      strategy:
-        matrix:
-          mac:
-            imageName: 'macos-10.15'
-            isMac: True
-
       pool:
-        vmImage: $(imageName)
+        vmImage: 'macos-10.15'
 
       steps:
         - checkout: self
