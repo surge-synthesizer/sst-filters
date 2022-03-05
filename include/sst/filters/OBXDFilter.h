@@ -21,6 +21,10 @@ or write to the Free Software Foundation, Inc.,
 #include "QuadFilterUnit.h"
 #include "FilterCoefficientMaker.h"
 
+/**
+ * This namespace contains an adaptation of the filter from
+ * https://github.com/reales/OB-Xd/blob/master/Source/Engine/Filter.h
+ */
 namespace sst::filters::OBXDFilter
 {
 enum Poles

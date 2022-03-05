@@ -103,3 +103,6 @@ libs/juce-*
 # A place for BP to store stuff
 ignore/*
 __pycache__
+
+## Doxygen
+doxy-out/

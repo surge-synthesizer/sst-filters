@@ -7,17 +7,16 @@
 #include "QuadFilterUnit.h"
 #include "FilterCoefficientMaker.h"
 
-/*
-** This contains various adaptations of the models found at
-**
-** https://github.com/ddiakopoulos/MoogLadders/blob/master/src/RKSimulationModel.h
-**
-** Modifications include
-** 1. Modifying to make Surge compatible with state management
-** 2. SSE and so on
-** 3. Model specific changes
-*/
-
+/**
+ * This contains various adaptations of the models found at
+ *
+ * https://github.com/ddiakopoulos/MoogLadders/blob/master/src/RKSimulationModel.h
+ *
+ * Modifications include
+ * 1. Modifying to make Surge compatible with state management
+ * 2. SSE and so on
+ * 3. Model specific changes
+ */
 namespace sst::filters::VintageLadder
 {
 namespace Common

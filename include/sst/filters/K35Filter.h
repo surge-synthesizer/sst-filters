@@ -5,12 +5,12 @@
 #include "QuadFilterUnit.h"
 #include "FilterCoefficientMaker.h"
 
+/**
+ * This namespace contains an adaptation of the filter from
+ * https://github.com/TheWaveWarden/odin2/blob/master/Source/audio/Filters/Korg35Filter.cpp
+ */
 namespace sst::filters::K35Filter
 {
-/*
-** This contains an adaptation of the filter from
-** https://github.com/TheWaveWarden/odin2/blob/master/Source/audio/Filters/Korg35Filter.cpp
-*/
 
 template <typename TuningProvider>
 static float clampedFrequency(float pitch, float sampleRate, TuningProvider *provider)

@@ -6,16 +6,15 @@
 #include "sst/utilities/basic_dsp.h"
 #include "sst/utilities/FastMath.h"
 
-/*
-** This contains an adaptation of the filter found at
-** https://ccrma.stanford.edu/~jatin/ComplexNonlinearities/NLBiquad.html
-** with coefficient calculation from
-** https://webaudio.github.io/Audio-EQ-Cookbook/audio-eq-cookbook.html
-**
-** A lot of code here is duplicated from NonlinearFeedback.cpp, perhaps in future they
-** could be merged, but for the time being they're separate and nothing is shared.
-*/
-
+/**
+ * This contains an adaptation of the filter found at
+ * https://ccrma.stanford.edu/~jatin/ComplexNonlinearities/NLBiquad.html
+ * with coefficient calculation from
+ * https://webaudio.github.io/Audio-EQ-Cookbook/audio-eq-cookbook.html
+ *
+ * A lot of code here is duplicated from NonlinearFeedback.cpp, perhaps in future they
+ * could be merged, but for the time being they're separate and nothing is shared.
+ */
 namespace sst::filters::ResonanceWarp
 {
 template <typename TuningProvider>

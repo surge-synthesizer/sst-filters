@@ -5,11 +5,10 @@
 #include "QuadFilterUnit.h"
 #include "FilterCoefficientMaker.h"
 
-/*
-** This contains an adaptation of the filter from
-** https://github.com/TheWaveWarden/odin2/blob/master/Source/audio/Filters/DiodeFilter.cpp
-*/
-
+/**
+ * This namespace contains an adaptation of the filter from
+ * https://github.com/TheWaveWarden/odin2/blob/master/Source/audio/Filters/DiodeFilter.cpp
+ */
 namespace sst::filters::DiodeLadderFilter
 {
 template <typename TuningProvider>

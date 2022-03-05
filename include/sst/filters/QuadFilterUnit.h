@@ -8,25 +8,41 @@ namespace sst
 {
 namespace filters
 {
-
+/** Max number of registers stored in each filter state. */
 constexpr int n_filter_registers = 16;
 
-/*
- * These are defined in QuadFilterUnit_Impl.h
- */
+/** State for a filter unit. */
 struct alignas(16) QuadFilterUnitState
 {
-    __m128 C[n_cm_coeffs], dC[n_cm_coeffs]; // coefficients
-    __m128 R[n_filter_registers];           // registers
-    float *DB[4];                           // delay buffers
-    int active[4]; // 0xffffffff if voice is active, 0 if not (usable as mask)
-    int WP[4];     // comb write position
+    /** Filter coefficients */
+    __m128 C[n_cm_coeffs];
 
-    // methods
+    /** Filter coefficients "delta" */
+    __m128 dC[n_cm_coeffs];
+
+    /** Filter state */
+    __m128 R[n_filter_registers];
+
+    /** Array of pointers to the filter's delay buffers */
+    float *DB[4];
+
+    /** 0xffffffff if voice is active, 0 if not (usable as mask) */
+    int active[4];
+
+    /** Write position for comb filters */
+    int WP[4];
+
+    /** Current sample rate */
     float sampleRate;
+
+    /** Reciprocal of the sample rate */
     float sampleRateInv;
 };
+
+/** Typedef alias for a filter unit processing method. */
 typedef __m128 (*FilterUnitQFPtr)(QuadFilterUnitState *__restrict, __m128 in);
+
+/** Returns a filter unit pointer for a given filter type and sub-type. */
 FilterUnitQFPtr GetQFPtrFilterUnit(FilterType type, FilterSubType subtype);
 
 /*

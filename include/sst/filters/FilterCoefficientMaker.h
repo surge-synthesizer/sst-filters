@@ -12,6 +12,13 @@ namespace filters
 
 constexpr int n_cm_coeffs = 8;
 
+/**
+ * Class for creating filter coefficients.
+ *
+ * @tparam TuningProvider   A 12-TET tuning provider is used by default,
+ *                          but if you would like to support other tunings,
+ *                          you should use a custom tuning provider.
+ */
 template <typename TuningProvider = detail::BasicTuningProvider> class FilterCoefficientMaker
 {
   public:
@@ -23,13 +30,17 @@ template <typename TuningProvider = detail::BasicTuningProvider> class FilterCoe
                                    int newBlockSize); // @NOTE: for Surge, this should be called
                                                       // with samplerate_os, and BLOCK_SIZE_OS
 
-    /** Resets the coefficients to zero, and the tuning provider */
+    /** Resets the coefficients to zero, and the tuning provider to nullptr */
     void Reset();
 
     /** Creates filter coefficients directly from an array */
     void FromDirect(const float (&N)[n_cm_coeffs]);
 
-    /** Creates filter coefficients for a given set of filter parameters */
+    /**
+     * Creates filter coefficients for a given set of filter parameters
+     *
+     * Note that frequency is expected in units of MIDI note number.
+     */
     void MakeCoeffs(float Freq, float Reso, FilterType Type, FilterSubType SubType,
                     TuningProvider *provider, bool tuningAdjusted);
 

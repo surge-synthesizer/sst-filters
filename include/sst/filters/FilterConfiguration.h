@@ -6,40 +6,40 @@ namespace sst::filters
 /** These are the filter types we have to choose from! */
 enum FilterType
 {
-    fut_none = 0,
-    fut_lp12,
-    fut_lp24,
-    fut_lpmoog,
-    fut_hp12,
-    fut_hp24,
-    fut_bp12,    // ADJ
-    fut_notch12, // ADH
-    fut_comb_pos,
-    fut_SNH,
-    fut_vintageladder,
-    fut_obxd_2pole_lp, // ADJ
-    fut_obxd_4pole,
-    fut_k35_lp,
-    fut_k35_hp,
-    fut_diode,
-    fut_cutoffwarp_lp,
-    fut_cutoffwarp_hp,
-    fut_cutoffwarp_n,
-    fut_cutoffwarp_bp,
-    fut_obxd_2pole_hp,
-    fut_obxd_2pole_n,
-    fut_obxd_2pole_bp,
-    fut_bp24,
-    fut_notch24,
-    fut_comb_neg,
-    fut_apf,
-    fut_cutoffwarp_ap,
-    fut_resonancewarp_lp,
-    fut_resonancewarp_hp,
-    fut_resonancewarp_n,
-    fut_resonancewarp_bp,
-    fut_resonancewarp_ap,
-    fut_tripole,
+    fut_none = 0,         /**< Off */
+    fut_lp12,             /**< Lowpass - 12 dB */
+    fut_lp24,             /**< Lowpass - 24 dB */
+    fut_lpmoog,           /**< Lowpass - Legacy Ladder */
+    fut_hp12,             /**< Highpass - 12 dB */
+    fut_hp24,             /**< Highpass - 24 dB */
+    fut_bp12,             /**< Bandpass - 12 dB */
+    fut_notch12,          /**< Notch - 12 dB */
+    fut_comb_pos,         /**< Effect - Comb + */
+    fut_SNH,              /**< Effect - Sample & Hold */
+    fut_vintageladder,    /**< Lowpass - Vintage Ladder */
+    fut_obxd_2pole_lp,    /**< Lowpass - OB-Xd 12 dB */
+    fut_obxd_4pole,       /**< Lowpass - OB-Xd 24 dB */
+    fut_k35_lp,           /**< Lowpass - K35 */
+    fut_k35_hp,           /**< Highpass - K35 */
+    fut_diode,            /**< Lowpass - Diode Ladder */
+    fut_cutoffwarp_lp,    /**< Lowpass - Cutoff Warp */
+    fut_cutoffwarp_hp,    /**< Higghpass - Cutoff Warp */
+    fut_cutoffwarp_n,     /**< Notch - Cutoff Warp */
+    fut_cutoffwarp_bp,    /**< Bandpass - Cutoff Warp */
+    fut_obxd_2pole_hp,    /**< Highpass - OB-Xd 12 dB */
+    fut_obxd_2pole_n,     /**< Notch - OB-Xd 12 dB */
+    fut_obxd_2pole_bp,    /**< Bandpass - OB-Xd 12 dB */
+    fut_bp24,             /**< Bandpass - 24 dB */
+    fut_notch24,          /**< Notch - 24 dB */
+    fut_comb_neg,         /**< Effect - Comb - */
+    fut_apf,              /**< Effect - Allpass */
+    fut_cutoffwarp_ap,    /**< Effect - Cutoff Warp Allpass */
+    fut_resonancewarp_lp, /**< Lowpass - Resonance Warp */
+    fut_resonancewarp_hp, /**< Highpass - Resonance Warp */
+    fut_resonancewarp_n,  /**< Notch - Resonance Warp */
+    fut_resonancewarp_bp, /**< Bandpass - Resonance Warp */
+    fut_resonancewarp_ap, /**< Effect - Resonance Warp Allpass */
+    fut_tripole,          /**< Multi - Tri-pole */
     num_filter_types,
 };
 
@@ -247,57 +247,58 @@ const int fut_subcount[num_filter_types] = {
 /** Sub-types for each filter are defined here */
 enum FilterSubType
 {
-    st_SVF = 0,
-    st_Rough = 1,
-    st_Smooth = 2,
-    st_Medium = 3,
-    st_Notch = 0,
-    st_NotchMild = 1,
+    st_SVF = 0,    /**< Clean */
+    st_Rough = 1,  /**< Driven */
+    st_Smooth = 2, /**< Smooth */
+    st_Medium = 3, /**< (Unused) */
 
-    st_lpmoog_6dB = 0,
-    st_lpmoog_12dB = 1,
-    st_lpmoog_18dB = 2,
-    st_lpmoog_24dB = 3,
+    st_Notch = 0,     /**< Standard */
+    st_NotchMild = 1, /**< Mild */
 
-    st_diode_6dB = 0,
-    st_diode_12dB = 1,
-    st_diode_18dB = 2,
-    st_diode_24dB = 3,
+    st_lpmoog_6dB = 0,  /**< Legacy Ladder - 6 dB */
+    st_lpmoog_12dB = 1, /**< Legacy Ladder - 12 dB */
+    st_lpmoog_18dB = 2, /**< Legacy Ladder - 18 dB */
+    st_lpmoog_24dB = 3, /**< Legacy Ladder - 24 dB */
 
-    st_cutoffwarp_tanh1 = 0,
-    st_cutoffwarp_tanh2 = 1,
-    st_cutoffwarp_tanh3 = 2,
-    st_cutoffwarp_tanh4 = 3,
-    st_cutoffwarp_softclip1 = 4,
-    st_cutoffwarp_softclip2 = 5,
-    st_cutoffwarp_softclip3 = 6,
-    st_cutoffwarp_softclip4 = 7,
-    st_cutoffwarp_ojd1 = 8,
-    st_cutoffwarp_ojd2 = 9,
-    st_cutoffwarp_ojd3 = 10,
-    st_cutoffwarp_ojd4 = 11,
+    st_diode_6dB = 0,  /**< Diode Ladder - 6 dB */
+    st_diode_12dB = 1, /**< Diode Ladder - 12 dB */
+    st_diode_18dB = 2, /**< Diode Ladder - 18 dB */
+    st_diode_24dB = 3, /**< Diode Ladder - 24 dB */
 
-    st_resonancewarp_tanh1 = 0,
-    st_resonancewarp_tanh2 = 1,
-    st_resonancewarp_tanh3 = 2,
-    st_resonancewarp_tanh4 = 3,
-    st_resonancewarp_softclip1 = 4,
-    st_resonancewarp_softclip2 = 5,
-    st_resonancewarp_softclip3 = 6,
-    st_resonancewarp_softclip4 = 7,
+    st_cutoffwarp_tanh1 = 0,     /**< Cutoff Warp - 1 Stage tanh */
+    st_cutoffwarp_tanh2 = 1,     /**< Cutoff Warp - 2 Stages tanh */
+    st_cutoffwarp_tanh3 = 2,     /**< Cutoff Warp - 3 Stages tanh */
+    st_cutoffwarp_tanh4 = 3,     /**< Cutoff Warp - 4 Stages tanh */
+    st_cutoffwarp_softclip1 = 4, /**< Cutoff Warp - 1 Stage Soft Clip */
+    st_cutoffwarp_softclip2 = 5, /**< Cutoff Warp - 2 Stages Soft Clip */
+    st_cutoffwarp_softclip3 = 6, /**< Cutoff Warp - 3 Stages Soft Clip */
+    st_cutoffwarp_softclip4 = 7, /**< Cutoff Warp - 4 Stages Soft Clip */
+    st_cutoffwarp_ojd1 = 8,      /**< Cutoff Warp - 1 Stage OJD */
+    st_cutoffwarp_ojd2 = 9,      /**< Cutoff Warp - 2 Stages OJD */
+    st_cutoffwarp_ojd3 = 10,     /**< Cutoff Warp - 3 Stages OJD */
+    st_cutoffwarp_ojd4 = 11,     /**< Cutoff Warp - 4 Stages OJD */
 
-    st_tripole_LLL1 = 0,
-    st_tripole_LHL1 = 1,
-    st_tripole_HLH1 = 2,
-    st_tripole_HHH1 = 3,
-    st_tripole_LLL2 = 4,
-    st_tripole_LHL2 = 5,
-    st_tripole_HLH2 = 6,
-    st_tripole_HHH2 = 7,
-    st_tripole_LLL3 = 8,
-    st_tripole_LHL3 = 9,
-    st_tripole_HLH3 = 10,
-    st_tripole_HHH3 = 11,
+    st_resonancewarp_tanh1 = 0,     /**< Resonance Warp - 1 Stage tanh */
+    st_resonancewarp_tanh2 = 1,     /**< Resonance Warp - 2 Stages tanh */
+    st_resonancewarp_tanh3 = 2,     /**< Resonance Warp - 3 Stages tanh */
+    st_resonancewarp_tanh4 = 3,     /**< Resonance Warp - 4 Stages tanh */
+    st_resonancewarp_softclip1 = 4, /**< Resonance Warp - 1 Stage Soft Clip */
+    st_resonancewarp_softclip2 = 5, /**< Resonance Warp - 2 Stages Soft Clip */
+    st_resonancewarp_softclip3 = 6, /**< Resonance Warp - 3 Stages Soft Clip */
+    st_resonancewarp_softclip4 = 7, /**< Resonance Warp - 4 Stages Soft Clip */
+
+    st_tripole_LLL1 = 0,  /**< Low -> Low -> Low, first */
+    st_tripole_LHL1 = 1,  /**< Low -> High -> Low, first */
+    st_tripole_HLH1 = 2,  /**< High -> Low -> High, first */
+    st_tripole_HHH1 = 3,  /**< High -> High -> High, first */
+    st_tripole_LLL2 = 4,  /**< Low -> Low -> Low, second */
+    st_tripole_LHL2 = 5,  /**< Low -> High -> Low, second */
+    st_tripole_HLH2 = 6,  /**< High -> Low -> High, second */
+    st_tripole_HHH2 = 7,  /**< High -> High -> High, second */
+    st_tripole_LLL3 = 8,  /**< Low -> Low -> Low, third */
+    st_tripole_LHL3 = 9,  /**< Low -> High -> Low, third */
+    st_tripole_HLH3 = 10, /**< High -> Low -> High, third */
+    st_tripole_HHH3 = 11, /**< High -> High -> High, third */
 };
 
 } // namespace sst::filters
