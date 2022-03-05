@@ -236,7 +236,7 @@ inline float clipscale(float freq, int subtype)
     }
 }
 
-inline float boundFreq(float freq) { return std::clamp(freq, -55.0f, 75.0f); }
+[[nodiscard]] inline float boundFreq(float freq) { return std::clamp(freq, -55.0f, 75.0f); }
 
 inline double Map2PoleResonance(double reso, double freq, int subtype)
 {
@@ -349,7 +349,7 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_LP12(float freq, float reso, 
     float cosi, sinu;
     float gain = resoscale(reso, subtype);
 
-    boundFreq(freq);
+    freq = boundFreq(freq);
     provider->note_to_omega_ignoring_tuning(freq, sinu, cosi, sampleRate);
 
     double alpha = sinu * Map2PoleResonance(reso, freq, subtype);
@@ -375,7 +375,7 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_LP24(float freq, float reso, 
     float cosi, sinu;
     float gain = resoscale(reso, subtype);
 
-    boundFreq(freq);
+    freq = boundFreq(freq);
     provider->note_to_omega_ignoring_tuning(freq, sinu, cosi, sampleRate);
 
     double Q2inv = Map4PoleResonance((double)reso, (double)freq, subtype);
@@ -402,7 +402,7 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_HP12(float freq, float reso, 
     float cosi, sinu;
     float gain = resoscale(reso, subtype);
 
-    boundFreq(freq);
+    freq = boundFreq(freq);
     provider->note_to_omega_ignoring_tuning(freq, sinu, cosi, sampleRate);
 
     double Q2inv = Map2PoleResonance(reso, freq, subtype);
@@ -429,7 +429,7 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_HP24(float freq, float reso, 
     float cosi, sinu;
     float gain = resoscale(reso, subtype);
 
-    boundFreq(freq);
+    freq = boundFreq(freq);
     provider->note_to_omega_ignoring_tuning(freq, sinu, cosi, sampleRate);
 
     double Q2inv = Map4PoleResonance((double)reso, (double)freq, subtype);
@@ -461,7 +461,7 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_BP12(float freq, float reso, 
         gain *= 2.f;
     }
 
-    boundFreq(freq);
+    freq = boundFreq(freq);
     provider->note_to_omega_ignoring_tuning(freq, sinu, cosi, sampleRate);
 
     double Q2inv = Map2PoleResonance(reso, freq, subtype);
@@ -499,7 +499,7 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_BP24(float freq, float reso, 
         gain *= 2.f;
     }
 
-    boundFreq(freq);
+    freq = boundFreq(freq);
     provider->note_to_omega_ignoring_tuning(freq, sinu, cosi, sampleRate);
 
     double Q2inv = Map4PoleResonance(reso, freq, subtype);
@@ -532,7 +532,7 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_Notch(float Freq, float Reso,
     float cosi, sinu;
     double Q2inv;
 
-    boundFreq(Freq);
+    Freq = boundFreq(Freq);
     provider->note_to_omega_ignoring_tuning(Freq, sinu, cosi, sampleRate);
 
     if (SubType == st_NotchMild)
@@ -560,7 +560,7 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_APF(float Freq, float Reso, i
     float cosi, sinu;
     double Q2inv;
 
-    boundFreq(Freq);
+    Freq = boundFreq(Freq);
     provider->note_to_omega_ignoring_tuning(Freq, sinu, cosi, sampleRate);
 
     Q2inv = (2.5 - 2.49 * utilities::limit_range((double)(1 - (1 - Reso) * (1 - Reso)), 0.0, 1.0));
