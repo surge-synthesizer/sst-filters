@@ -4,22 +4,21 @@
 #include "QuadFilterUnit.h"
 #include "FilterCoefficientMaker.h"
 
-/*
-** This filter is an emulation of the "Threeler" VCF by
-** Ian Fritz (https://ijfritz.byethost4.com/Threeler_board_doc.pdf).
-** The filter consists of three one-pole filters with nonlinear
-** resonance and global feedback. The filter has four "modes":
-**   1. LPF -> LPF -> LPF
-**   2. LPF -> HPF -> LPF
-**   3. HPF -> LPF -> HPF
-**   4. HPF -> HPF -> HPF
-** The filter has three output points. For modes and three output
-** points makes for a total of 12 sub-types.
-**
-** The details of the emulation are derived in a Python notebook here:
-** https://github.com/surge-synthesizer/surge-python/blob/main/scripts/dsp_simulations/ThreelerAnalysis.ipynb
-*/
-
+/**
+ * This filter is an emulation of the "Threeler" VCF by
+ * Ian Fritz (https://ijfritz.byethost4.com/Threeler_board_doc.pdf).
+ * The filter consists of three one-pole filters with nonlinear
+ * resonance and global feedback. The filter has four "modes":
+ *   1. LPF -> LPF -> LPF
+ *   2. LPF -> HPF -> LPF
+ *   3. HPF -> LPF -> HPF
+ *   4. HPF -> HPF -> HPF
+ * The filter has three output points. For modes and three output
+ * points makes for a total of 12 sub-types.
+ *
+ * The details of the emulation are derived in a Python notebook here:
+ * https://github.com/surge-synthesizer/surge-python/blob/main/scripts/dsp_simulations/ThreelerAnalysis.ipynb
+ */
 namespace sst::filters::TriPoleFilter
 {
 constexpr float res_gain = 1.5f;

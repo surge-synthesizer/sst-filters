@@ -6,13 +6,12 @@
 #include "sst/utilities/basic_dsp.h"
 #include "sst/utilities/FastMath.h"
 
-/*
-** This contains an adaptation of the filter found at
-** https://ccrma.stanford.edu/~jatin/ComplexNonlinearities/NLFeedback.html
-** with coefficient calculation from
-** https://webaudio.github.io/Audio-EQ-Cookbook/audio-eq-cookbook.html
-*/
-
+/**
+ * This namespace contains an adaptation of the filter found at
+ * https://ccrma.stanford.edu/~jatin/ComplexNonlinearities/NLFeedback.html
+ * with coefficient calculation from
+ * https://webaudio.github.io/Audio-EQ-Cookbook/audio-eq-cookbook.html
+ */
 namespace sst::filters::CutoffWarp
 {
 template <typename TuningProvider>
