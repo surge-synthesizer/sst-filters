@@ -9,6 +9,7 @@ pr:
 jobs:
 
   - job: Test
+    condition: eq(variables['Build.Reason'], 'PullRequest')
     strategy:
       matrix:
         mac:
@@ -35,6 +36,7 @@ jobs:
         displayName: Run tests with cmake
 
   - job: Examples
+    condition: eq(variables['Build.Reason'], 'PullRequest')
     strategy:
       matrix:
         mac:
@@ -62,6 +64,7 @@ jobs:
 
 
   - job: MacARM
+    condition: eq(variables['Build.Reason'], 'PullRequest')
     pool:
       vmImage: 'macos-10.15'
 
@@ -74,3 +77,37 @@ jobs:
 
       - bash: cmake --build build --config Debug --parallel --target sst-filters-tests | xcpretty
         displayName: Build tests
+
+  - job: Doxygenate
+    condition: not(eq(variables['Build.Reason'], 'PullRequest'))
+    pool:
+      vmImage: 'ubuntu-20.04'
+    steps:
+    - checkout: self
+      fetchDepth: 1
+  
+    - task: DownloadSecureFile@1
+      inputs:
+        secureFile: sru-token.txt
+  
+    - bash: |
+         sudo apt-get install doxygen graphviz
+         doxygen doxygen/Doxyfile
+  
+         HASH=`git rev-parse --short HEAD`
+         TOK=`cat $AGENT_TEMPDIRECTORY/sru-token.txt`
+         git clone https://surge-rackupdater:${TOK}@github.com/surge-synthesizer/sst-docs
+         git config --global user.email "surge-rackupdater@dev.null"
+         git config --global user.name "surge-rackupdater"
+  
+         mkdir -p sst-docs/docs/sst-filters
+         pushd doxy-out
+         tar cf - . | (cd ../sst-docs/docs/sst-filters && tar xf -)
+         popd
+         pushd sst-docs
+         git add docs
+         git status
+         git commit -m "Update sst-filters docs at ${HASH}"
+         git push origin main
+
+      displayName: "Make Doxygen and Commit it"
