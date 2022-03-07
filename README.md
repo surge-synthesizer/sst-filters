@@ -1,7 +1,6 @@
 # SST Filters
 
 Tests: [![CI Build Status](https://dev.azure.com/surge-synthesizer/surge/_apis/build/status/surge-synthesizer.sst-filters?branchName=main)](https://dev.azure.com/surge-synthesizer/surge/_apis/build/status/surge-synthesizer.sst-filters?branchName=main)
-Docs: [![Docs Status](https://codedocs.xyz/surge-synthesizer/sst-filters.svg)](https://codedocs.xyz/surge-synthesizer/sst-filters/index.html)
 
 This repository contains the filters from the
 [Surge Synthesizer](https://github.com/surge-synthesizer/surge)
@@ -18,6 +17,8 @@ Current filters include:
 - K35 and Diode Ladder filters (ported from [Odin 2](https://github.com/TheWaveWarden/odin2))
 - Cutoff/Resonance Warp filters
 - Tri-Pole filter
+
+For more information, see the [API documentation](https://surge-synthesizer.github.io/sst-docs/docs/sst-filters).
 
 ## Usage
 
