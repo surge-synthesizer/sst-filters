@@ -62,6 +62,9 @@ jobs:
       - bash: cmake --build build --config Release --target filter_plot_tool
         displayName: Build filter_plot_tool
 
+      - bash: cmake --build build --config Release --target FiltersPlugin_VST3
+        displayName: Build filters_example_plugin
+
 
   - job: MacARM
     condition: eq(variables['Build.Reason'], 'PullRequest')
