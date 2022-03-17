@@ -3,6 +3,14 @@
 #include <juce_audio_utils/juce_audio_utils.h>
 #include <sst/filters.h>
 
+namespace ParamTags
+{
+const juce::String freqTag = "freq_hz";
+const juce::String resTag = "res";
+const juce::String filterTypeTag = "filter_type";
+const juce::String filterSubTypeTag = "filter_subtype";
+} // namespace ParamTags
+
 class FiltersPlugin : public juce::AudioProcessor
 {
   public:
@@ -34,10 +42,13 @@ class FiltersPlugin : public juce::AudioProcessor
     void getStateInformation(juce::MemoryBlock &data) override;
     void setStateInformation(const void *data, int sizeInBytes) override;
 
+    auto &getVTS() { return vts; }
+
   private:
     std::atomic<float> *freqHzParam = nullptr;
     std::atomic<float> *resParam = nullptr;
     std::atomic<float> *filterTypeParam = nullptr;
+    std::atomic<float> *filterSubTypeParam = nullptr;
     juce::AudioProcessorValueTreeState vts;
 
     struct FilterUnit

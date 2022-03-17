@@ -1,11 +1,8 @@
 #include "FiltersPlugin.h"
+#include "FiltersPluginEditor.h"
 
 namespace
 {
-const juce::String freqTag = "freq_hz";
-const juce::String resTag = "res";
-const juce::String filterTypeTag = "filter_type";
-
 float freq_hz_to_note_num (float freqHz)
 {
     return 12.0f * std::log2 (freqHz / 440.0f) + 69.0f;
@@ -18,9 +15,11 @@ FiltersPlugin::FiltersPlugin()
                                .withOutput("Output", juce::AudioChannelSet::stereo(), true)),
       vts(*this, nullptr, juce::Identifier("Parameters"), createParameters())
 {
+    using namespace ParamTags;
     freqHzParam = vts.getRawParameterValue (freqTag);
     resParam = vts.getRawParameterValue (resTag);
     filterTypeParam = vts.getRawParameterValue (filterTypeTag);
+    filterSubTypeParam = vts.getRawParameterValue (filterSubTypeTag);
 }
 
 juce::AudioProcessorValueTreeState::ParameterLayout FiltersPlugin::createParameters()
@@ -28,6 +27,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout FiltersPlugin::createParamet
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
 
     using VTSParam = juce::AudioProcessorValueTreeState::Parameter;
+    using namespace ParamTags;
 
     juce::NormalisableRange freqRange{20.0f, 20000.0f};
     freqRange.setSkewForCentre(2000.0f);
@@ -53,9 +53,10 @@ juce::AudioProcessorValueTreeState::ParameterLayout FiltersPlugin::createParamet
 
     juce::StringArray filterTypeChoices;
     for (const auto& filter_type_name : sst::filters::filter_type_names)
-        filterTypeChoices.add (filter_type_name);
+        filterTypeChoices.add(filter_type_name);
 
-    params.push_back (std::make_unique<juce::AudioParameterChoice> (filterTypeTag, "Filter Type", filterTypeChoices, 0));
+    params.push_back(std::make_unique<juce::AudioParameterChoice> (filterTypeTag, "Filter Type", filterTypeChoices, 0));
+    params.push_back(std::make_unique<juce::AudioParameterInt>(filterSubTypeTag, "Filter Sub-Type", 0, sst::filters::FilterSubType::st_tripole_LLL3, 0));
 
     // @TODO: figure out parameter for filter sub-type
 
@@ -91,7 +92,7 @@ void FiltersPlugin::processBlock(juce::AudioBuffer<float> &buffer, juce::MidiBuf
     const auto numSamples = buffer.getNumSamples();
 
     const auto filterType = static_cast<sst::filters::FilterType> ((int) *filterTypeParam);
-    const auto filterSubType = sst::filters::st_SVF;
+    const auto filterSubType = static_cast<sst::filters::FilterSubType> ((int) *filterSubTypeParam);
 
     auto filterUnitPtr = sst::filters::GetQFPtrFilterUnit(filterType, filterSubType);
     coeffMaker.MakeCoeffs(freq_hz_to_note_num (*freqHzParam), *resParam, filterType, filterSubType, nullptr, false);
@@ -119,7 +120,7 @@ void FiltersPlugin::processBlock(juce::AudioBuffer<float> &buffer, juce::MidiBuf
 
 juce::AudioProcessorEditor *FiltersPlugin::createEditor()
 {
-    return new juce::GenericAudioProcessorEditor(*this);
+    return new FiltersPluginEditor (*this);
 }
 
 void FiltersPlugin::getStateInformation(juce::MemoryBlock &data)

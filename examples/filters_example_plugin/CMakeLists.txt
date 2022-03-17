@@ -12,6 +12,7 @@ juce_add_plugin(FiltersPlugin
 
 target_sources(FiltersPlugin PRIVATE
     FiltersPlugin.cpp
+    FiltersPluginEditor.cpp
 )
 
 target_compile_definitions(FiltersPlugin
