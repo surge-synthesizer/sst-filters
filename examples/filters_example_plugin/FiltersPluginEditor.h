@@ -26,7 +26,10 @@ class FiltersPluginEditor : public juce::AudioProcessorEditor,
     juce::AudioParameterChoice *typeChoiceParam = nullptr;
 
     std::unique_ptr<juce::SliderParameterAttachment> freqAttachment, resAttachment;
-    std::unique_ptr<juce::ComboBoxParameterAttachment> typeAttachment, subTypeAttachment;
+    std::unique_ptr<juce::ComboBoxParameterAttachment> typeAttachment;
+
+    class SubTypeComboBoxParameterAttachment;
+    std::unique_ptr<SubTypeComboBoxParameterAttachment> subTypeAttachment;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FiltersPluginEditor)
 };

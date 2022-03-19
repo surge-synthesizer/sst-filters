@@ -74,8 +74,8 @@ class FiltersPlugin : public juce::AudioProcessor
         }
     };
 
-    sst::filters::FilterType lastFilterType;
-    sst::filters::FilterSubType lastFilterSubType;
+    sst::filters::FilterType lastFilterType{};
+    sst::filters::FilterSubType lastFilterSubType{};
 
     sst::filters::FilterCoefficientMaker<> coeffMaker;
     std::vector<FilterUnit> filterUnits;

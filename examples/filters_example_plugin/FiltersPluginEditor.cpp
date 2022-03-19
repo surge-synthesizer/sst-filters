@@ -1,5 +1,51 @@
 #include "FiltersPluginEditor.h"
 
+class FiltersPluginEditor::SubTypeComboBoxParameterAttachment : private juce::ComboBox::Listener
+{
+  public:
+    SubTypeComboBoxParameterAttachment(juce::RangedAudioParameter &param, juce::ComboBox &c,
+                                       juce::UndoManager *um = nullptr)
+        : comboBox(c), attachment(
+                           param, [this](float f) { setValue(f); }, um)
+    {
+        sendInitialUpdate();
+        comboBox.addListener(this);
+    }
+
+    ~SubTypeComboBoxParameterAttachment() override { comboBox.removeListener(this); }
+
+    void sendInitialUpdate() { attachment.sendInitialUpdate(); }
+
+  private:
+    void setValue(float newValue)
+    {
+        const auto numItems = comboBox.getNumItems();
+        int index = 0;
+
+        if (numItems > 1)
+            index = juce::jlimit(0, numItems - 1, (int)newValue);
+
+        if (index == comboBox.getSelectedItemIndex())
+            return;
+
+        const juce::ScopedValueSetter<bool> svs(ignoreCallbacks, true);
+        comboBox.setSelectedItemIndex(index, juce::sendNotificationSync);
+    }
+
+    void comboBoxChanged(juce::ComboBox *) override
+    {
+        if (ignoreCallbacks)
+            return;
+
+        const auto selected = (float)comboBox.getSelectedItemIndex();
+        attachment.setValueAsCompleteGesture(selected);
+    }
+
+    juce::ComboBox &comboBox;
+    juce::ParameterAttachment attachment;
+    bool ignoreCallbacks = false;
+};
+
 FiltersPluginEditor::FiltersPluginEditor(FiltersPlugin &p)
     : juce::AudioProcessorEditor(p), plugin(p)
 {
@@ -20,31 +66,33 @@ FiltersPluginEditor::FiltersPluginEditor(FiltersPlugin &p)
     setupSlider(freqSlider, freqAttachment, ParamTags::freqTag, "Freq.", freqLabel);
     setupSlider(resSlider, resAttachment, ParamTags::resTag, "Res.", resLabel);
 
-    auto setupComboBox = [this](auto &box, auto &attachment, const juce::String &paramTag,
-                                const juce::String &name, auto &label) {
+    auto setupComboBox = [this](auto &box, const juce::String &paramTag, const juce::String &name,
+                                auto &label) {
         label.setText(name, juce::dontSendNotification);
         label.attachToComponent(&box, true);
         label.setJustificationType(juce::Justification::right);
         addAndMakeVisible(box);
 
         auto *param = plugin.getVTS().getParameter(paramTag);
-        attachment = std::make_unique<juce::ComboBoxParameterAttachment>(*param, box);
-
         if (auto *choiceParam = dynamic_cast<juce::AudioParameterChoice *>(param))
         {
             box.addItemList(choiceParam->getAllValueStrings(), 1);
             box.setSelectedItemIndex(choiceParam->getIndex(), juce::dontSendNotification);
         }
+
+        return param;
     };
 
-    setupComboBox(typeBox, typeAttachment, ParamTags::filterTypeTag, "Type", typeLabel);
-    setupComboBox(subTypeBox, subTypeAttachment, ParamTags::filterSubTypeTag, "Sub-Type",
-                  subTypeLabel);
-
-    typeChoiceParam = dynamic_cast<juce::AudioParameterChoice *>(
-        plugin.getVTS().getParameter(ParamTags::filterTypeTag));
+    auto *typeParam = setupComboBox(typeBox, ParamTags::filterTypeTag, "Type", typeLabel);
+    typeAttachment = std::make_unique<juce::ComboBoxParameterAttachment>(*typeParam, typeBox);
+    typeChoiceParam = dynamic_cast<juce::AudioParameterChoice *>(typeParam);
     typeChoiceParam->addListener(this);
+
+    auto *subTypeParam =
+        setupComboBox(subTypeBox, ParamTags::filterSubTypeTag, "Sub-Type", subTypeLabel);
     updateSubTypeMenu(typeChoiceParam->getIndex());
+    subTypeAttachment =
+        std::make_unique<SubTypeComboBoxParameterAttachment>(*subTypeParam, subTypeBox);
 
     setSize(1000, 500);
 }

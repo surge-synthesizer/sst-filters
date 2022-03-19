@@ -66,7 +66,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout FiltersPlugin::createParamet
         filterTypeChoices.add(filter_type_name);
 
     params.push_back(std::make_unique<juce::AudioParameterChoice> (filterTypeTag, "Filter Type", filterTypeChoices, 0));
-    params.push_back(std::make_unique<juce::AudioParameterInt>(filterSubTypeTag, "Filter Sub-Type", 0, sst::filters::FilterSubType::st_tripole_LLL3, 0));
+    params.push_back(std::make_unique<juce::AudioParameterInt>(filterSubTypeTag, "Filter Sub-Type", 0, sst::filters::FilterSubType::st_tripole_HHH3, 0));
 
     return {params.begin(), params.end()};
 }

@@ -200,7 +200,7 @@ const char fut_tripole_subtypes[4][32] = {
     "High -> High -> High",
 };
 
-const char fut_tripole_output_stage[4][16]{
+const char fut_tripole_output_stage[3][16]{
     "First",
     "Second",
     "Third",
