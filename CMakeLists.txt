@@ -15,6 +15,10 @@ if(MSVC)
     )
 endif()
 
+add_library(${PROJECT_NAME}-extras INTERFACE)
+target_include_directories(${PROJECT_NAME}-extras INTERFACE include-extras)
+target_link_libraries(${PROJECT_NAME}-extras INTERFACE ${PROJECT_NAME})
+
 get_directory_property(parent_dir PARENT_DIRECTORY)
 if ("${parent_dir}" STREQUAL "")
     set(is_toplevel 1)

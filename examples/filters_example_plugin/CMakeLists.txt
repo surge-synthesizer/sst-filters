@@ -1,5 +1,3 @@
-CPMAddPackage("gh:juce-framework/JUCE#6.1.5")
-
 juce_add_plugin(FiltersPlugin
         BUNDLE_ID org.surge-synth-team.sst-filters.FiltrsPlugin
         PRODUCT_NAME "FiltersPlugin"

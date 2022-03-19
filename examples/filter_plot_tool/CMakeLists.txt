@@ -3,7 +3,6 @@ set(CMAKE_CXX_STANDARD 17)
 
 add_executable(filter_plot_tool
     filter_plot_tool.cpp
-    AudioFFT.cpp
 )
 
 # Fectch matplotlib-cpp
@@ -19,7 +18,7 @@ target_compile_definitions(filter_plot_tool
 )
 
 target_include_directories(filter_plot_tool PRIVATE ${Python3_INCLUDE_DIRS})
-target_link_libraries(filter_plot_tool PRIVATE Python3::Python sst-filters simde)
+target_link_libraries(filter_plot_tool PRIVATE Python3::Python sst-filters sst-filters-extras simde juce::juce_dsp)
 
 add_custom_command(TARGET filter_plot_tool
         POST_BUILD
