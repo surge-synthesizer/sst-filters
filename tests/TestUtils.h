@@ -19,7 +19,7 @@ constexpr bool printRMSs = false; // change this to true when generating test da
 constexpr auto sampleRate = 48000.0f;
 constexpr int blockSize = 2048;
 
-constexpr float A440 = 69.0f;
+constexpr float A440 = 0.0f;
 constexpr int numTestFreqs = 5;
 constexpr std::array<float, numTestFreqs> testFreqs { 80.0f, 200.0f, 440.0f, 1000.0f, 10000.0f };
 

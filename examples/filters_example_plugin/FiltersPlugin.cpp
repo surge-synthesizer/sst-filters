@@ -5,7 +5,17 @@ namespace
 {
 float freq_hz_to_note_num (float freqHz)
 {
-    return 12.0f * std::log2 (freqHz / 440.0f) + 69.0f;
+    return 12.0f * std::log2 (freqHz / 440.0f);
+}
+
+auto getFilterType (std::atomic<float>* param)
+{
+    return static_cast<sst::filters::FilterType> ((int) *param);
+}
+
+auto getFilterSubType (std::atomic<float>* param)
+{
+    return static_cast<sst::filters::FilterSubType> ((int) *param);
 }
 } // namespace
 
@@ -58,8 +68,6 @@ juce::AudioProcessorValueTreeState::ParameterLayout FiltersPlugin::createParamet
     params.push_back(std::make_unique<juce::AudioParameterChoice> (filterTypeTag, "Filter Type", filterTypeChoices, 0));
     params.push_back(std::make_unique<juce::AudioParameterInt>(filterSubTypeTag, "Filter Sub-Type", 0, sst::filters::FilterSubType::st_tripole_LLL3, 0));
 
-    // @TODO: figure out parameter for filter sub-type
-
     return {params.begin(), params.end()};
 }
 
@@ -84,6 +92,9 @@ void FiltersPlugin::prepareToPlay(double sampleRate, int samplesPerBlock)
     filterUnits.resize(getMainBusNumInputChannels());
     for (auto &filt : filterUnits)
         filt.reset();
+
+    lastFilterType = getFilterType (filterTypeParam);
+    lastFilterSubType = getFilterSubType (filterSubTypeParam);
 }
 
 void FiltersPlugin::processBlock(juce::AudioBuffer<float> &buffer, juce::MidiBuffer &)
@@ -91,8 +102,17 @@ void FiltersPlugin::processBlock(juce::AudioBuffer<float> &buffer, juce::MidiBuf
     const auto numChannels = buffer.getNumChannels();
     const auto numSamples = buffer.getNumSamples();
 
-    const auto filterType = static_cast<sst::filters::FilterType> ((int) *filterTypeParam);
-    const auto filterSubType = static_cast<sst::filters::FilterSubType> ((int) *filterSubTypeParam);
+    const auto filterType = getFilterType(filterTypeParam);
+    const auto filterSubType = getFilterSubType(filterSubTypeParam);
+
+    if (filterType != lastFilterType || filterSubType != lastFilterSubType)
+    {
+        lastFilterType = filterType;
+        lastFilterSubType = filterSubType;
+
+        for (auto &filt : filterUnits)
+            filt.reset();
+    }
 
     auto filterUnitPtr = sst::filters::GetQFPtrFilterUnit(filterType, filterSubType);
     coeffMaker.MakeCoeffs(freq_hz_to_note_num (*freqHzParam), *resParam, filterType, filterSubType, nullptr, false);
@@ -115,7 +135,10 @@ void FiltersPlugin::processBlock(juce::AudioBuffer<float> &buffer, juce::MidiBuf
             _mm_store_ps (yArr, yVec);
             x[n] = yArr[0];
         }
+
     }
+
+    coeffMaker.updateCoefficients(filterUnits[0].filterState);
 }
 
 juce::AudioProcessorEditor *FiltersPlugin::createEditor()

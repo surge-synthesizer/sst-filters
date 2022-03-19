@@ -52,6 +52,13 @@ template <typename TuningProvider = detail::BasicTuningProvider> class FilterCoe
      */
     template <typename StateType> void updateState(StateType &state, int channel = -1);
 
+    /**
+     * Update the local coefficients with the coefficients from the filter state.
+     * This is necessary since the filter state is responsible for smoothing the filter
+     * coefficients.
+     */
+    template <typename StateType> void updateCoefficients(StateType &state, int channel = 0);
+
     /** Current filter coefficients */
     float C[n_cm_coeffs]{};
 
