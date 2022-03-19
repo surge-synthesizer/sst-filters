@@ -11,6 +11,21 @@ const juce::String filterTypeTag = "filter_type";
 const juce::String filterSubTypeTag = "filter_subtype";
 } // namespace ParamTags
 
+namespace ParamConversions
+{
+inline float freq_hz_to_note_num(float freqHz) { return 12.0f * std::log2(freqHz / 440.0f); }
+
+inline auto getFilterType(std::atomic<float> *param)
+{
+    return static_cast<sst::filters::FilterType>((int)*param);
+}
+
+inline auto getFilterSubType(std::atomic<float> *param)
+{
+    return static_cast<sst::filters::FilterSubType>((int)*param);
+}
+} // namespace ParamConversions
+
 class FiltersPlugin : public juce::AudioProcessor
 {
   public:

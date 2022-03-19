@@ -3,20 +3,7 @@
 
 namespace
 {
-float freq_hz_to_note_num (float freqHz)
-{
-    return 12.0f * std::log2 (freqHz / 440.0f);
-}
 
-auto getFilterType (std::atomic<float>* param)
-{
-    return static_cast<sst::filters::FilterType> ((int) *param);
-}
-
-auto getFilterSubType (std::atomic<float>* param)
-{
-    return static_cast<sst::filters::FilterSubType> ((int) *param);
-}
 } // namespace
 
 FiltersPlugin::FiltersPlugin()
@@ -93,8 +80,8 @@ void FiltersPlugin::prepareToPlay(double sampleRate, int samplesPerBlock)
     for (auto &filt : filterUnits)
         filt.reset();
 
-    lastFilterType = getFilterType (filterTypeParam);
-    lastFilterSubType = getFilterSubType (filterSubTypeParam);
+    lastFilterType = ParamConversions::getFilterType (filterTypeParam);
+    lastFilterSubType = ParamConversions::getFilterSubType (filterSubTypeParam);
 }
 
 void FiltersPlugin::processBlock(juce::AudioBuffer<float> &buffer, juce::MidiBuffer &)
@@ -102,8 +89,8 @@ void FiltersPlugin::processBlock(juce::AudioBuffer<float> &buffer, juce::MidiBuf
     const auto numChannels = buffer.getNumChannels();
     const auto numSamples = buffer.getNumSamples();
 
-    const auto filterType = getFilterType(filterTypeParam);
-    const auto filterSubType = getFilterSubType(filterSubTypeParam);
+    const auto filterType = ParamConversions::getFilterType(filterTypeParam);
+    const auto filterSubType = ParamConversions::getFilterSubType(filterSubTypeParam);
 
     if (filterType != lastFilterType || filterSubType != lastFilterSubType)
     {
@@ -115,7 +102,7 @@ void FiltersPlugin::processBlock(juce::AudioBuffer<float> &buffer, juce::MidiBuf
     }
 
     auto filterUnitPtr = sst::filters::GetQFPtrFilterUnit(filterType, filterSubType);
-    coeffMaker.MakeCoeffs(freq_hz_to_note_num (*freqHzParam), *resParam, filterType, filterSubType, nullptr, false);
+    coeffMaker.MakeCoeffs(ParamConversions::freq_hz_to_note_num (*freqHzParam), *resParam, filterType, filterSubType, nullptr, false);
 
     if (filterUnitPtr == nullptr)
         return; // no filter to process!

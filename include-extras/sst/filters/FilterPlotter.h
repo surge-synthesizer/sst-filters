@@ -23,7 +23,7 @@ struct FilterPlotParameters
 class FilterPlotter
 {
   public:
-    FilterPlotter(int fftOrder = 15) : fft(fftOrder), fftSize(1 << fftOrder) {}
+    explicit FilterPlotter(int fftOrder = 15) : fft(fftOrder), fftSize(1 << fftOrder) {}
 
     std::pair<std::vector<float>, std::vector<float>>
     plotFilterMagnitudeResponse(sst::filters::FilterType filterType,
@@ -45,7 +45,10 @@ class FilterPlotter
 
         // process filter
         std::vector<float> filterBuffer(fftSize, 0.0f);
-        runFilter (filterState, filterUnitPtr, sweepBuffer.data(), filterBuffer.data(), fftSize);
+        if (filterUnitPtr != nullptr)
+            runFilter (filterState, filterUnitPtr, sweepBuffer.data(), filterBuffer.data(), fftSize);
+        else
+            std::copy (sweepBuffer.begin(), sweepBuffer.end(), filterBuffer.begin());
 
         auto magResponseDB = computeFrequencyResponse(sweepBuffer.data(), filterBuffer.data(), fftSize);
         auto magResponseDBSmoothed = freqSmooth(magResponseDB.data(), (int) magResponseDB.size(), params.freqSmoothOctaves);
@@ -55,7 +58,7 @@ class FilterPlotter
     }
 
   private:
-    void generateLogSweep(float *buffer, int nSamples, const FilterPlotParameters& params)
+    static void generateLogSweep(float *buffer, int nSamples, const FilterPlotParameters& params)
     {
         const auto beta = (float)nSamples / std::log(params.endFreqHz / params.startFreqHz);
 
@@ -68,7 +71,7 @@ class FilterPlotter
         }
     }
 
-    void runFilter (sst::filters::QuadFilterUnitState &filterState, sst::filters::FilterUnitQFPtr &filterUnitPtr, const float* inBuffer, float* outBuffer, int numSamples)
+    static void runFilter (sst::filters::QuadFilterUnitState &filterState, sst::filters::FilterUnitQFPtr &filterUnitPtr, const float* inBuffer, float* outBuffer, int numSamples)
     {
         // reset filter state
         std::fill (filterState.R, &filterState.R[sst::filters::n_filter_registers], _mm_setzero_ps());
@@ -85,8 +88,6 @@ class FilterPlotter
 
     std::vector<float> computeFrequencyResponse(float* sweepBuffer, float* filterBuffer, int numSamples)
     {
-        juce::dsp::FFT fft { juce::roundToInt (std::log2 (numSamples)) };
-
         const auto fftDataSize = numSamples * 2;
         std::vector<float> sweepFFT (fftDataSize, 0.0f);
         std::copy (sweepBuffer, sweepBuffer + numSamples, sweepFFT.begin());
@@ -104,7 +105,7 @@ class FilterPlotter
         return magnitudeResponseDB;
     }
 
-    std::vector<float> fftFreqs(int N, float T)
+    static std::vector<float> fftFreqs(int N, float T)
     {
         auto val = 1.0f / ((float) N * T);
 
@@ -115,7 +116,7 @@ class FilterPlotter
         return results;
     }
 
-    std::vector<float> freqSmooth (const float* data, int numSamples, float smFactor = 1.0f / 24.0f)
+    static std::vector<float> freqSmooth (const float* data, int numSamples, float smFactor = 1.0f / 24.0f)
     {
         const auto s = smFactor > 1.0f ? smFactor : std::sqrt (std::pow (2.0f, smFactor));
 

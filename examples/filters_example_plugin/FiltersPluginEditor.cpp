@@ -47,7 +47,7 @@ class FiltersPluginEditor::SubTypeComboBoxParameterAttachment : private juce::Co
 };
 
 FiltersPluginEditor::FiltersPluginEditor(FiltersPlugin &p)
-    : juce::AudioProcessorEditor(p), plugin(p)
+    : juce::AudioProcessorEditor(p), plugin(p), plotComponent(p.getVTS())
 {
     auto setupSlider = [this](auto &slider, auto &attachment, const juce::String &paramTag,
                               const juce::String &name, auto &label) {
@@ -93,6 +93,8 @@ FiltersPluginEditor::FiltersPluginEditor(FiltersPlugin &p)
     updateSubTypeMenu(typeChoiceParam->getIndex());
     subTypeAttachment =
         std::make_unique<SubTypeComboBoxParameterAttachment>(*subTypeParam, subTypeBox);
+
+    addAndMakeVisible(plotComponent);
 
     setSize(1000, 500);
 }
@@ -206,8 +208,7 @@ void FiltersPluginEditor::resized()
 {
     auto bounds = getLocalBounds();
 
-    auto filterViewBounds = bounds.removeFromRight(700);
-    juce::ignoreUnused(filterViewBounds); // @TODO: this will be the filter view...
+    plotComponent.setBounds(bounds.removeFromRight(700));
 
     constexpr int labelWidth = 55;
     bounds.removeFromLeft(labelWidth); // leave space for labels

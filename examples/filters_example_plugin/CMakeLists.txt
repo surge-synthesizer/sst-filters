@@ -11,6 +11,7 @@ juce_add_plugin(FiltersPlugin
 target_sources(FiltersPlugin PRIVATE
     FiltersPlugin.cpp
     FiltersPluginEditor.cpp
+    FilterPlotComponent.cpp
 )
 
 target_compile_definitions(FiltersPlugin
@@ -37,6 +38,8 @@ target_compile_definitions(FiltersPlugin
 
 target_link_libraries(FiltersPlugin PUBLIC
         juce::juce_audio_utils
+        juce::juce_dsp
         simde
         sst-filters
+        sst-filters-extras
 )

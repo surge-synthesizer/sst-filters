@@ -1,12 +1,13 @@
 #pragma once
 
 #include "FiltersPlugin.h"
+#include "FilterPlotComponent.h"
 
 class FiltersPluginEditor : public juce::AudioProcessorEditor,
                             private juce::AudioProcessorParameter::Listener
 {
   public:
-    FiltersPluginEditor(FiltersPlugin &plugin);
+    explicit FiltersPluginEditor(FiltersPlugin &plugin);
     ~FiltersPluginEditor() override;
 
     void paint(juce::Graphics &g) override;
@@ -30,6 +31,8 @@ class FiltersPluginEditor : public juce::AudioProcessorEditor,
 
     class SubTypeComboBoxParameterAttachment;
     std::unique_ptr<SubTypeComboBoxParameterAttachment> subTypeAttachment;
+
+    FilterPlotComponent plotComponent;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FiltersPluginEditor)
 };
