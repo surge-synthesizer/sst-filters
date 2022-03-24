@@ -3,7 +3,6 @@ set(CMAKE_CXX_STANDARD 17)
 
 add_executable(filter_plot_tool
     filter_plot_tool.cpp
-    AudioFFT.cpp
 )
 
 # Fectch matplotlib-cpp
@@ -14,12 +13,31 @@ target_include_directories(filter_plot_tool PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/
 # link to python
 find_package(Python3 COMPONENTS Development)
 target_compile_definitions(filter_plot_tool
+    PUBLIC
+        JUCE_ALLOW_STATIC_NULL_VARIABLES=0
+        JUCE_STRICT_REFCOUNTEDPOINTER=1
+
+        JUCE_USE_CURL=0
+        JUCE_WEB_BROWSER=0
+        JUCE_USE_CAMERA=disabled
+
+        # These are purposefully not overridden.
+        # JUCE_DISPLAY_SPLASH_SCREEN=0
+        # JUCE_REPORT_APP_USAGE=0
+
+        JUCE_COREGRAPHICS_DRAW_ASYNC=1
+        JUCE_WASAPI=1
+        JUCE_DIRECTSOUND=1
+
+        JUCE_CATCH_UNHANDLED_EXCEPTIONS=0
+        JUCE_VST3_CAN_REPLACE_VST2=0
+
     PRIVATE
         WITHOUT_NUMPY=1
 )
 
 target_include_directories(filter_plot_tool PRIVATE ${Python3_INCLUDE_DIRS})
-target_link_libraries(filter_plot_tool PRIVATE Python3::Python sst-filters simde)
+target_link_libraries(filter_plot_tool PRIVATE Python3::Python sst-filters sst-filters-extras simde juce::juce_dsp)
 
 add_custom_command(TARGET filter_plot_tool
         POST_BUILD

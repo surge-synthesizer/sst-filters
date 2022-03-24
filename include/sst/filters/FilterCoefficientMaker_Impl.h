@@ -33,6 +33,8 @@ void FilterCoefficientMaker<TuningProvider>::setSampleRateAndBlockSize(float new
 namespace detail
 {
 inline void set1f(__m128 &m, int i, float f) { *((float *)&m + i) = f; }
+
+inline float get1f(__m128 m, int i) { return *((float *)&m + i); }
 } // namespace detail
 
 template <typename TuningProvider>
@@ -58,6 +60,14 @@ void FilterCoefficientMaker<TuningProvider>::updateState(StateType &state, int c
 
     state.sampleRate = sampleRate;
     state.sampleRateInv = sampleRateInv;
+}
+
+template <typename TuningProvider>
+template <typename StateType>
+void FilterCoefficientMaker<TuningProvider>::updateCoefficients(StateType &state, int channel)
+{
+    for (int i = 0; i < n_cm_coeffs; i++)
+        C[i] = detail::get1f(state.C[i], channel);
 }
 
 template <typename TuningProvider>
@@ -605,7 +615,7 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_COMB(float freq, float reso, 
     dtime = dtime * sampleRate;
 
     // See comment in SurgeStorage and issue #3248
-    if (!provider->_patch->correctlyTuneCombFilter)
+    if (provider != nullptr && !provider->_patch->correctlyTuneCombFilter)
     {
         dtime -= utilities::SincTable::FIRoffset;
     }

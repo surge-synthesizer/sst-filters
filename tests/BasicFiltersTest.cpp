@@ -12,7 +12,8 @@ TEST_CASE("Basic Filters")
 
         runTest({FilterType::fut_lp12,
                  FilterSubType::st_Rough,
-                 {-14.2668f, -14.4482f, -14.9144f, -18.5243f, -53.2976f}});
+                 {-4.52473f, -3.6442f, -2.13439f, -16.4384f, -49.3718f},
+                 0.0f});
 
         runTest({FilterType::fut_lp12,
                  FilterSubType::st_Smooth,
@@ -27,7 +28,7 @@ TEST_CASE("Basic Filters")
 
         runTest({FilterType::fut_lp24,
                  FilterSubType::st_Rough,
-                 {-17.3497f, -17.5608f, -18.514f, -32.9067f, -57.8716f}});
+                 {-6.51442f, -5.74044f, -6.61548f, -28.9689f, -54.0992f}});
 
         runTest({FilterType::fut_lp24,
                  FilterSubType::st_Smooth,
@@ -42,7 +43,7 @@ TEST_CASE("Basic Filters")
 
         runTest({FilterType::fut_hp12,
                  FilterSubType::st_Rough,
-                 {-32.665f, -5.15768f, -4.91711f, -4.81455f, -4.51194f}});
+                 {-31.4426f, -15.8495f, -1.84373f, -2.67782f, -4.16204f}});
 
         runTest({FilterType::fut_hp12,
                  FilterSubType::st_Smooth,
@@ -57,7 +58,7 @@ TEST_CASE("Basic Filters")
 
         runTest({FilterType::fut_hp24,
                  FilterSubType::st_Rough,
-                 {-49.0085f, -32.9746f, -18.1176f, -9.17151f, -5.92669f}});
+                 {-42.8669f, -28.9289f, -6.65685f, -4.0466f, -5.3227f}});
 
         runTest({FilterType::fut_hp24,
                  FilterSubType::st_Smooth,
@@ -72,7 +73,7 @@ TEST_CASE("Basic Filters")
 
         runTest({FilterType::fut_bp12,
                  FilterSubType::st_Rough,
-                 {-10.5052f, -10.6062f, -10.7242f, -11.1712f, -26.6445f}});
+                 {-12.6309f, -3.79841f, -0.00540512f, -4.4129f, -26.6096f}});
 
         runTest({FilterType::fut_bp12,
                  FilterSubType::st_Smooth,
@@ -87,7 +88,7 @@ TEST_CASE("Basic Filters")
 
         runTest({FilterType::fut_bp24,
                  FilterSubType::st_Rough,
-                 {-14.9184f, -13.9041f, -13.4795f, -13.9258f, -47.6594f}});
+                 {-21.5631f, -6.61244f, -0.148954f, -6.07533f, -43.7467f}});
 
         runTest({FilterType::fut_bp24,
                  FilterSubType::st_Smooth,
@@ -146,7 +147,7 @@ TEST_CASE("Basic Filters")
     {
         runTest({FilterType::fut_SNH,
                  FilterSubType{},
-                 {-6.75229f, -6.85575f, -6.83264f, -6.83216f, -5.31153f}});
+                 {-5.62205f, -1.85607f, -34.0156f, -4.31724f, -4.09113f}});
     }
 
     SECTION("COMB")

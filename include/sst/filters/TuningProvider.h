@@ -22,16 +22,13 @@ struct BasicTuningProvider
 
     static void note_to_omega_ignoring_tuning(float x, float &sinu, float &cosi, float sampleRate)
     {
-        auto pitch = powf(2.f, (x - 69.f) * (1.f / 12.f));
+        auto pitch = note_to_pitch_ignoring_tuning(x);
         auto arg = 2.0f * (float)M_PI * std::min(0.5f, 440.0f * pitch / sampleRate);
         sinu = sin(arg);
         cosi = cos(arg);
     }
 
-    static float note_to_pitch_ignoring_tuning(float x)
-    {
-        return powf(2.f, (x - 69.f) * (1.f / 12.f));
-    }
+    static float note_to_pitch_ignoring_tuning(float x) { return powf(2.f, x * (1.f / 12.f)); }
 
     static float note_to_pitch_inv_ignoring_tuning(float x)
     {

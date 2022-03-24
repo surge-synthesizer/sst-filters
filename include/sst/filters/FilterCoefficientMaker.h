@@ -39,7 +39,7 @@ template <typename TuningProvider = detail::BasicTuningProvider> class FilterCoe
     /**
      * Creates filter coefficients for a given set of filter parameters
      *
-     * Note that frequency is expected in units of MIDI note number.
+     * Note that frequency is expected in units of MIDI note number, with A440 = 0.
      */
     void MakeCoeffs(float Freq, float Reso, FilterType Type, FilterSubType SubType,
                     TuningProvider *provider, bool tuningAdjusted);
@@ -51,6 +51,13 @@ template <typename TuningProvider = detail::BasicTuningProvider> class FilterCoe
      * will be used for all channels.
      */
     template <typename StateType> void updateState(StateType &state, int channel = -1);
+
+    /**
+     * Update the local coefficients with the coefficients from the filter state.
+     * This is necessary since the filter state is responsible for smoothing the filter
+     * coefficients.
+     */
+    template <typename StateType> void updateCoefficients(StateType &state, int channel = 0);
 
     /** Current filter coefficients */
     float C[n_cm_coeffs]{};

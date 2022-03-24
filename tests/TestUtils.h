@@ -19,7 +19,6 @@ constexpr bool printRMSs = false; // change this to true when generating test da
 constexpr auto sampleRate = 48000.0f;
 constexpr int blockSize = 2048;
 
-constexpr float A440 = 69.0f;
 constexpr int numTestFreqs = 5;
 constexpr std::array<float, numTestFreqs> testFreqs { 80.0f, 200.0f, 440.0f, 1000.0f, 10000.0f };
 
@@ -50,6 +49,8 @@ struct TestConfig
     FilterType type;
     FilterSubType subType;
     RMSSet expRmsDBs;
+    float cutoffFreq = 0.0f;
+    float resonance = 0.5f;
 };
 
 static float delayBufferData[4][utilities::MAX_FB_COMB + utilities::SincTable::FIRipol_N] {};
@@ -69,7 +70,12 @@ auto runTest = [] (const TestConfig& testConfig)
 
     sst::filters::FilterCoefficientMaker coefMaker;
     coefMaker.setSampleRateAndBlockSize(sampleRate, blockSize);
-    coefMaker.MakeCoeffs(A440, 0.5f, testConfig.type, testConfig.subType, nullptr, false);
+    coefMaker.MakeCoeffs(testConfig.cutoffFreq,
+                         testConfig.resonance,
+                         testConfig.type,
+                         testConfig.subType,
+                         nullptr,
+                         false);
     coefMaker.updateState(filterState);
 
     std::array<float, numTestFreqs> actualRMSs {};

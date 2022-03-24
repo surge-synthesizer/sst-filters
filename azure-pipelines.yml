@@ -56,11 +56,20 @@ jobs:
       - checkout: self
         fetchDepth: 1
 
+      - bash: |
+          sudo apt-get update
+          sudo apt install ninja-build libasound2-dev libx11-dev libxcomposite-dev libxcursor-dev libxext-dev libxinerama-dev libxrandr-dev libxrender-dev libfreetype6-dev libglu1-mesa-dev libjack-jackd2-dev
+        condition: variables.isLinux
+        displayName: Install Linux dependencies
+
       - bash: cmake -Bbuild -DCMAKE_BUILD_TYPE=Release -DSST_FILTERS_BUILD_EXAMPLES=ON
         displayName: Run cmake configure
 
       - bash: cmake --build build --config Release --target filter_plot_tool
         displayName: Build filter_plot_tool
+
+      - bash: cmake --build build --config Release --target FiltersPlugin_VST3
+        displayName: Build filters_example_plugin
 
 
   - job: MacARM
