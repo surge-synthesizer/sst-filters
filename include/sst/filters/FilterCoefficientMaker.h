@@ -39,7 +39,7 @@ template <typename TuningProvider = detail::BasicTuningProvider> class FilterCoe
     /**
      * Creates filter coefficients for a given set of filter parameters
      *
-     * Note that frequency is expected in units of MIDI note number.
+     * Note that frequency is expected in units of MIDI note number, with A440 = 0.
      */
     void MakeCoeffs(float Freq, float Reso, FilterType Type, FilterSubType SubType,
                     TuningProvider *provider, bool tuningAdjusted);
