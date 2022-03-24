@@ -5,7 +5,10 @@ namespace
 {
 constexpr float lowFreq = 10.0f;
 constexpr float highFreq = 24000.0f;
-constexpr auto dbRange = 20.0f;
+constexpr auto dbMin = -33.0f;
+constexpr auto dbMax = 9.0f;
+constexpr auto dbRange = dbMax - dbMin;
+constexpr int labelHeight = 15;
 
 float freqToX(float freq, int width)
 {
@@ -13,7 +16,7 @@ float freqToX(float freq, int width)
     return xNorm * (float)width;
 }
 
-float dbToY(float db, float height) { return (float)height * (dbRange - db) / (2.0f * dbRange); }
+float dbToY(float db, int height) { return (float)height * (dbMax - db) / dbRange; }
 } // namespace
 
 FilterPlotComponent::FilterPlotComponent(juce::AudioProcessorValueTreeState &vtState) : vts(vtState)
@@ -57,18 +60,35 @@ void FilterPlotComponent::drawPlotBackground(juce::Graphics &g)
     const auto width = getWidth();
     const auto height = getHeight();
 
+    const auto font = juce::Font{(float)labelHeight * 0.9f};
+    g.setFont(font);
+
     for (float freq : {100.0f, 1000.0f, 10000.0f})
     {
         const auto xPos = freqToX(freq, width);
         juce::Line line{juce::Point{xPos, 0.0f}, juce::Point{xPos, (float)height}};
         g.drawLine(line);
+
+        const auto over1000 = freq >= 1000.0f;
+        const auto freqString =
+            juce::String(over1000 ? freq / 1000.0f : freq) + (over1000 ? " kHz" : " Hz");
+        const auto labelRect = juce::Rectangle{font.getStringWidth(freqString), labelHeight}
+                                   .withBottomY(height)
+                                   .withRightX((int)xPos);
+        g.drawFittedText(freqString, labelRect, juce::Justification::bottom, 1);
     }
 
-    for (float db : {-18.0f, -12.0f, -6.0f, 0.0f, 6.0f, 12.0f, 18.0f})
+    for (float db : {-30.0f, -24.0f, -18.0f, -12.0f, -6.0f, 0.0f, 6.0f})
     {
         const auto yPos = dbToY(db, height);
         juce::Line line{juce::Point{0.0f, yPos}, juce::Point{(float)width, yPos}};
         g.drawLine(line);
+
+        const auto dbString = juce::String(db) + " dB";
+        const auto labelRect = juce::Rectangle{font.getStringWidth(dbString), labelHeight}
+                                   .withBottomY((int)yPos)
+                                   .withRightX(width);
+        g.drawFittedText(dbString, labelRect, juce::Justification::right, 1);
     }
 }
 

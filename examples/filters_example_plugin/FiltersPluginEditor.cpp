@@ -213,7 +213,7 @@ void FiltersPluginEditor::resized()
     constexpr int labelWidth = 55;
     bounds.removeFromLeft(labelWidth); // leave space for labels
 
-    auto setComponentBounds = [&bounds](auto &comp, auto &label, int reduce = 0) {
+    auto setComponentBounds = [labelWidth, &bounds](auto &comp, auto &label, int reduce = 0) {
         comp.setBounds(bounds.removeFromTop(50).reduced(reduce));
         label.setBounds(comp.getBounds().withX(0).withWidth(labelWidth));
     };
