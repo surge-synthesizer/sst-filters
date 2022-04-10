@@ -35,7 +35,13 @@ class FilterPlotter
         generateLogSweep(sweepBuffer.data(), fftSize, params);
 
         // set up filter
+        float delayBuffer[4][sst::filters::utilities::MAX_FB_COMB +
+                       sst::filters::utilities::SincTable::FIRipol_N];
         auto filterState = sst::filters::QuadFilterUnitState{};
+        for (auto i=0; i<4; ++i)
+        {
+            filterState.DB[i] = &(delayBuffer[i][0]);
+        }
         auto filterUnitPtr = sst::filters::GetQFPtrFilterUnit(filterType, filterSubType);
 
         sst::filters::FilterCoefficientMaker coefMaker;
@@ -75,6 +81,13 @@ class FilterPlotter
     {
         // reset filter state
         std::fill (filterState.R, &filterState.R[sst::filters::n_filter_registers], _mm_setzero_ps());
+
+        for (int i=0; i<4; ++i)
+        {
+            filterState.WP[i] = 0;
+            filterState.active[i] = 0;
+        }
+        filterState.active[0] = 0xFFFFFFFF;
 
         for (int i = 0; i < numSamples; ++i)
         {
