@@ -22,7 +22,7 @@ constexpr int blockSize = 2048;
 constexpr int numTestFreqs = 5;
 constexpr std::array<float, numTestFreqs> testFreqs { 80.0f, 200.0f, 440.0f, 1000.0f, 10000.0f };
 
-auto runSine = [](auto &filterState, auto &filterUnitPtr, float testFreq, int numSamples) {
+inline float runSine(sst::filters::QuadFilterUnitState &filterState, sst::filters::FilterUnitQFPtr &filterUnitPtr, float testFreq, int numSamples) {
     // reset filter state
     std::fill (filterState.R, &filterState.R[sst::filters::n_filter_registers], _mm_setzero_ps());
 
@@ -55,7 +55,7 @@ struct TestConfig
 
 static float delayBufferData[4][utilities::MAX_FB_COMB + utilities::SincTable::FIRipol_N] {};
 
-auto runTest = [] (const TestConfig& testConfig)
+inline void runTest(const TestConfig& testConfig)
 {
     auto filterState = sst::filters::QuadFilterUnitState{};
     for (int i = 0; i < 4; ++i)
@@ -84,7 +84,7 @@ auto runTest = [] (const TestConfig& testConfig)
         auto rmsDB = runSine(filterState, filterUnitPtr, testFreqs[i], blockSize);
 
         if constexpr (! printRMSs)
-            REQUIRE(rmsDB == Approx(testConfig.expRmsDBs[i]).margin(1.0e-4f));
+            REQUIRE(rmsDB == Approx(testConfig.expRmsDBs[i]).margin(1.0e-2f));
 
         actualRMSs[i] = rmsDB;
     }
