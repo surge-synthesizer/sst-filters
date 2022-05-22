@@ -16,7 +16,7 @@ struct FilterPlotParameters
     float sampleRate = 96000.0f;
     float startFreqHz = 20.0f;
     float endFreqHz = 20000.0f;
-    float inputAmplitude = 0.1f;
+    float inputAmplitude = 1.0f / juce::MathConstants<float>::sqrt2;
     float freqSmoothOctaves = 1.0f / 12.0f;
 };
 
