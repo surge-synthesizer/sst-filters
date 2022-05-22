@@ -16,8 +16,8 @@ struct FilterPlotParameters
     float sampleRate = 96000.0f;
     float startFreqHz = 20.0f;
     float endFreqHz = 20000.0f;
-    float inputAmplitude = 1.0f;
-    float freqSmoothOctaves = 1.0f / 3.0f;
+    float inputAmplitude = 0.1f;
+    float freqSmoothOctaves = 1.0f / 12.0f;
 };
 
 class FilterPlotter
@@ -113,14 +113,14 @@ class FilterPlotter
         const auto fftOutSize = numSamples / 2 + 1;
         std::vector<float> magnitudeResponseDB (fftOutSize, 0.0f);
         for (int i = 0; i < fftOutSize; ++i)
-            magnitudeResponseDB[i] = 20.0f * std::log10(filtFFT[i] / sweepFFT[i]);
+            magnitudeResponseDB[i] = juce::Decibels::gainToDecibels(filtFFT[i] / sweepFFT[i]);
 
         return magnitudeResponseDB;
     }
 
     static std::vector<float> fftFreqs(int N, float T)
     {
-        auto val = 1.0f / ((float) N * T);
+        auto val = 0.5f / ((float) N * T);
 
         std::vector<float> results (N, 0.0f);
         std::iota (results.begin(), results.end(), 0.0f);

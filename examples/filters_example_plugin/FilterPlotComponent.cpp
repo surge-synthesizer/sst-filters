@@ -5,6 +5,7 @@ namespace
 {
 constexpr float lowFreq = 10.0f;
 constexpr float highFreq = 24000.0f;
+const auto scaleFreq = std::log(highFreq / lowFreq);
 constexpr auto dbMin = -33.0f;
 constexpr auto dbMax = 9.0f;
 constexpr auto dbRange = dbMax - dbMin;
@@ -12,7 +13,7 @@ constexpr int labelHeight = 15;
 
 float freqToX(float freq, int width)
 {
-    const auto xNorm = std::log(freq / lowFreq) / std::log(highFreq / lowFreq);
+    const auto xNorm = std::log(freq / lowFreq) / scaleFreq;
     return xNorm * (float)width;
 }
 
@@ -63,6 +64,7 @@ void FilterPlotComponent::drawPlotBackground(juce::Graphics &g)
     const auto font = juce::Font{(float)labelHeight * 0.9f};
     g.setFont(font);
 
+    // draw major lines
     for (float freq : {100.0f, 1000.0f, 10000.0f})
     {
         const auto xPos = freqToX(freq, width);
@@ -89,6 +91,29 @@ void FilterPlotComponent::drawPlotBackground(juce::Graphics &g)
                                    .withBottomY((int)yPos)
                                    .withRightX(width);
         g.drawFittedText(dbString, labelRect, juce::Justification::right, 1);
+    }
+
+    // draw minor lines
+    {
+        juce::Graphics::ScopedSaveState gss{g};
+        g.setOpacity(0.75f);
+        for (float freqBase : {2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f})
+        {
+            for (float freqMult : {10.0f, 100.0f, 1000.0f, 10000.0f})
+            {
+                const auto freq = freqBase * freqMult;
+                const auto xPos = freqToX(freq, width);
+                juce::Line line{juce::Point{xPos, 0.0f}, juce::Point{xPos, (float)height}};
+                g.drawLine(line);
+            }
+        }
+
+        for (float db : {-27.0f, -21.0f, -15.0f, -9.0f, -3.0f, 3.0f})
+        {
+            const auto yPos = dbToY(db, height);
+            juce::Line line{juce::Point{0.0f, yPos}, juce::Point{(float)width, yPos}};
+            g.drawLine(line);
+        }
     }
 }
 
