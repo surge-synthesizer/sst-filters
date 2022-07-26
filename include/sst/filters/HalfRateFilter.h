@@ -6,13 +6,13 @@
 namespace sst::filters::HalfRate
 {
 
+static constexpr uint32_t halfrate_max_M = 6;
+static constexpr uint32_t hr_BLOCK_SIZE = 256;
+
 class alignas(16) HalfRateFilter
 {
-    static constexpr uint32_t halfrate_max_M = 6;
-    static constexpr uint32_t hr_BLOCK_SIZE = 256;
-    const __m128 half = _mm_set_ps1(0.5f);
-
   private:
+    // Remember leave these first so they stay aligned
     __m128 va[halfrate_max_M];
     __m128 vx0[halfrate_max_M];
     __m128 vx1[halfrate_max_M];
@@ -21,6 +21,8 @@ class alignas(16) HalfRateFilter
     __m128 vy1[halfrate_max_M];
     __m128 vy2[halfrate_max_M];
     __m128 oldout;
+
+    const __m128 half = _mm_set_ps1(0.5f);
 
   public:
     HalfRateFilter(int M, bool steep)
