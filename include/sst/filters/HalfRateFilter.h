@@ -25,6 +25,13 @@ class alignas(16) HalfRateFilter
     const __m128 half = _mm_set_ps1(0.5f);
 
   public:
+    /**
+     * Implement a half rate up/down filter
+     *
+     * @param M The size of the FIR. Range from 1 to halfrate_max_M
+     * @param steep Steepness. Set false for softer slopes, more attenuation and less stopband
+     * ripple
+     */
     HalfRateFilter(int M, bool steep)
     {
         assert(!(M > halfrate_max_M));
