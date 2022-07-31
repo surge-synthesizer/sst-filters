@@ -1,6 +1,7 @@
 #ifndef SST_FILTERS_HALFRATEFILTER_H
 #define SST_FILTERS_HALFRATEFILTER_H
 
+#include <cstdint>
 #include "sst/utilities/globals.h"
 
 namespace sst::filters::HalfRate
