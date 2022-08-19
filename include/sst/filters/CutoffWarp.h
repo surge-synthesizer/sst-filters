@@ -40,13 +40,13 @@ enum Saturator
 // 'drive' and without the unused QuadFilterWaveshaperState pointer.
 static inline __m128 ojd_waveshaper_ps(const __m128 x) noexcept
 {
-    static const auto pm17 = _mm_set1_ps(-1.7f);
-    static const auto p11 = _mm_set1_ps(1.1f);
-    static const auto pm03 = _mm_set1_ps(-0.3f);
-    static const auto p09 = _mm_set1_ps(0.9f);
+    const auto pm17 = _mm_set1_ps(-1.7f);
+    const auto p11 = _mm_set1_ps(1.1f);
+    const auto pm03 = _mm_set1_ps(-0.3f);
+    const auto p09 = _mm_set1_ps(0.9f);
 
-    static const auto denLow = _mm_set1_ps(1.f / (4 * (1 - 0.3f)));
-    static const auto denHigh = _mm_set1_ps(1.f / (4 * (1 - 0.9f)));
+    const auto denLow = _mm_set1_ps(1.f / (4 * (1 - 0.3f)));
+    const auto denHigh = _mm_set1_ps(1.f / (4 * (1 - 0.9f)));
 
     auto maskNeg = _mm_cmple_ps(x, pm17);                         // in <= -1.7f
     auto maskPos = _mm_cmpge_ps(x, p11);                          // in > 1.1f
@@ -54,8 +54,8 @@ static inline __m128 ojd_waveshaper_ps(const __m128 x) noexcept
     auto maskHigh = _mm_andnot_ps(maskPos, _mm_cmpgt_ps(x, p09)); // in > 0.9 && in < 1.1
     auto maskMid = _mm_and_ps(_mm_cmpge_ps(x, pm03), _mm_cmple_ps(x, p09)); // the middle
 
-    static const auto vNeg = _mm_set1_ps(-1.0);
-    static const auto vPos = _mm_set1_ps(1.0);
+    const auto vNeg = _mm_set1_ps(-1.0);
+    const auto vPos = _mm_set1_ps(1.0);
     auto vMid = x;
 
     auto xlow = _mm_sub_ps(x, pm03);

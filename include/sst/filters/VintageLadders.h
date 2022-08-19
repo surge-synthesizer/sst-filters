@@ -134,7 +134,7 @@ inline void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, float f
 
 inline __m128 clip(__m128 value, __m128 _saturation, __m128 _saturationinverse)
 {
-    static const __m128 minusone = F(-1), one = F(1), onethird = F(1.f / 3.f);
+    const __m128 minusone = F(-1), one = F(1), onethird = F(1.f / 3.f);
     auto vtsi = M(value, _saturationinverse);
     auto v2 = _mm_min_ps(one, _mm_max_ps(minusone, vtsi));
     auto v23 = M(v2, M(v2, v2));
@@ -179,7 +179,7 @@ inline __m128 process(QuadFilterUnitState *__restrict f, __m128 input)
     auto stepSize = F(f->sampleRateInv * extraOversampleInv),
          halfStepSize = F(0.5f * f->sampleRateInv * extraOversampleInv);
 
-    static const __m128 oneoversix = F(1.f / 6.f), two = F(2.f), dFac = F(extraOversampleInv),
+    const __m128 oneoversix = F(1.f / 6.f), two = F(2.f), dFac = F(extraOversampleInv),
                         sat = F(saturation), satInv = F(saturationInverse);
 
     __m128 outputOS[extraOversample];
@@ -342,7 +342,7 @@ inline __m128 process(QuadFilterUnitState *__restrict f, __m128 in)
 #define A(a, b) _mm_add_ps(a, b)
 #define S(a, b) _mm_sub_ps(a, b)
 
-    static const __m128 dFac = F(0.5f), half = F(0.5f), one = F(1.0f), four = F(4.0f),
+    const __m128 dFac = F(0.5f), half = F(0.5f), one = F(1.0f), four = F(4.0f),
                         m18730 = F(1.8730f), m04955 = F(0.4995f), mneg06490 = F(-0.6490f),
                         m09988 = F(0.9988f), mneg39364 = F(-3.9364f), m18409 = F(1.8409f),
                         m09968 = F(0.9968f), thermal = F(1.f / 70.f), oneoverthermal = F(70.0f),
