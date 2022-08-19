@@ -167,7 +167,7 @@ inline float fasttan(float x) noexcept
 
 inline __m128 fasttanhSSE(__m128 x)
 {
-    static const __m128 m135135 = _mm_set_ps1(135135), m17325 = _mm_set_ps1(17325),
+    const __m128 m135135 = _mm_set_ps1(135135), m17325 = _mm_set_ps1(17325),
                         m378 = _mm_set_ps1(378), m62370 = _mm_set_ps1(62370),
                         m3150 = _mm_set_ps1(3150), m28 = _mm_set_ps1(28);
 
@@ -206,7 +206,7 @@ inline __m128 fastexpSSE(__m128 x) noexcept
 #define A(a, b) _mm_add_ps(a, b)
 #define F(a) _mm_set_ps1(a)
 
-    static const __m128 m1680 = F(1680), m840 = F(840), mneg840 = F(-840), m180 = F(180),
+    const __m128 m1680 = F(1680), m840 = F(840), mneg840 = F(-840), m180 = F(180),
                         m20 = F(20), mneg20 = F(-20);
 
     auto num = A(m1680, M(x, A(m840, M(x, A(m180, M(x, A(m20, x)))))));

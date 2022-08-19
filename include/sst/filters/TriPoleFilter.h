@@ -68,7 +68,7 @@ static inline __m128 thr_sigmoid(__m128 x, float beta)
 
 static inline __m128 sech2_with_tanh(__m128 tanh_value)
 {
-    static const auto one = F(1.0f);
+    const auto one = F(1.0f);
     return S(one, M(tanh_value, tanh_value));
 }
 
@@ -86,7 +86,7 @@ static inline __m128 nonlinOutput(__m128 tanh_x, __m128 tanh_y, __m128 z, __m128
 
 static inline __m128 getDerivative(__m128 tanh_y, __m128 b_coeff)
 {
-    static const auto one = F(1.0f);
+    const auto one = F(1.0f);
     return S(M(N(b_coeff), sech2_with_tanh(tanh_y)), one);
 }
 
@@ -124,7 +124,7 @@ static inline __m128 nonlinOutput(__m128 x_minus_x1_plus_z, __m128 tanh_y, __m12
 
 static inline __m128 getDerivative(__m128 tanh_y, __m128 b_coeff)
 {
-    static const auto neg_one = F(-1.0f);
+    const auto neg_one = F(-1.0f);
     return A(M(N(b_coeff), sech2_with_tanh(tanh_y)), neg_one);
 }
 
@@ -166,7 +166,7 @@ static inline __m128 getDerivative(__m128 tanh_y, __m128 b_coeff)
 
 static inline __m128 getXDerivative()
 {
-    static const auto two = F(2.0f);
+    const auto two = F(2.0f);
     return two;
 }
 
@@ -202,7 +202,7 @@ static inline __m128 nonlinOutput(__m128 x_minus_x1_plus_z, __m128 tanh_y, __m12
 
 static inline __m128 getDerivative(__m128 tanh_y, __m128 b_coeff)
 {
-    static const auto neg_one = F(-1.0f);
+    const auto neg_one = F(-1.0f);
     return A(M(N(b_coeff), sech2_with_tanh(tanh_y)), neg_one);
 }
 
@@ -243,9 +243,9 @@ const float betaExpOverMult = beta_exp / mult;
 
 static inline __m128 sign_ps(__m128 x)
 {
-    static const __m128 zero = _mm_setzero_ps();
-    static const __m128 one = _mm_set1_ps(1.0f);
-    static const __m128 neg_one = _mm_set1_ps(-1.0f);
+    const __m128 zero = _mm_setzero_ps();
+    const __m128 one = _mm_set1_ps(1.0f);
+    const __m128 neg_one = _mm_set1_ps(-1.0f);
 
     __m128 positive = _mm_and_ps(_mm_cmpgt_ps(x, zero), one);
     __m128 negative = _mm_and_ps(_mm_cmplt_ps(x, zero), neg_one);
