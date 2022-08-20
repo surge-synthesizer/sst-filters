@@ -125,13 +125,11 @@ void fillStringArrayWithFilterSubTypes(juce::StringArray &strArray,
     {
     case FilterType::fut_lp12:
     case FilterType::fut_lp24:
+    case FilterType::fut_bp12:
+    case FilterType::fut_bp24:
     case FilterType::fut_hp12:
     case FilterType::fut_hp24:
         fillArray(sst::filters::fut_def_subtypes);
-        break;
-    case FilterType::fut_bp12:
-    case FilterType::fut_bp24:
-        fillArray(sst::filters::fut_bp_subtypes);
         break;
     case FilterType::fut_notch12:
     case FilterType::fut_notch24:
