@@ -129,12 +129,6 @@ const char filter_menu_names[num_filter_types][32] = {
     */
 };
 
-const char fut_bp_subtypes[3][32] = {
-    "Clean",
-    "Driven",
-    "Smooth",
-};
-
 const char fut_notch_subtypes[2][32] = {
     "Standard",
     "Mild",
@@ -146,9 +140,9 @@ const char fut_comb_subtypes[2][64] = {
 };
 
 const char fut_def_subtypes[3][32] = {
-    "Clean",
+    "Standard",
     "Driven",
-    "Smooth",
+    "Clean",
 };
 
 const char fut_ldr_subtypes[4][32] = {
@@ -247,10 +241,10 @@ const int fut_subcount[num_filter_types] = {
 /** Sub-types for each filter are defined here */
 enum FilterSubType
 {
-    st_SVF = 0,    /**< Clean */
-    st_Rough = 1,  /**< Driven */
-    st_Smooth = 2, /**< Smooth */
-    st_Medium = 3, /**< (Unused) */
+    st_Standard = 0, /**< Standard (SVF) */
+    st_Driven = 1,   /**< Driven */
+    st_Clean = 2,    /**< Clean */
+    st_Medium = 3,   /**< (Unused) */
 
     st_Notch = 0,     /**< Standard */
     st_NotchMild = 1, /**< Mild */

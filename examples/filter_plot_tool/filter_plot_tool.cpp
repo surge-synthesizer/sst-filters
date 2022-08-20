@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
     if (argc > 3)
         filterType = static_cast<sst::filters::FilterType>(std::atoi(argv[3]));
 
-    auto filterSubType = sst::filters::FilterSubType::st_SVF;
+    auto filterSubType = sst::filters::FilterSubType::st_Standard;
     if (argc > 4)
         filterSubType = static_cast<sst::filters::FilterSubType>(std::atoi(argv[4]));
 

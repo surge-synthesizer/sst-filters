@@ -101,24 +101,24 @@ void FilterCoefficientMaker<TuningProvider>::MakeCoeffs(float Freq, float Reso, 
     switch (Type)
     {
     case fut_lp12:
-        if (SubType == st_SVF)
+        if (SubType == st_Standard)
             Coeff_SVF(Freq, Reso, false);
         else
             Coeff_LP12(Freq, Reso, SubType);
         break;
     case fut_hp12:
-        if (SubType == st_SVF)
+        if (SubType == st_Standard)
             Coeff_SVF(Freq, Reso, false);
         else
             Coeff_HP12(Freq, Reso, SubType);
         break;
     case fut_bp12:
-        if (SubType == st_SVF)
+        if (SubType == st_Standard)
             Coeff_SVF(Freq, Reso, false);
         else
             Coeff_BP12(Freq, Reso, SubType);
     case fut_bp24:
-        if (SubType == st_SVF)
+        if (SubType == st_Standard)
             Coeff_SVF(Freq, Reso, false); // WHY FALSE? It was this way before #3006 tho
         else
             Coeff_BP24(Freq, Reso, SubType);
@@ -131,13 +131,13 @@ void FilterCoefficientMaker<TuningProvider>::MakeCoeffs(float Freq, float Reso, 
         Coeff_APF(Freq, Reso, SubType);
         break;
     case fut_lp24:
-        if (SubType == st_SVF)
+        if (SubType == st_Standard)
             Coeff_SVF(Freq, Reso, true);
         else
             Coeff_LP24(Freq, Reso, SubType);
         break;
     case fut_hp24:
-        if (SubType == st_SVF)
+        if (SubType == st_Standard)
             Coeff_SVF(Freq, Reso, true);
         else
             Coeff_HP24(Freq, Reso, SubType);
@@ -237,9 +237,9 @@ inline float clipscale(float freq, int subtype)
 {
     switch (subtype)
     {
-    case st_Rough:
+    case st_Driven:
         return (1.0f / 64.0f) * db_to_linear(freq * 0.55f);
-    case st_Smooth:
+    case st_Clean:
         return (1.0f / 1024.0f);
     default:
         return 0;
@@ -257,12 +257,12 @@ inline double Map2PoleResonance(double reso, double freq, int subtype)
         reso *= max(0.0, 1.0 - max(0.0, (freq - 58) * 0.05));
         return (0.99 -
                 1.0 * utilities::limit_range((double)(1 - (1 - reso) * (1 - reso)), 0.0, 1.0));
-    case st_Rough:
+    case st_Driven:
         reso *= max(0.0, 1.0 - max(0.0, (freq - 58) * 0.05));
         return (1.0 -
                 1.05 * utilities::limit_range((double)(1 - (1 - reso) * (1 - reso)), 0.001, 1.0));
     default:
-    case st_Smooth:
+    case st_Clean:
         return (2.5 -
                 2.45 * utilities::limit_range((double)(1 - (1 - reso) * (1 - reso)), 0.0, 1.0));
     }
@@ -270,7 +270,7 @@ inline double Map2PoleResonance(double reso, double freq, int subtype)
 
 inline double Map2PoleResonance_noboost(double reso, double /*freq*/, int subtype)
 {
-    if (subtype == st_Rough)
+    if (subtype == st_Driven)
         return (1.0 -
                 0.99 * utilities::limit_range((double)(1 - (1 - reso) * (1 - reso)), 0.001, 1.0));
     else
@@ -286,11 +286,11 @@ inline double Map4PoleResonance(double reso, double freq, int subtype)
     case st_Medium:
         reso *= max(0.0, 1.0 - max(0.0, (freq - 58) * 0.05));
         return 0.99 - 0.9949 * utilities::limit_range((double)reso, 0.0, 1.0);
-    case st_Rough:
+    case st_Driven:
         reso *= max(0.0, 1.0 - max(0.0, (freq - 58) * 0.05));
         return (1.0 - 1.05 * utilities::limit_range((double)reso, 0.001, 1.0));
     default:
-    case st_Smooth:
+    case st_Clean:
         return (2.5 - 2.3 * utilities::limit_range((double)reso, 0.0, 1.0));
     }
 }
@@ -301,9 +301,9 @@ template <typename T> inline T resoscale(T reso, int subtype)
     {
     case st_Medium:
         return ((T)1.0 - (T)0.75 * reso * reso);
-    case st_Rough:
+    case st_Driven:
         return ((T)1.0 - (T)0.5 * reso * reso);
-    case st_Smooth:
+    case st_Clean:
         return ((T)1.0 - (T)0.25 * reso * reso);
     default:
         return (T)1.0;
@@ -316,9 +316,9 @@ template <typename T> inline T resoscale4Pole(T reso, int subtype)
     {
     case st_Medium:
         return ((T)1.0 - (T)0.75 * reso);
-    case st_Rough:
+    case st_Driven:
         return ((T)1.0 - (T)0.5 * reso * reso);
-    case st_Smooth:
+    case st_Clean:
         return ((T)1.0 - (T)0.5 * reso);
     default:
         return (T)1.0;
@@ -364,7 +364,7 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_LP12(float freq, float reso, 
 
     double alpha = sinu * Map2PoleResonance(reso, freq, subtype);
 
-    if (subtype != st_Smooth)
+    if (subtype != st_Clean)
     {
         alpha = std::min(alpha, sqrt(1.0 - cosi * cosi) - 0.0001);
     }
@@ -372,7 +372,7 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_LP12(float freq, float reso, 
     double a0 = 1 + alpha, a0inv = 1 / a0, a1 = -2 * cosi, a2 = 1 - alpha, b0 = (1 - cosi) * 0.5,
            b1 = 1 - cosi, b2 = (1 - cosi) * 0.5;
 
-    if (subtype == st_Smooth)
+    if (subtype == st_Clean)
         ToNormalizedLattice(a0inv, a1, a2, b0 * gain, b1 * gain, b2 * gain,
                             clipscale(freq, subtype));
     else
@@ -391,7 +391,7 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_LP24(float freq, float reso, 
     double Q2inv = Map4PoleResonance((double)reso, (double)freq, subtype);
     double alpha = sinu * Q2inv;
 
-    if (subtype != st_Smooth)
+    if (subtype != st_Clean)
     {
         alpha = std::min(alpha, sqrt(1.0 - cosi * cosi) - 0.0001);
     }
@@ -399,7 +399,7 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_LP24(float freq, float reso, 
     double a0 = 1 + alpha, a0inv = 1 / a0, a1 = -2 * cosi, a2 = 1 - alpha, b0 = (1 - cosi) * 0.5,
            b1 = 1 - cosi, b2 = (1 - cosi) * 0.5;
 
-    if (subtype == st_Smooth)
+    if (subtype == st_Clean)
         ToNormalizedLattice(a0inv, a1, a2, b0 * gain, b1 * gain, b2 * gain,
                             clipscale(freq, subtype));
     else
@@ -426,7 +426,7 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_HP12(float freq, float reso, 
     double a0 = 1 + alpha, a0inv = 1 / a0, a1 = -2 * cosi, a2 = 1 - alpha, b0 = (1 + cosi) * 0.5,
            b1 = -(1 + cosi), b2 = (1 + cosi) * 0.5;
 
-    if (subtype == st_Smooth)
+    if (subtype == st_Clean)
         ToNormalizedLattice(a0inv, a1, a2, b0 * gain, b1 * gain, b2 * gain,
                             clipscale(freq, subtype));
     else
@@ -453,7 +453,7 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_HP24(float freq, float reso, 
     double a0 = 1 + alpha, a0inv = 1 / a0, a1 = -2 * cosi, a2 = 1 - alpha, b0 = (1 + cosi) * 0.5,
            b1 = -(1 + cosi), b2 = (1 + cosi) * 0.5;
 
-    if (subtype == st_Smooth)
+    if (subtype == st_Clean)
         ToNormalizedLattice(a0inv, a1, a2, b0 * gain, b1 * gain, b2 * gain,
                             clipscale(freq, subtype));
     else
@@ -466,7 +466,7 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_BP12(float freq, float reso, 
     float cosi, sinu;
     float gain = resoscale(reso, subtype);
 
-    if (subtype == st_Rough)
+    if (subtype == st_Driven)
     {
         gain *= 2.f;
     }
@@ -491,7 +491,7 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_BP12(float freq, float reso, 
         b2 = -Q * alpha;
     }
 
-    if (subtype == st_Smooth)
+    if (subtype == st_Clean)
         ToNormalizedLattice(a0inv, a1, a2, b0 * gain, b1 * gain, b2 * gain,
                             clipscale(freq, subtype));
     else
@@ -504,7 +504,7 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_BP24(float freq, float reso, 
     float cosi, sinu;
     float gain = resoscale(reso, subtype);
 
-    if (subtype == st_Rough)
+    if (subtype == st_Driven)
     {
         gain *= 2.f;
     }
@@ -529,7 +529,7 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_BP24(float freq, float reso, 
         b2 = -Q * alpha;
     }
 
-    if (subtype == st_Smooth)
+    if (subtype == st_Clean)
         ToNormalizedLattice(a0inv, a1, a2, b0 * gain, b1 * gain, b2 * gain,
                             clipscale(freq, subtype));
     else

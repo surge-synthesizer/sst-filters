@@ -597,11 +597,11 @@ inline FilterUnitQFPtr GetQFPtrFilterUnit(FilterType type, FilterSubType subtype
     {
         switch (subtype)
         {
-        case st_SVF:
+        case st_Standard:
             return SVFLP12Aquad;
-        case st_Rough:
+        case st_Driven:
             return IIR12CFCquad;
-        case st_Smooth:
+        case st_Clean:
             return IIR12Bquad;
         default:
             break;
@@ -611,11 +611,11 @@ inline FilterUnitQFPtr GetQFPtrFilterUnit(FilterType type, FilterSubType subtype
     {
         switch (subtype)
         {
-        case st_SVF:
+        case st_Standard:
             return SVFLP24Aquad;
-        case st_Rough:
+        case st_Driven:
             return IIR24CFCquad;
-        case st_Smooth:
+        case st_Clean:
             return IIR24Bquad;
         default:
             break;
@@ -626,11 +626,11 @@ inline FilterUnitQFPtr GetQFPtrFilterUnit(FilterType type, FilterSubType subtype
     {
         switch (subtype)
         {
-        case st_SVF:
+        case st_Standard:
             return SVFHP12Aquad;
-        case st_Rough:
+        case st_Driven:
             return IIR12CFCquad;
-        case st_Smooth:
+        case st_Clean:
             return IIR12Bquad;
         default:
             break;
@@ -641,11 +641,11 @@ inline FilterUnitQFPtr GetQFPtrFilterUnit(FilterType type, FilterSubType subtype
     {
         switch (subtype)
         {
-        case st_SVF:
+        case st_Standard:
             return SVFHP24Aquad;
-        case st_Rough:
+        case st_Driven:
             return IIR24CFCquad;
-        case st_Smooth:
+        case st_Clean:
             return IIR24Bquad;
         default:
             break;
@@ -656,11 +656,11 @@ inline FilterUnitQFPtr GetQFPtrFilterUnit(FilterType type, FilterSubType subtype
     {
         switch (subtype)
         {
-        case st_SVF:
+        case st_Standard:
             return SVFBP12Aquad;
-        case st_Rough:
+        case st_Driven:
             return IIR12CFCquad;
-        case st_Smooth:
+        case st_Clean:
             return IIR12Bquad;
         default:
             break;
@@ -671,11 +671,11 @@ inline FilterUnitQFPtr GetQFPtrFilterUnit(FilterType type, FilterSubType subtype
     {
         switch (subtype)
         {
-        case st_SVF:
+        case st_Standard:
             return SVFBP24Aquad;
-        case st_Rough:
+        case st_Driven:
             return IIR24CFCquad;
-        case st_Smooth:
+        case st_Clean:
             return IIR24Bquad;
         default:
             break;

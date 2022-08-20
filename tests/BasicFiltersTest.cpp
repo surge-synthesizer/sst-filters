@@ -7,91 +7,91 @@ TEST_CASE("Basic Filters")
     SECTION("LP_12")
     {
         runTest({FilterType::fut_lp12,
-                 FilterSubType::st_SVF,
+                 FilterSubType::st_Standard,
                  {-8.02604f, -6.72912f, -3.8718f, -20.6177f, -53.7828f}});
 
         runTest({FilterType::fut_lp12,
-                 FilterSubType::st_Rough,
+                 FilterSubType::st_Driven,
                  {-4.52473f, -3.6442f, -2.13439f, -16.4384f, -49.3718f},
                  0.0f});
 
         runTest({FilterType::fut_lp12,
-                 FilterSubType::st_Smooth,
+                 FilterSubType::st_Clean,
                  {-3.62033f, -3.70258f, -6.10753f, -17.6442f, -53.1438f}});
     }
 
     SECTION("LP_24")
     {
         runTest({FilterType::fut_lp24,
-                 FilterSubType::st_SVF,
+                 FilterSubType::st_Standard,
                  {-7.79654f, -5.2026f, -1.93057f, -27.0258f, -50.9426f}});
 
         runTest({FilterType::fut_lp24,
-                 FilterSubType::st_Rough,
+                 FilterSubType::st_Driven,
                  {-6.51442f, -5.74044f, -6.61548f, -28.9689f, -54.0992f}});
 
         runTest({FilterType::fut_lp24,
-                 FilterSubType::st_Smooth,
+                 FilterSubType::st_Clean,
                  {-5.89545f, -10.7429f, -20.97f, -35.7356f, -60.1235f}});
     }
 
     SECTION("HP_12")
     {
         runTest({FilterType::fut_hp12,
-                 FilterSubType::st_SVF,
+                 FilterSubType::st_Standard,
                  {-35.8899f, -20.1651f, -3.91549f, -6.78058f, -8.34447f}});
 
         runTest({FilterType::fut_hp12,
-                 FilterSubType::st_Rough,
+                 FilterSubType::st_Driven,
                  {-31.4426f, -15.8495f, -1.84373f, -2.67782f, -4.16204f}});
 
         runTest({FilterType::fut_hp12,
-                 FilterSubType::st_Smooth,
+                 FilterSubType::st_Clean,
                  {-32.3916f, -17.1967f, -6.15529f, -3.55761f, -3.57168f}});
     }
 
     SECTION("HP_24")
     {
         runTest({FilterType::fut_hp24,
-                 FilterSubType::st_SVF,
+                 FilterSubType::st_Standard,
                  {-38.0661f, -27.0505f, -1.89886f, -5.27993f, -8.33136f}});
 
         runTest({FilterType::fut_hp24,
-                 FilterSubType::st_Rough,
+                 FilterSubType::st_Driven,
                  {-42.8669f, -28.9289f, -6.65685f, -4.0466f, -5.3227f}});
 
         runTest({FilterType::fut_hp24,
-                 FilterSubType::st_Smooth,
+                 FilterSubType::st_Clean,
                  {-51.1071f, -34.1528f, -16.2113f, -7.22786f, -4.15892f}});
     }
 
     SECTION("BP_12")
     {
         runTest({FilterType::fut_bp12,
-                 FilterSubType::st_SVF,
+                 FilterSubType::st_Standard,
                  {-22.9694f, -13.5409f, -3.81424f, -13.7711f, -34.7354f}});
 
         runTest({FilterType::fut_bp12,
-                 FilterSubType::st_Rough,
+                 FilterSubType::st_Driven,
                  {-12.6309f, -3.79841f, -0.00540512f, -4.4129f, -26.6096f}});
 
         runTest({FilterType::fut_bp12,
-                 FilterSubType::st_Smooth,
+                 FilterSubType::st_Clean,
                  {-18.7297f, -11.5658f, -9.04975f, -13.323f, -34.3029f}});
     }
 
     SECTION("BP_24")
     {
         runTest({FilterType::fut_bp24,
-                 FilterSubType::st_SVF,
+                 FilterSubType::st_Standard,
                  {-33.6982f, -18.0861f, -1.37863f, -18.7074f, -50.5816f}});
 
         runTest({FilterType::fut_bp24,
-                 FilterSubType::st_Rough,
+                 FilterSubType::st_Driven,
                  {-21.5631f, -6.61244f, -0.148954f, -6.07533f, -43.7467f}});
 
         runTest({FilterType::fut_bp24,
-                 FilterSubType::st_Smooth,
+                 FilterSubType::st_Clean,
                  {-39.4046f, -26.4753f, -21.4875f, -26.704f, -65.0009f}});
     }
 
