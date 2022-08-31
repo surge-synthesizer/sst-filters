@@ -42,7 +42,7 @@ class alignas(16) HalfRateFilter
         reset();
     }
 
-    void process_block(float *floatL, float *floatR, int nsamples = 64)
+    void process_block(float *floatL, float *floatR, int nsamples)
     {
         __m128 *__restrict L = (__m128 *)floatL;
         __m128 *__restrict R = (__m128 *)floatR;
@@ -143,7 +143,7 @@ class alignas(16) HalfRateFilter
             oldout = _mm_shuffle_ps(o[k], o[k], _MM_SHUFFLE(3, 3, 1, 1));
         }
     }
-    void process_block_D2(float *floatL, float *floatR, int nsamples = 64, float *outL = 0,
+    void process_block_D2(float *floatL, float *floatR, int nsamples, float *outL = 0,
                           float *outR = 0) // process in-place. the new block will be half the size
     {
         __m128 *L = (__m128 *)floatL;
@@ -273,7 +273,7 @@ class alignas(16) HalfRateFilter
     }
 
     void process_block_U2(float *floatL_in, float *floatR_in, float *floatL, float *floatR,
-                          int nsamples = 64)
+                          int nsamples)
     {
         __m128 *L = (__m128 *)floatL;
         __m128 *R = (__m128 *)floatR;
