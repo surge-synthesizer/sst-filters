@@ -149,17 +149,51 @@ class alignas(16) HalfRateFilter
         __m128 *L = (__m128 *)floatL;
         __m128 *R = (__m128 *)floatR;
         __m128 o[hr_BLOCK_SIZE];
-        // fill the buffer with interleaved stereo samples
+
+        /*
+         * fill the buffer with interleaved stereo samples by rotating the
+         * input simd-in-time a bit
+         *
+         * _mm_shuffle_ps(a,b,_MM_SHUFFLE(i,j,k,l)) returns a[i], a[j], b[k], b[l]
+         *
+         * So this loop makes o look like the rotation of L and R. That is
+         *
+         * o[n] = {L[n],L[n],R[n],R[n]}
+         *
+         * for n in 0..nsamples leading o to being LLRR pairs of the input
+         */
         for (int k = 0; k < nsamples; k += 4)
         {
-            //[o3,o2,o1,o0] = [L0,L0,R0,R0]
             o[k] = _mm_shuffle_ps(L[k >> 2], R[k >> 2], _MM_SHUFFLE(0, 0, 0, 0));
             o[k + 1] = _mm_shuffle_ps(L[k >> 2], R[k >> 2], _MM_SHUFFLE(1, 1, 1, 1));
             o[k + 2] = _mm_shuffle_ps(L[k >> 2], R[k >> 2], _MM_SHUFFLE(2, 2, 2, 2));
             o[k + 3] = _mm_shuffle_ps(L[k >> 2], R[k >> 2], _MM_SHUFFLE(3, 3, 3, 3));
         }
 
-        // process filters
+        /*
+         * Process filters. We have a cascade of M three point filters we need to run.
+         * Each has a state vx0..2 and vy0..2 indexed by the filter M. We also have coefficients
+         * for each filter A_M and B_M. which are loaded into ta in set_coefficients in order
+         * B A B A in SIMD space
+         *
+         * The filter step is x2 = x1; x1 = x0; x0 = o. Which means the X have the LL RR form.
+         *
+         * Then y2 = y1, y1 = y0 and y0 = x2 + (x0-y2) * a
+         *
+         * Then o = y0. Fine. But what's that filter step doing. Basically it is saying for each
+         * L and R pair we get two AllPass updates. So expanding the vector you get
+         *
+         * 0: y0_0 = x2_0 + (L - y2_0) + B
+         * 1: y0_0 = x2_0 + (L - y2_0) + A
+         *
+         * etc... - basically we have done a pair of all passes at each M.
+         *
+         * So at the end of this loop for each order, the 'o' array will be filled
+         * with the cascade of coefficient B or A all passes and will be in order
+         *
+         * o_i: AllPassCascade_B(L_i), AllPassCascade_A(L_i), AllPassCascade_B(R_i),
+         * AllPassCascade_A(R_i)
+         */
         for (int j = 0; j < M; j++)
         {
             __m128 tx0 = vx0[j];
@@ -170,6 +204,7 @@ class alignas(16) HalfRateFilter
             __m128 ty2 = vy2[j];
             __m128 ta = va[j];
 
+            // Why is this loop hand-unrolled?
             for (int k = 0; k < nsamples; k += 2)
             {
                 // shuffle inputs
@@ -207,27 +242,87 @@ class alignas(16) HalfRateFilter
         __m128 cR = _mm_setzero_ps();
         __m128 dR = _mm_setzero_ps();
 
-        /*
-        // If you want to avoid downsampling, do this
-        for(unsigned int k=0; k<nsamples; k++)
-        {
-
-        float *of = (float*)o;
-        float out_a = of[(k<<2)];
-        float out_b = of[(k<<2)+1];
-
-
-        float *fL = (float*)L;
-        fL[k] = (out_a + oldout_f) * 0.5f;
-        oldout_f = out_b;
-        }*/
-
         if (outL)
             L = (__m128 *)outL;
         if (outR)
             R = (__m128 *)outR;
 
-        // 95
+        /*
+         * OK so now we have all the filtered signals we want to reconstruct the output.
+         * This is basically the sample selection stage. To read this code you need
+         * to remember that _mm_movehl_ps(a,b) results in b[3], b[4], a[3], a[4] as the
+         * simd output.
+         *
+         * The code had this comment
+         *
+         *  const double output=(filter_a.process(input)+oldout)*0.5;
+         *  oldout=filter_b.process(input);
+         *
+         * atop this code
+         *
+         * __m128 tL0 = _mm_shuffle_ps(o[k], o[k], _MM_SHUFFLE(1, 1, 1, 1));
+         * __m128 tR0 = _mm_shuffle_ps(o[k], o[k], _MM_SHUFFLE(3, 3, 3, 3));
+         * __m128 aL = _mm_add_ss(tL0, o[k + 1]);
+         * aR = _mm_movehl_ps(aR, o[k + 1]);
+         * aR = _mm_add_ss(aR, tR0);
+         *
+         * So can we make that tie out? Remembering o now has the for B_L A_L, B_R, A_R
+         *
+         * So tL0 = _mm_shuffle_ps(o[k], o[k], 11111)
+         * or tL0 = o[k][1] in every slot or tl0 is A_L across the board at sample k.
+         * Similarly tR0 = A_R across the board at sample K.
+         *
+         * Now recall _mm_add_ss(a,b) gives you (a[0]+b[0], a[1], a[2], a[3]) so now we do
+         *
+         * __m128 aL = _mm_add_ss(tL0, o[k + 1]);
+         * aL = (A_L[k] + B_L[k+1], A_L[k],  A_L[k], A_L[k]);
+         *
+         * Now
+         *
+         * aR = _mm_movehl_ps(aR, o[k + 1]);
+         * aR = B_R[k+1], A_R[k+1], aR[3], aR[4]
+         *
+         * aR = _mm_add_ss(aR, tR0) or
+         * aR = (A_R[k] + B_R[k+1], A_R[k+1], aR[3], aR[4])
+         *
+         * (At this point I'm suspecting that the rest of the SIMD registeres in A wont matter)
+         *
+         * Now similarly bL and bR, cL and cR, dL and dR are constructed with the same code just
+         * at index k+2/3, k+4/5, k+6/7
+         *
+         * So once those stages are assembled we do this
+         *
+         * aL = _mm_movelh_ps(aL, bL);
+         * cL = _mm_movelh_ps(cL, dL);
+         * L[k >> 3] = _mm_shuffle_ps(aL, cL, _MM_SHUFFLE(2, 0, 2, 0));
+         *
+         * And similarly for R. So what's that doing. So first of all _mm_novelh_ps [note lh
+         * not hl] has signatlre
+         *
+         * _mm_movelh_ps(a,b) = a[0],a[1],b[0],b[1]
+         *
+         * so this sets
+         *
+         * aL = aL[0],aL[1],bL[0],bL[1]
+         * cL = cL[0], cL[1], dL[0], dL[1]
+         *
+         * and then that shuffle says
+         *
+         * L = aL[2],aL[0],cL[2],cL[0]
+         *
+         * which looks a lot to me like I have a bit flip somewhere wrong in my
+         * comments (like that should be 0202 not 2020 but leave that for now)
+         * because essentially all this complexity is resulting in
+         *
+         * L[i] = A_L[2*i] + B_L[2+i+1]
+         *
+         * Namely all this code does two things
+         *
+         * 1. Run a cascade of all pass filters
+         * 2. Interleave the output with offset samples for the downsample between
+         *    the two filter sides
+         *
+         */
         for (int k = 0; k < nsamples; k += 8)
         {
             /*	const double output=(filter_a.process(input)+oldout)*0.5;
