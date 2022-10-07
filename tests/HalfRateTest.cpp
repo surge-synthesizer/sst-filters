@@ -141,5 +141,4 @@ TEST_CASE("HalfRate Filter") {
             }
         }
     }
-
 }
