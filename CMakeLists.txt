@@ -3,8 +3,6 @@ project(sst-filters VERSION 0.5 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 
-include(cmake/CPM.cmake)
-
 add_library(${PROJECT_NAME} INTERFACE)
 target_include_directories(${PROJECT_NAME} INTERFACE include)
 
@@ -22,6 +20,7 @@ target_link_libraries(${PROJECT_NAME}-extras INTERFACE ${PROJECT_NAME})
 get_directory_property(parent_dir PARENT_DIRECTORY)
 if ("${parent_dir}" STREQUAL "")
     set(is_toplevel 1)
+    include(cmake/CPM.cmake)
 else ()
     set(is_toplevel 0)
 endif ()
