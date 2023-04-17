@@ -29,6 +29,14 @@ option(SST_FILTERS_BUILD_EXAMPLES "Add targets for building and running sst-filt
 
 if (SST_FILTERS_BUILD_TESTS OR SST_FILTERS_BUILD_EXAMPLES)
     message(STATUS "Importing SIMDE with CPM")
+
+    if (NOT TARGET sst-basic-blocks)
+        CPMAddPackage(NAME sst-basic-blocks
+                GITHUB_REPOSITORY surge-synthesizer/sst-basic-blocks
+                GIT_TAG main
+                )
+    endif()
+
     CPMAddPackage(NAME simde
             GITHUB_REPOSITORY simd-everywhere/simde
             VERSION 0.7.2
@@ -37,6 +45,19 @@ if (SST_FILTERS_BUILD_TESTS OR SST_FILTERS_BUILD_EXAMPLES)
     target_include_directories(simde INTERFACE ${simde_SOURCE_DIR})
 endif ()
 
+if (SST_GET_BASIC_BLOCKS)
+    CPMAddPackage(NAME sst-basic-blocks
+            GITHUB_REPOSITORY surge-synthesizer/sst-basic-blocks
+            GIT_TAG main
+            )
+endif()
+
+if (NOT TARGET sst-basic-blocks)
+    message(FATAL_ERROR "sst-basic-blocks is not available in this context. Set SST_GET_BASIC_BLOCKS=1 or add it")
+else()
+    target_link_libraries(${PROJECT_NAME} INTERFACE sst-basic-blocks)
+endif()
+
 if (SST_FILTERS_BUILD_TESTS)
     add_subdirectory(tests)
 endif ()
@@ -44,3 +65,5 @@ endif ()
 if(SST_FILTERS_BUILD_EXAMPLES)
     add_subdirectory(examples)
 endif()
+
+

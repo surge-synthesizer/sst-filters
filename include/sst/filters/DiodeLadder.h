@@ -2,6 +2,7 @@
 #define SST_FILTERS_DIODELADDER_H
 
 #include "sst/utilities/basic_dsp.h"
+#include "sst/basic-blocks/dsp/FastMath.h"
 #include "QuadFilterUnit.h"
 #include "FilterCoefficientMaker.h"
 
@@ -79,7 +80,7 @@ void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, float freq, fl
                       float sampleRate, float sampleRateInv, TuningProvider *provider)
 {
     const float wd = clampedFrequency(freq, sampleRate, provider) * 2.0f * (float)M_PI;
-    const float wa = (2.0f * sampleRate) * utilities::DSP::fasttan(wd * sampleRateInv * 0.5f);
+    const float wa = (2.0f * sampleRate) * basic_blocks::dsp::fasttan(wd * sampleRateInv * 0.5f);
     const float g = wa * sampleRateInv * 0.5f;
 
     const float G4 = 0.5f * g / (1.0f + g);

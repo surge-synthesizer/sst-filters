@@ -3,6 +3,7 @@
 
 #include "QuadFilterUnit.h"
 #include "FilterCoefficientMaker.h"
+#include "sst/basic-blocks/dsp/FastMath.h"
 
 /**
  * This filter is an emulation of the "Threeler" VCF by
@@ -261,7 +262,7 @@ static inline __m128 res_func_ps(__m128 x)
     auto x_less_than = _mm_cmplt_ps(x_abs, F(max_val));
 
     auto y =
-        A(N(utilities::DSP::fastexpSSE(M(F(beta_exp), N(utilities::abs_ps(A(x, F(c))))))), F(bias));
+        A(N(basic_blocks::dsp::fastexpSSE(M(F(beta_exp), N(utilities::abs_ps(A(x, F(c))))))), F(bias));
     y = M(sign_ps(x), M(y, F(oneOverMult)));
 
     return _mm_or_ps(_mm_and_ps(x_less_than, M(x, F(oneOverMult))), _mm_andnot_ps(x_less_than, y));
@@ -274,7 +275,7 @@ static inline __m128 res_deriv_ps(__m128 x)
     auto x_abs = utilities::abs_ps(x);
     auto x_less_than = _mm_cmplt_ps(x_abs, F(max_val));
 
-    auto y = A(utilities::DSP::fastexpSSE(M(F(beta_exp), N(utilities::abs_ps(A(x, F(c)))))),
+    auto y = A(basic_blocks::dsp::fastexpSSE(M(F(beta_exp), N(utilities::abs_ps(A(x, F(c)))))),
                F(betaExpOverMult));
 
     return _mm_or_ps(_mm_and_ps(x_less_than, F(one)), _mm_andnot_ps(x_less_than, y));

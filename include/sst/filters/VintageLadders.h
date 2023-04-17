@@ -3,7 +3,7 @@
 
 #include "sst/utilities/globals.h"
 #include "sst/utilities/basic_dsp.h"
-#include "sst/utilities/FastMath.h"
+#include "sst/basic-blocks/dsp/FastMath.h"
 #include "QuadFilterUnit.h"
 #include "FilterCoefficientMaker.h"
 
@@ -365,7 +365,7 @@ inline __m128 process(QuadFilterUnitState *__restrict f, __m128 in)
         auto acr = A(M(mneg39364, fc2), A(M(m18409, fc), m09968));
 
         // auto tune = (1.0 - exp(-((2 * M_PI) * f * fcr))) / thermal;
-        auto tune = M(S(one, utilities::DSP::fastexpSSE(M(neg2pi, M(fr, fcr)))), oneoverthermal);
+        auto tune = M(S(one, basic_blocks::dsp::fastexpSSE(M(neg2pi, M(fr, fcr)))), oneoverthermal);
         // auto resquad = 4.0 * res * arc;
         auto resquad = M(four, M(res, acr));
 
@@ -380,7 +380,7 @@ inline __m128 process(QuadFilterUnitState *__restrict f, __m128 in)
 
         // delay[0] = stage[0] = delay[0] + tune * (tanh(input * thermal) - stageTanh[0]);
         f->R[h_stage + 0] =
-            A(f->R[h_delay + 0], M(tune, S(utilities::DSP::fasttanhSSEclamped(M(input, thermal)),
+            A(f->R[h_delay + 0], M(tune, S(basic_blocks::dsp::fasttanhSSEclamped(M(input, thermal)),
                                            f->R[h_stageTanh + 0])));
         f->R[h_delay + 0] = f->R[h_stage + 0];
 
@@ -391,11 +391,11 @@ inline __m128 process(QuadFilterUnitState *__restrict f, __m128 in)
 
             // stage[k] = delay[k] + tune * ((stageTanh[k-1] = tanh(input * thermal)) - (k != 3 ?
             // stageTanh[k] : tanh(delay[k] * thermal)));
-            f->R[h_stageTanh + k - 1] = utilities::DSP::fasttanhSSEclamped(M(input, thermal));
+            f->R[h_stageTanh + k - 1] = basic_blocks::dsp::fasttanhSSEclamped(M(input, thermal));
             f->R[h_stage + k] =
                 A(f->R[h_delay + k], M(tune, S(f->R[h_stageTanh + k - 1],
                                                (k != 3 ? f->R[h_stageTanh + k]
-                                                       : utilities::DSP::fasttanhSSEclamped(
+                                                       : basic_blocks::dsp::fasttanhSSEclamped(
                                                              M(f->R[h_delay + k], thermal))))));
 
             // delay[k] = stage[k];
