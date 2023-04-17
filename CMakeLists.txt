@@ -37,12 +37,14 @@ if (SST_FILTERS_BUILD_TESTS OR SST_FILTERS_BUILD_EXAMPLES)
                 )
     endif()
 
-    CPMAddPackage(NAME simde
-            GITHUB_REPOSITORY simd-everywhere/simde
-            VERSION 0.7.2
-            )
-    add_library(simde INTERFACE)
-    target_include_directories(simde INTERFACE ${simde_SOURCE_DIR})
+    if (NOT TARGET simde)
+        CPMAddPackage(NAME simde
+                GITHUB_REPOSITORY simd-everywhere/simde
+                VERSION 0.7.2
+                )
+        add_library(simde INTERFACE)
+        target_include_directories(simde INTERFACE ${simde_SOURCE_DIR})
+    endif()
 endif ()
 
 if (SST_GET_BASIC_BLOCKS)
