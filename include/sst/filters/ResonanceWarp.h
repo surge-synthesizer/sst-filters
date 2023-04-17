@@ -4,7 +4,7 @@
 #include "QuadFilterUnit.h"
 #include "FilterCoefficientMaker.h"
 #include "sst/utilities/basic_dsp.h"
-#include "sst/utilities/FastMath.h"
+#include "sst/basic-blocks/dsp/FastMath.h"
 
 /**
  * This contains an adaptation of the filter found at
@@ -53,8 +53,8 @@ static inline __m128 doNLFilter(const __m128 input, const __m128 a1, const __m12
     switch (sat)
     {
     case SAT_TANH:
-        z1 = utilities::DSP::fasttanhSSEclamped(z1);
-        z2 = utilities::DSP::fasttanhSSEclamped(z2);
+        z1 = basic_blocks::dsp::fasttanhSSEclamped(z1);
+        z2 = basic_blocks::dsp::fasttanhSSEclamped(z2);
         break;
     default:
         z1 = utilities::softclip_ps(z1); // note, this is a bit different to Jatin's softclipper
@@ -98,8 +98,8 @@ void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, float freq, fl
 
     const float wc = 2.0f * (float)M_PI * clampedFrequency(freq, sampleRate, provider) / sampleRate;
 
-    const float wsin = utilities::DSP::fastsin(wc);
-    const float wcos = utilities::DSP::fastcos(wc);
+    const float wsin = basic_blocks::dsp::fastsin(wc);
+    const float wcos = basic_blocks::dsp::fastcos(wc);
     const float alpha = wsin / (2.0f * q);
 
     // note we actually calculate the reciprocal of a0 because we only use a0 to normalize the

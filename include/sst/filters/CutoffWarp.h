@@ -4,7 +4,7 @@
 #include "QuadFilterUnit.h"
 #include "FilterCoefficientMaker.h"
 #include "sst/utilities/basic_dsp.h"
-#include "sst/utilities/FastMath.h"
+#include "sst/basic-blocks/dsp/FastMath.h"
 
 /**
  * This namespace contains an adaptation of the filter found at
@@ -89,7 +89,7 @@ static inline __m128 doNLFilter(const __m128 input, const __m128 a1, const __m12
         nf = ojd_waveshaper_ps(out);
         break;
     default: // SAT_TANH; the removed SAT_SINE and others are also caught here
-        nf = utilities::DSP::fasttanhSSEclamped(out);
+        nf = basic_blocks::dsp::fasttanhSSEclamped(out);
         break;
     }
 
@@ -136,8 +136,8 @@ void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, float freq, fl
     const float normalisedFreq = 2.0f * clampedFrequency(freq, sampleRate, provider) / sampleRate;
     const float wc = (float)M_PI * normalisedFreq;
 
-    const float wsin = utilities::DSP::fastsin(wc);
-    const float wcos = utilities::DSP::fastcos(wc);
+    const float wsin = basic_blocks::dsp::fastsin(wc);
+    const float wcos = basic_blocks::dsp::fastcos(wc);
     const float alpha = wsin / (2.0f * q);
 
     // note we actually calculate the reciprocal of a0 because we only use a0 to normalize the
