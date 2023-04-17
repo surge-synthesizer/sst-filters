@@ -2,7 +2,6 @@
 #define SST_FILTERS_VINTAGELADDERS_H
 
 #include "sst/utilities/globals.h"
-#include "sst/utilities/basic_dsp.h"
 #include "sst/basic-blocks/dsp/FastMath.h"
 #include "QuadFilterUnit.h"
 #include "FilterCoefficientMaker.h"
@@ -26,7 +25,7 @@ inline float clampedFrequency(float pitch, float sampleRate, TuningProvider *pro
 {
     auto freq =
         provider->note_to_pitch_ignoring_tuning(pitch + 69.0f) * (float)TuningProvider::MIDI_0_FREQ;
-    freq = utilities::limit_range(freq, 5.f, sampleRate * 0.3f);
+    freq = std::clamp(freq, 5.f, sampleRate * 0.3f);
     return freq;
 }
 } // namespace Common
@@ -115,7 +114,7 @@ inline void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, float f
 
     lc[rkm_cutoff] = pitch * 2.0f * (float)M_PI;
     lc[rkm_reso] =
-        utilities::limit_range(reso, 0.f, 1.f) *
+        std::clamp(reso, 0.f, 1.f) *
         4.5f; // code says 0-10 is value but above 4 or so it's just out of tune self-oscillation
     lc[rkm_gComp] = 0.0;
 
@@ -320,7 +319,7 @@ inline void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, float f
     float co = std::max(cutoff - sampleRate * 0.33333f, 0.0f) * 0.1f * sampleRateInv;
     float gctrim = applyGainCompensation ? 0.05f : 0.0f;
 
-    reso = utilities::limit_range(utilities::limit_range(reso, 0.0f, 0.9925f), 0.0f,
+    reso = std::clamp(std::clamp(reso, 0.0f, 0.9925f), 0.0f,
                                   0.994f - co - gctrim);
     lC[h_res] = reso;
     lC[h_fc] = cutoff * sampleRateInv;

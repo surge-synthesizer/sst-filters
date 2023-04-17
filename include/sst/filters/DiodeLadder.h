@@ -1,7 +1,6 @@
 #ifndef SST_FILTERS_DIODELADDER_H
 #define SST_FILTERS_DIODELADDER_H
 
-#include "sst/utilities/basic_dsp.h"
 #include "sst/basic-blocks/dsp/FastMath.h"
 #include "QuadFilterUnit.h"
 #include "FilterCoefficientMaker.h"
@@ -17,7 +16,7 @@ static float clampedFrequency(float pitch, float sampleRate, TuningProvider *pro
 {
     auto freq =
         provider->note_to_pitch_ignoring_tuning(pitch + 69) * (float)TuningProvider::MIDI_0_FREQ;
-    freq = utilities::limit_range(freq, 5.f, sampleRate * 0.3f);
+    freq = std::clamp(freq, 5.f, sampleRate * 0.3f);
     return freq;
 }
 

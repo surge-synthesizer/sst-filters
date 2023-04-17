@@ -3,8 +3,8 @@
 
 #include "QuadFilterUnit.h"
 #include "FilterCoefficientMaker.h"
-#include "sst/utilities/basic_dsp.h"
 #include "sst/basic-blocks/dsp/FastMath.h"
+#include "sst/basic-blocks/dsp/Clippers.h"
 
 /**
  * This contains an adaptation of the filter found at
@@ -22,7 +22,7 @@ static float clampedFrequency(float pitch, float sampleRate, TuningProvider *pro
 {
     auto freq =
         provider->note_to_pitch_ignoring_tuning(pitch + 69) * (float)TuningProvider::MIDI_0_FREQ;
-    freq = utilities::limit_range(freq, 5.f, sampleRate * 0.3f);
+    freq = std::clamp(freq, 5.f, sampleRate * 0.3f);
     return freq;
 }
 
@@ -57,8 +57,8 @@ static inline __m128 doNLFilter(const __m128 input, const __m128 a1, const __m12
         z2 = basic_blocks::dsp::fasttanhSSEclamped(z2);
         break;
     default:
-        z1 = utilities::softclip_ps(z1); // note, this is a bit different to Jatin's softclipper
-        z2 = utilities::softclip_ps(z2);
+        z1 = basic_blocks::dsp::softclip_ps(z1); // note, this is a bit different to Jatin's softclipper
+        z2 = basic_blocks::dsp::softclip_ps(z2);
         break;
     }
     return out;
@@ -92,7 +92,7 @@ void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, float freq, fl
 {
     float C[n_cm_coeffs];
 
-    reso = utilities::limit_range(reso, 0.f, 1.f);
+    reso = std::clamp(reso, 0.f, 1.f);
 
     const float q = ((reso * reso * reso) * 18.0f + 0.1f);
 
