@@ -5,6 +5,7 @@ target_compile_definitions(sst-filters-tests PRIVATE CATCH_CONFIG_DISABLE_EXCEPT
 target_sources(sst-filters-tests
         PRIVATE
         BasicFiltersTest.cpp
+        BiquadTest.cpp
         CutoffWarpTest.cpp
         DiodeLadderTest.cpp
         K35FilterTest.cpp
