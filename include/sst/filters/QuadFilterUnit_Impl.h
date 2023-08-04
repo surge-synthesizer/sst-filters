@@ -708,7 +708,7 @@ inline FilterUnitQFPtr GetQFPtrFilterUnit(FilterType type, FilterSubType subtype
         return SNHquad;
     case fut_comb_pos:
     case fut_comb_neg:
-        if (subtype & QFUSubtypeMasks::EXTENDED_COMB)
+        if (subtype & static_cast<int>(QFUSubtypeMasks::EXTENDED_COMB))
         {
             return COMBquad_SSE2<utilities::MAX_FB_COMB_EXTENDED>;
         }
