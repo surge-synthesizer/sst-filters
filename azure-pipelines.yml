@@ -13,7 +13,7 @@ jobs:
     strategy:
       matrix:
         mac:
-          imageName: 'macos-10.15'
+          imageName: 'macos-latest'
           isMac: True
         win:
           imageName: 'windows-2019'
@@ -40,7 +40,7 @@ jobs:
     strategy:
       matrix:
         mac:
-          imageName: 'macos-10.15'
+          imageName: 'macos-latest'
           isMac: True
         win:
           imageName: 'windows-2019'
@@ -75,7 +75,7 @@ jobs:
   - job: MacARM
     condition: eq(variables['Build.Reason'], 'PullRequest')
     pool:
-      vmImage: 'macos-10.15'
+      vmImage: 'macos-latest'
 
     steps:
       - checkout: self
