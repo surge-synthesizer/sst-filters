@@ -39,7 +39,14 @@ namespace sst::filters::utilities
 static inline int _stricmp(const char *s1, const char *s2) { return strcasecmp(s1, s2); }
 #endif
 
-constexpr int MAX_FB_COMB = 2048; // must be 2^n
+// In surge 1.3 we wanted the comb filters to ring a little longer, but
+// we don't want to firce this on every client so make it ifdefable at
+// build time
+#ifndef SST_FILTERS_COMB_EXTENSION_FACTOR
+#define SST_FILTERS_COMB_EXTENSION_FACTOR 2
+#endif
+
+constexpr int MAX_FB_COMB = 2048 * SST_FILTERS_COMB_EXTENSION_FACTOR; // must be 2^n
 constexpr int MAX_FB_COMB_EXTENDED = 2048 * 64;
 } // namespace sst::filters::utilities
 
