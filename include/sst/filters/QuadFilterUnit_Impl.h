@@ -22,9 +22,6 @@ namespace sst::filters
 #define A(a, b) _mm_add_ps(a, b)
 #define S(a, b) _mm_sub_ps(a, b)
 #define MAX(a, b) _mm_max_ps(a, b)
-#define AND(a, b) _mm_and_ps(a, b)
-#define NAND(a, b) _mm_andnot_ps(a, b)
-#define OR(a, b) _mm_or_ps(a, b)
 
 inline __m128 SVFLP12Aquad(QuadFilterUnitState *__restrict f, __m128 in)
 {
@@ -349,8 +346,8 @@ inline __m128 IIR12CFLquad(QuadFilterUnitState *__restrict f, __m128 in)
     const __m128 m001 = F(0.001f);
     const __m128 m099 = F(0.999f);
 
-    __m128 m =
-        _mm_rsqrt_ps(MAX(m128_one, M(m128_two, AND(y, basic_blocks::mechanics::m128_mask_absval))));
+    __m128 m = _mm_rsqrt_ps(
+        MAX(m128_one, M(m128_two, _mm_and_ps(y, basic_blocks::mechanics::m128_mask_absval))));
     f->R[2] = A(M(f->R[2], m099), M(m, m001));
 
     return y;
@@ -425,7 +422,7 @@ inline __m128 IIR24CFLquad(QuadFilterUnitState *__restrict f, __m128 in)
     const __m128 m099 = F(0.999f);
 
     __m128 m = _mm_rsqrt_ps(
-        MAX(m128_one, M(m128_two, AND(y2, basic_blocks::mechanics::m128_mask_absval))));
+        MAX(m128_one, M(m128_two, _mm_and_ps(y2, basic_blocks::mechanics::m128_mask_absval))));
     f->R[2] = A(M(f->R[2], m099), M(m, m001));
 
     return y2;
@@ -490,10 +487,11 @@ inline __m128 SNHquad(QuadFilterUnitState *__restrict f, __m128 in)
 
     __m128 mask = _mm_cmpgt_ps(f->R[0], _mm_setzero_ps());
 
-    f->R[1] = OR(NAND(mask, f->R[1]),
-                 AND(mask, basic_blocks::dsp::softclip_ps(S(in, M(f->C[1], f->R[1])))));
+    f->R[1] =
+        _mm_or_ps(_mm_andnot_ps(mask, f->R[1]),
+                  _mm_and_ps(mask, basic_blocks::dsp::softclip_ps(S(in, M(f->C[1], f->R[1])))));
 
-    f->R[0] = A(f->R[0], AND(m128_minusone, mask));
+    f->R[0] = A(f->R[0], _mm_and_ps(m128_minusone, mask));
 
     return f->R[1];
 }
@@ -842,8 +840,5 @@ inline FilterUnitQFPtr GetQFPtrFilterUnit(FilterType type, FilterSubType subtype
 #undef A
 #undef S
 #undef MAX
-#undef AND
-#undef NAND
-#undef OR
 
 } // namespace sst::filters

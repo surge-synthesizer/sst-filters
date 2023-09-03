@@ -34,8 +34,6 @@ namespace sst::filters::OBXDFilter
 #define D(a, b) _mm_div_ps(a, b)
 #define A(a, b) _mm_add_ps(a, b)
 #define S(a, b) _mm_sub_ps(a, b)
-#define AND(a, b) _mm_and_ps(a, b)
-#define NAND(a, b) _mm_andnot_ps(a, b)
 #define IS_EQ(a, b) _mm_cmpeq_ps(a, b)
 #define IS_LT(a, b) _mm_cmplt_ps(a, b)
 
@@ -162,7 +160,8 @@ inline __m128 NewtonRaphson12dB(__m128 sample, QuadFilterUnitState *__restrict f
     __m128 selfOscOffVal = S(diodePairResistanceApprox(M(f->R[s1], eight_seven_six)), m128_one);
     __m128 selfOscOnVal =
         S(diodePairResistanceApprox(M(f->R[s1], eight_seven_six)), one_three_five);
-    tCfb = A(AND(selfOscEnabledMask, selfOscOnVal), NAND(selfOscEnabledMask, selfOscOffVal));
+    tCfb = A(_mm_and_ps(selfOscEnabledMask, selfOscOnVal),
+             _mm_andnot_ps(selfOscEnabledMask, selfOscOffVal));
 
     // resolve linear feedback
     // float y = ((sample - 2*(s1*(R+tCfb)) - g*s1  - s2)/(1+ g*(2*(R+tCfb)+ g)));
@@ -198,8 +197,8 @@ inline __m128 process_2_pole(QuadFilterUnitState *__restrict f, __m128 sample)
     __m128 mask = IS_LT(f->C[multimode], m128_half);
     __m128 val1 = A(M(S(m128_half, f->C[multimode]), y2), M(f->C[multimode], y1));
     __m128 val2 = A(M(S(m128_one, f->C[multimode]), y1), M(S(f->C[multimode], m128_half), v));
-    __m128 bp_true = A(AND(mask, val1), NAND(mask, val2));
-    mc = A(AND(mask_bp, bp_false), NAND(mask_bp, bp_true));
+    __m128 bp_true = A(_mm_and_ps(mask, val1), _mm_andnot_ps(mask, val2));
+    mc = A(_mm_and_ps(mask_bp, bp_false), _mm_andnot_ps(mask_bp, bp_true));
     return M(mc, gainAdjustment2Pole);
 }
 
@@ -284,8 +283,8 @@ inline __m128 process_4_pole(QuadFilterUnitState *__restrict f, __m128 sample)
     __m128 two_val = A(M(S(m128_one, f->C[pole_mix_scaled]), y2), M(f->C[pole_mix_scaled], y1));
     __m128 three_val = y1;
 
-    mc = A(AND(zero_mask, zero_val), AND(one_mask, one_val));
-    mc = A(mc, A(AND(two_mask, two_val), AND(three_mask, three_val)));
+    mc = A(_mm_and_ps(zero_mask, zero_val), _mm_and_ps(one_mask, one_val));
+    mc = A(mc, A(_mm_and_ps(two_mask, two_val), _mm_and_ps(three_mask, three_val)));
 
     // half volume compensation
     auto out = M(mc, A(m128_one, M(f->C[R24], zero_four_five)));
@@ -298,8 +297,6 @@ inline __m128 process_4_pole(QuadFilterUnitState *__restrict f, __m128 sample)
 #undef D
 #undef A
 #undef S
-#undef AND
-#undef NAND
 #undef IS_EQ
 #undef IS_LT
 

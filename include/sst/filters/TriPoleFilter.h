@@ -58,17 +58,14 @@ static float clampedFrequency(float pitch, float sampleRate, TuningProvider *pro
 #define A(a, b) _mm_add_ps(a, b)
 #define S(a, b) _mm_sub_ps(a, b)
 #define N(a) S(m128_zero, a)
-#define AND(a, b) _mm_and_ps(a, b)
-#define NAND(a, b) _mm_andnot_ps(a, b)
-#define OR(a, b) _mm_or_ps(a, b)
 
 /** inverse square root sigmoid */
 static inline __m128 thr_sigmoid(__m128 x, float beta)
 {
-    __m128 vtmp = M(x, x);                    // calculate in*in
-    __m128 vtmp2 = A(vtmp, F(beta));          // in*in+1.f
-    vtmp = _mm_rsqrt_ps(vtmp2);               // 1/sqrt(in*in+1.f)
-    return M(vtmp, x);                        // in*1/sqrt(in*in+1)
+    __m128 vtmp = M(x, x);           // calculate in*in
+    __m128 vtmp2 = A(vtmp, F(beta)); // in*in+1.f
+    vtmp = _mm_rsqrt_ps(vtmp2);      // 1/sqrt(in*in+1.f)
+    return M(vtmp, x);               // in*1/sqrt(in*in+1)
 }
 
 static inline __m128 sech2_with_tanh(__m128 tanh_value)
@@ -250,10 +247,10 @@ const float betaExpOverMult = beta_exp / mult;
 
 static inline __m128 sign_ps(__m128 x)
 {
-    __m128 positive = AND(_mm_cmpgt_ps(x, m128_zero), m128_one);
-    __m128 negative = AND(_mm_cmplt_ps(x, m128_zero), m128_minusone);
+    __m128 positive = _mm_and_ps(_mm_cmpgt_ps(x, m128_zero), m128_one);
+    __m128 negative = _mm_and_ps(_mm_cmplt_ps(x, m128_zero), m128_minusone);
 
-    return OR(positive, negative);
+    return _mm_or_ps(positive, negative);
 }
 
 static inline __m128 res_func_ps(__m128 x)
@@ -263,11 +260,12 @@ static inline __m128 res_func_ps(__m128 x)
     auto x_abs = basic_blocks::mechanics::abs_ps(x);
     auto x_less_than = _mm_cmplt_ps(x_abs, F(max_val));
 
-    auto y =
-        A(N(basic_blocks::dsp::fastexpSSE(M(F(beta_exp), N(basic_blocks::mechanics::abs_ps(A(x, F(c))))))), F(bias));
+    auto y = A(N(basic_blocks::dsp::fastexpSSE(
+                   M(F(beta_exp), N(basic_blocks::mechanics::abs_ps(A(x, F(c))))))),
+               F(bias));
     y = M(sign_ps(x), M(y, F(oneOverMult)));
 
-    return OR(AND(x_less_than, M(x, F(oneOverMult))), NAND(x_less_than, y));
+    return _mm_or_ps(_mm_and_ps(x_less_than, M(x, F(oneOverMult))), _mm_andnot_ps(x_less_than, y));
 }
 
 static inline __m128 res_deriv_ps(__m128 x)
@@ -277,10 +275,11 @@ static inline __m128 res_deriv_ps(__m128 x)
     auto x_abs = basic_blocks::mechanics::abs_ps(x);
     auto x_less_than = _mm_cmplt_ps(x_abs, F(max_val));
 
-    auto y = A(basic_blocks::dsp::fastexpSSE(M(F(beta_exp), N(basic_blocks::mechanics::abs_ps(A(x, F(c)))))),
+    auto y = A(basic_blocks::dsp::fastexpSSE(
+                   M(F(beta_exp), N(basic_blocks::mechanics::abs_ps(A(x, F(c)))))),
                F(betaExpOverMult));
 
-    return OR(AND(x_less_than, m128_one), NAND(x_less_than, y));
+    return _mm_or_ps(_mm_and_ps(x_less_than, m128_one), _mm_andnot_ps(x_less_than, y));
 }
 } // namespace ResWaveshaper
 
@@ -488,9 +487,6 @@ template <FilterSubType subtype> inline __m128 process(QuadFilterUnitState *__re
 #undef A
 #undef S
 #undef N
-#undef AND
-#undef NAND
-#undef OR
 
 } // namespace sst::filters::TriPoleFilter
 
