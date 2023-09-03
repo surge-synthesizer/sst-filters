@@ -52,26 +52,28 @@ static float clampedFrequency(float pitch, float sampleRate, TuningProvider *pro
     return freq;
 }
 
-#define F(a) _mm_set_ps1(a)
+#define F(a) _mm_set1_ps(a)
 #define M(a, b) _mm_mul_ps(a, b)
 #define D(a, b) _mm_div_ps(a, b)
 #define A(a, b) _mm_add_ps(a, b)
 #define S(a, b) _mm_sub_ps(a, b)
-#define N(a) S(F(0.0f), a)
+#define N(a) S(m128_zero, a)
+#define AND(a, b) _mm_and_ps(a, b)
+#define NAND(a, b) _mm_andnot_ps(a, b)
+#define OR(a, b) _mm_or_ps(a, b)
 
 /** inverse square root sigmoid */
 static inline __m128 thr_sigmoid(__m128 x, float beta)
 {
-    __m128 vtmp = _mm_mul_ps(x, x);           // calculate in*in
-    __m128 vtmp2 = _mm_add_ps(vtmp, F(beta)); // in*in+1.f
+    __m128 vtmp = M(x, x);                    // calculate in*in
+    __m128 vtmp2 = A(vtmp, F(beta));          // in*in+1.f
     vtmp = _mm_rsqrt_ps(vtmp2);               // 1/sqrt(in*in+1.f)
-    return _mm_mul_ps(vtmp, x);               // in*1/sqrt(in*in+1)
+    return M(vtmp, x);                        // in*1/sqrt(in*in+1)
 }
 
 static inline __m128 sech2_with_tanh(__m128 tanh_value)
 {
-    const auto one = F(1.0f);
-    return S(one, M(tanh_value, tanh_value));
+    return S(m128_one, M(tanh_value, tanh_value));
 }
 
 namespace OnePoleLPF
@@ -88,8 +90,7 @@ static inline __m128 nonlinOutput(__m128 tanh_x, __m128 tanh_y, __m128 z, __m128
 
 static inline __m128 getDerivative(__m128 tanh_y, __m128 b_coeff)
 {
-    const auto one = F(1.0f);
-    return S(M(N(b_coeff), sech2_with_tanh(tanh_y)), one);
+    return S(M(N(b_coeff), sech2_with_tanh(tanh_y)), m128_one);
 }
 
 static inline __m128 getXDerivative(__m128 tanh_x, __m128 b_coeff)
@@ -101,10 +102,12 @@ static inline __m128 process(__m128 tanh_x, __m128 z, __m128 estimate, __m128 b_
                              __m128 a_coeff, float beta)
 {
     estimate = linOutput(tanh_x, z, b_coeff, a_coeff);
+
     for (int i = 0; i < nIterStage; ++i)
     {
         auto tanh_y = thr_sigmoid(estimate, beta);
         auto residue = S(nonlinOutput(tanh_x, tanh_y, z, b_coeff), estimate);
+
         estimate = S(estimate, D(residue, getDerivative(tanh_y, b_coeff)));
     }
 
@@ -126,21 +129,23 @@ static inline __m128 nonlinOutput(__m128 x_minus_x1_plus_z, __m128 tanh_y, __m12
 
 static inline __m128 getDerivative(__m128 tanh_y, __m128 b_coeff)
 {
-    const auto neg_one = F(-1.0f);
-    return A(M(N(b_coeff), sech2_with_tanh(tanh_y)), neg_one);
+    return A(M(N(b_coeff), sech2_with_tanh(tanh_y)), m128_minusone);
 }
 
-static inline __m128 getXDerivative() { return F(2.0f); }
+static inline __m128 getXDerivative() { return m128_two; }
 
 static inline __m128 process(__m128 x, __m128 x1, __m128 z, __m128 estimate, __m128 b_coeff,
                              __m128 a_coeff, float beta)
 {
     auto x_minus_x1_plus_z = A(S(x, x1), z);
+
     estimate = linOutput(x_minus_x1_plus_z, a_coeff);
+
     for (int i = 0; i < nIterStage; ++i)
     {
         auto tanh_y = thr_sigmoid(estimate, beta);
         auto residue = S(nonlinOutput(x_minus_x1_plus_z, tanh_y, b_coeff), estimate);
+
         estimate = S(estimate, D(residue, getDerivative(tanh_y, b_coeff)));
     }
 
@@ -166,21 +171,20 @@ static inline __m128 getDerivative(__m128 tanh_y, __m128 b_coeff)
     return OnePoleLPF::getDerivative(tanh_y, b_coeff);
 }
 
-static inline __m128 getXDerivative()
-{
-    const auto two = F(2.0f);
-    return two;
-}
+static inline __m128 getXDerivative() { return m128_two; }
 
 static inline __m128 process(__m128 tanh_x, __m128 z, __m128 fb, __m128 fb1, __m128 estimate,
                              __m128 b_coeff, __m128 a_coeff, __m128 bx)
 {
     auto z_minus_fb_plus_fb1 = A(S(z, fb), fb1);
+
     estimate = linOutput(bx, z_minus_fb_plus_fb1, a_coeff);
+
     for (int i = 0; i < nIterStage; ++i)
     {
         auto tanh_y = thr_sigmoid(estimate, ota1bn);
         auto residue = S(nonlinOutput(tanh_x, tanh_y, z_minus_fb_plus_fb1, b_coeff), estimate);
+
         estimate = S(estimate, D(residue, getDerivative(tanh_y, b_coeff)));
     }
 
@@ -204,8 +208,7 @@ static inline __m128 nonlinOutput(__m128 x_minus_x1_plus_z, __m128 tanh_y, __m12
 
 static inline __m128 getDerivative(__m128 tanh_y, __m128 b_coeff)
 {
-    const auto neg_one = F(-1.0f);
-    return A(M(N(b_coeff), sech2_with_tanh(tanh_y)), neg_one);
+    return A(M(N(b_coeff), sech2_with_tanh(tanh_y)), m128_minusone);
 }
 
 static inline __m128 getFBDerivative(__m128 tanh_fb, __m128 b_coeff)
@@ -217,10 +220,12 @@ static inline __m128 process(__m128 x_minus_x1_plus_z, __m128 tanh_fb, __m128 es
                              __m128 b_coeff, __m128 a_coeff)
 {
     estimate = linOutput(x_minus_x1_plus_z, tanh_fb, a_coeff, b_coeff);
+
     for (int i = 0; i < nIterStage; ++i)
     {
         auto tanh_y = thr_sigmoid(estimate, ota1bn);
         auto residue = S(nonlinOutput(x_minus_x1_plus_z, tanh_y, tanh_fb, b_coeff), estimate);
+
         estimate = S(estimate, D(residue, getDerivative(tanh_y, b_coeff)));
     }
 
@@ -245,14 +250,10 @@ const float betaExpOverMult = beta_exp / mult;
 
 static inline __m128 sign_ps(__m128 x)
 {
-    const __m128 zero = _mm_setzero_ps();
-    const __m128 one = _mm_set1_ps(1.0f);
-    const __m128 neg_one = _mm_set1_ps(-1.0f);
+    __m128 positive = AND(_mm_cmpgt_ps(x, m128_zero), m128_one);
+    __m128 negative = AND(_mm_cmplt_ps(x, m128_zero), m128_minusone);
 
-    __m128 positive = _mm_and_ps(_mm_cmpgt_ps(x, zero), one);
-    __m128 negative = _mm_and_ps(_mm_cmplt_ps(x, zero), neg_one);
-
-    return _mm_or_ps(positive, negative);
+    return OR(positive, negative);
 }
 
 static inline __m128 res_func_ps(__m128 x)
@@ -266,7 +267,7 @@ static inline __m128 res_func_ps(__m128 x)
         A(N(basic_blocks::dsp::fastexpSSE(M(F(beta_exp), N(basic_blocks::mechanics::abs_ps(A(x, F(c))))))), F(bias));
     y = M(sign_ps(x), M(y, F(oneOverMult)));
 
-    return _mm_or_ps(_mm_and_ps(x_less_than, M(x, F(oneOverMult))), _mm_andnot_ps(x_less_than, y));
+    return OR(AND(x_less_than, M(x, F(oneOverMult))), NAND(x_less_than, y));
 }
 
 static inline __m128 res_deriv_ps(__m128 x)
@@ -279,7 +280,7 @@ static inline __m128 res_deriv_ps(__m128 x)
     auto y = A(basic_blocks::dsp::fastexpSSE(M(F(beta_exp), N(basic_blocks::mechanics::abs_ps(A(x, F(c)))))),
                F(betaExpOverMult));
 
-    return _mm_or_ps(_mm_and_ps(x_less_than, F(one)), _mm_andnot_ps(x_less_than, y));
+    return OR(AND(x_less_than, m128_one), NAND(x_less_than, y));
 }
 } // namespace ResWaveshaper
 
@@ -374,6 +375,7 @@ template <FilterSubType subtype> inline __m128 process(QuadFilterUnitState *__re
 
     // define local variables
     __m128 tanh_x0, tanh_x1, tanh_x2, tanh_fb, f0_deriv, f1_deriv, f2_deriv, bx, hpf_in;
+
     switch (mode)
     {
     case 0: // lowpass
@@ -427,8 +429,9 @@ template <FilterSubType subtype> inline __m128 process(QuadFilterUnitState *__re
 
         // resonance stage
         auto k_times_f1_out = M(k_ps, estimate1);
-        res_out = M(F(1.0f / res_gain), ResWaveshaper::res_func_ps(M(F(res_gain), k_times_f1_out)));
         auto res_deriv = ResWaveshaper::res_deriv_ps(k_times_f1_out);
+
+        res_out = M(F(1.0f / res_gain), ResWaveshaper::res_func_ps(M(F(res_gain), k_times_f1_out)));
 
         // filter stage 3
         switch (mode)
@@ -447,7 +450,8 @@ template <FilterSubType subtype> inline __m128 process(QuadFilterUnitState *__re
         };
 
         auto num = S(estimate, estimate2);
-        auto den = S(F(1.0f), M(k_ps, M(res_deriv, M(f0_deriv, M(f1_deriv, f2_deriv)))));
+        auto den = S(m128_one, M(k_ps, M(res_deriv, M(f0_deriv, M(f1_deriv, f2_deriv)))));
+
         estimate = S(estimate, D(num, den));
     }
 
@@ -484,6 +488,9 @@ template <FilterSubType subtype> inline __m128 process(QuadFilterUnitState *__re
 #undef A
 #undef S
 #undef N
+#undef AND
+#undef NAND
+#undef OR
 
 } // namespace sst::filters::TriPoleFilter
 

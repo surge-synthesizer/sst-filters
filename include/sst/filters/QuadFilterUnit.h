@@ -1,7 +1,7 @@
 #ifndef _SST_CPP_QUADFILTERUNIT_H
 #define _SST_CPP_QUADFILTERUNIT_H
 
-#include "sst/utilities/globals.h"
+#include "sst/utilities/shared.h"
 #include "FilterCoefficientMaker.h"
 
 namespace sst
@@ -17,7 +17,7 @@ struct alignas(16) QuadFilterUnitState
     /** Filter coefficients */
     __m128 C[n_cm_coeffs];
 
-    /** Filter coefficients "delta" */
+    /** Filter coefficients delta */
     __m128 dC[n_cm_coeffs];
 
     /** Filter state */
@@ -46,12 +46,12 @@ typedef __m128 (*FilterUnitQFPtr)(QuadFilterUnitState *__restrict, __m128 in);
 FilterUnitQFPtr GetQFPtrFilterUnit(FilterType type, FilterSubType subtype);
 
 /*
- * Subtypes are integers below 16 - maybe one day go as high as 32. So we have space in the
- * int for more information, and we mask on higher bits to allow us to
- * programmatically change features we don't expose to users, in things like
- * FX. So far this is only used to extend the COMB time in the combulator.
+ * Subtypes are integers below 16 - maybe one day we will go as high as 32.
+ * So we have space in the integer for more information, and we mask on higher bits
+ * to allow us to programmatically change features we don't expose to users in things
+ * like effects. So far this is only used to extend the comb delay time for the Combulator.
  *
- * These should obviously be distinct per type but can overlap in values otherwise
+ * These should obviously be distinct per type, but can overlap in values otherwise.
  *
  * Try and use above 2^16
  */

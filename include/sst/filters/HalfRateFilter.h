@@ -2,10 +2,16 @@
 #define SST_FILTERS_HALFRATEFILTER_H
 
 #include <cstdint>
-#include "sst/utilities/globals.h"
+#include "sst/utilities/shared.h"
 
 namespace sst::filters::HalfRate
 {
+
+#define M(a, b) _mm_mul_ps(a, b)
+#define A(a, b) _mm_add_ps(a, b)
+#define S(a, b) _mm_sub_ps(a, b)
+
+using namespace sst::filters::utilities;
 
 static constexpr uint32_t halfrate_max_M = 6;
 static constexpr uint32_t hr_BLOCK_SIZE = 256;
@@ -22,8 +28,6 @@ class alignas(16) HalfRateFilter
     __m128 vy1[halfrate_max_M];
     __m128 vy2[halfrate_max_M];
     __m128 oldout;
-
-    const __m128 half = _mm_set_ps1(0.5f);
 
   public:
     /**
@@ -79,7 +83,7 @@ class alignas(16) HalfRateFilter
                 ty2 = ty1;
                 ty1 = ty0;
                 // allpass filter 1
-                ty0 = _mm_add_ps(tx2, _mm_mul_ps(_mm_sub_ps(tx0, ty2), ta));
+                ty0 = A(tx2, M(S(tx0, ty2), ta));
                 o[k] = ty0;
 
                 // shuffle inputs
@@ -90,7 +94,7 @@ class alignas(16) HalfRateFilter
                 ty2 = ty1;
                 ty1 = ty0;
                 // allpass filter 1
-                ty0 = _mm_add_ps(tx2, _mm_mul_ps(_mm_sub_ps(tx0, ty2), ta));
+                ty0 = A(tx2, M(S(tx0, ty2), ta));
                 o[k + 1] = ty0;
             }
             vx0[j] = tx0;
@@ -130,14 +134,14 @@ class alignas(16) HalfRateFilter
             //	oldout=filter_b.process(input);
 
             __m128 vL = _mm_add_ss(o[k], oldout);
-            vL = _mm_mul_ss(vL, half);
+            vL = _mm_mul_ss(vL, m128_half);
             _mm_store_ss(&fL[k], vL);
 
             faR = _mm_movehl_ps(faR, o[k]);
             fbR = _mm_movehl_ps(fbR, oldout);
 
             __m128 vR = _mm_add_ss(faR, fbR);
-            vR = _mm_mul_ss(vR, half);
+            vR = _mm_mul_ss(vR, m128_half);
             _mm_store_ss(&fR[k], vR);
 
             oldout = _mm_shuffle_ps(o[k], o[k], _MM_SHUFFLE(3, 3, 1, 1));
@@ -215,7 +219,7 @@ class alignas(16) HalfRateFilter
                 ty2 = ty1;
                 ty1 = ty0;
                 // allpass filter 1
-                ty0 = _mm_add_ps(tx2, _mm_mul_ps(_mm_sub_ps(tx0, ty2), ta));
+                ty0 = A(tx2, M(S(tx0, ty2), ta));
                 o[k] = ty0;
 
                 // shuffle inputs
@@ -226,7 +230,7 @@ class alignas(16) HalfRateFilter
                 ty2 = ty1;
                 ty1 = ty0;
                 // allpass filter 1
-                ty0 = _mm_add_ps(tx2, _mm_mul_ps(_mm_sub_ps(tx0, ty2), ta));
+                ty0 = A(tx2, M(S(tx0, ty2), ta));
                 o[k + 1] = ty0;
             }
             vx0[j] = tx0;
@@ -361,9 +365,8 @@ class alignas(16) HalfRateFilter
             R[k >> 3] = _mm_shuffle_ps(aR, cR, _MM_SHUFFLE(2, 0, 2, 0));
 
             // optional: *=0.5;
-            const __m128 half = _mm_set_ps1(0.5f);
-            L[k >> 3] = _mm_mul_ps(L[k >> 3], half);
-            R[k >> 3] = _mm_mul_ps(R[k >> 3], half);
+            L[k >> 3] = M(L[k >> 3], m128_half);
+            R[k >> 3] = M(R[k >> 3], m128_half);
         }
     }
 
@@ -411,7 +414,7 @@ class alignas(16) HalfRateFilter
                 ty2 = ty1;
                 ty1 = ty0;
                 // allpass filter 1
-                ty0 = _mm_add_ps(tx2, _mm_mul_ps(_mm_sub_ps(tx0, ty2), ta));
+                ty0 = A(tx2, M(S(tx0, ty2), ta));
                 o[k] = ty0;
 
                 // shuffle inputs
@@ -422,7 +425,7 @@ class alignas(16) HalfRateFilter
                 ty2 = ty1;
                 ty1 = ty0;
                 // allpass filter 1
-                ty0 = _mm_add_ps(tx2, _mm_mul_ps(_mm_sub_ps(tx0, ty2), ta));
+                ty0 = A(tx2, M(S(tx0, ty2), ta));
                 o[k + 1] = ty0;
             }
             vx0[j] = tx0;
@@ -449,14 +452,14 @@ class alignas(16) HalfRateFilter
             //	oldout=filter_b.process(input);
 
             __m128 vL = _mm_add_ss(o[k], oldout);
-            vL = _mm_mul_ss(vL, half);
+            vL = _mm_mul_ss(vL, m128_half);
             _mm_store_ss(&fL[k], vL);
 
             faR = _mm_movehl_ps(faR, o[k]);
             fbR = _mm_movehl_ps(fbR, oldout);
 
             __m128 vR = _mm_add_ss(faR, fbR);
-            vR = _mm_mul_ss(vR, half);
+            vR = _mm_mul_ss(vR, m128_half);
             _mm_store_ss(&fR[k], vR);
 
             oldout = _mm_shuffle_ps(o[k], o[k], _MM_SHUFFLE(3, 3, 1, 1));
@@ -641,6 +644,10 @@ class alignas(16) HalfRateFilter
     float oldoutL, oldoutR;
     // unsigned int BLOCK_SIZE;
 };
+
+#undef M
+#undef A
+#undef S
 
 } // namespace sst::filters::HalfRate
 

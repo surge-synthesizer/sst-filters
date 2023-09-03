@@ -8,7 +8,8 @@
 namespace sst::filters
 {
 
-// @TODO: In Surge this is implemented with a LUT. I think it's probably okay to use full precision.
+// @TODO: In Surge XT this is implemented with a LUT. I think it's probably okay to use full
+// precision.
 template <typename T> inline T db_to_linear(T in) { return pow((T)10, (T)0.05 * in); }
 
 constexpr float smooth = 0.2f;
@@ -80,12 +81,10 @@ void FilterCoefficientMaker<TuningProvider>::MakeCoeffs(float Freq, float Reso, 
     {
         if (tuningAdjusted && provider->tuningApplicationMode == TuningProvider::RETUNE_ALL)
         {
-            /*
-             * Modulations are not remapped and tuning is in effect; remap the note
-             */
+            // Modulations are not remapped and tuning is in effect; remap the note
             auto idx = (int)floor(Freq + 69);
             float frac =
-                (Freq + 69) - (float)idx; // frac is 0 means use idx; frac is 1 means use idx+1
+                (Freq + 69) - (float)idx; // frac is 0 means use idx; frac is 1 means use idx + 1
 
             float b0 = (float)provider->currentTuning.logScaledFrequencyForMidiNote(idx) * 12.0f;
             float b1 =
@@ -148,7 +147,7 @@ void FilterCoefficientMaker<TuningProvider>::MakeCoeffs(float Freq, float Reso, 
         Coeff_COMB(Freq, Reso, SubType);
         break;
     case fut_comb_neg:
-        Coeff_COMB(Freq, Reso, SubType + 2); // -ve feedback is the next 2 subtypes
+        Coeff_COMB(Freq, Reso, SubType + 2); // negative feedback is the next 2 subtypes
         break;
     case fut_SNH:
         Coeff_SNH(Freq, Reso, SubType);
@@ -254,27 +253,22 @@ inline double Map2PoleResonance(double reso, double freq, int subtype)
     {
     case st_Medium:
         reso *= max(0.0, 1.0 - max(0.0, (freq - 58) * 0.05));
-        return (0.99 -
-                1.0 * std::clamp((double)(1 - (1 - reso) * (1 - reso)), 0.0, 1.0));
+        return (0.99 - 1.0 * std::clamp((double)(1 - (1 - reso) * (1 - reso)), 0.0, 1.0));
     case st_Driven:
         reso *= max(0.0, 1.0 - max(0.0, (freq - 58) * 0.05));
-        return (1.0 -
-                1.05 * std::clamp((double)(1 - (1 - reso) * (1 - reso)), 0.001, 1.0));
+        return (1.0 - 1.05 * std::clamp((double)(1 - (1 - reso) * (1 - reso)), 0.001, 1.0));
     default:
     case st_Clean:
-        return (2.5 -
-                2.45 * std::clamp((double)(1 - (1 - reso) * (1 - reso)), 0.0, 1.0));
+        return (2.5 - 2.45 * std::clamp((double)(1 - (1 - reso) * (1 - reso)), 0.0, 1.0));
     }
 }
 
 inline double Map2PoleResonance_noboost(double reso, double /*freq*/, int subtype)
 {
     if (subtype == st_Driven)
-        return (1.0 -
-                0.99 * std::clamp((double)(1 - (1 - reso) * (1 - reso)), 0.001, 1.0));
+        return (1.0 - 0.99 * std::clamp((double)(1 - (1 - reso) * (1 - reso)), 0.001, 1.0));
     else
-        return (0.99 -
-                0.98 * std::clamp((double)(1 - (1 - reso) * (1 - reso)), 0.0, 1.0));
+        return (0.99 - 0.98 * std::clamp((double)(1 - (1 - reso) * (1 - reso)), 0.0, 1.0));
 }
 
 inline double Map4PoleResonance(double reso, double freq, int subtype)
@@ -546,13 +540,11 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_Notch(float Freq, float Reso,
 
     if (SubType == st_NotchMild)
     {
-        Q2inv =
-            (1.00 - 0.99 * std::clamp((double)(1 - (1 - Reso) * (1 - Reso)), 0.0, 1.0));
+        Q2inv = (1.00 - 0.99 * std::clamp((double)(1 - (1 - Reso) * (1 - Reso)), 0.0, 1.0));
     }
     else
     {
-        Q2inv =
-            (2.5 - 2.49 * std::clamp((double)(1 - (1 - Reso) * (1 - Reso)), 0.0, 1.0));
+        Q2inv = (2.5 - 2.49 * std::clamp((double)(1 - (1 - Reso) * (1 - Reso)), 0.0, 1.0));
     }
 
     double alpha = sinu * Q2inv;
@@ -590,8 +582,7 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_LP4L(float freq, float reso, 
         0.187); // gg
 
     float t_b1 = 1.f - (float)exp(-2 * M_PI * gg);
-    float q = std::min(2.15f * std::clamp(reso, 0.f, 1.f),
-                       0.5f / (t_b1 * t_b1 * t_b1 * t_b1));
+    float q = std::min(2.15f * std::clamp(reso, 0.f, 1.f), 0.5f / (t_b1 * t_b1 * t_b1 * t_b1));
 
     float c[n_cm_coeffs]{};
     memset(c, 0, sizeof(float) * n_cm_coeffs);
@@ -620,7 +611,7 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_COMB(float freq, float reso, 
     }
 
     dtime = std::clamp(dtime, (float)utilities::SincTable::FIRipol_N,
-                                   (float)comb_length - utilities::SincTable::FIRipol_N);
+                       (float)comb_length - utilities::SincTable::FIRipol_N);
     if (extended)
     {
         // extended use is not from the filter bank so allow greater feedback range

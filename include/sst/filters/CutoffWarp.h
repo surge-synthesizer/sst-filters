@@ -23,10 +23,12 @@ static float clampedFrequency(float pitch, float sampleRate, TuningProvider *pro
     return freq;
 }
 
-#define F(a) _mm_set_ps1(a)
+#define F(a) _mm_set1_ps(a)
 #define M(a, b) _mm_mul_ps(a, b)
 #define A(a, b) _mm_add_ps(a, b)
 #define S(a, b) _mm_sub_ps(a, b)
+#define AND(a, b) _mm_and_ps(a, b)
+#define NAND(a, b) _mm_andnot_ps(a, b)
 
 enum Saturator
 {
@@ -48,27 +50,25 @@ static inline __m128 ojd_waveshaper_ps(const __m128 x) noexcept
     const auto denLow = _mm_set1_ps(1.f / (4 * (1 - 0.3f)));
     const auto denHigh = _mm_set1_ps(1.f / (4 * (1 - 0.9f)));
 
-    auto maskNeg = _mm_cmple_ps(x, pm17);                         // in <= -1.7f
-    auto maskPos = _mm_cmpge_ps(x, p11);                          // in > 1.1f
-    auto maskLow = _mm_andnot_ps(maskNeg, _mm_cmplt_ps(x, pm03)); // in > -1.7 && in < =0.3
-    auto maskHigh = _mm_andnot_ps(maskPos, _mm_cmpgt_ps(x, p09)); // in > 0.9 && in < 1.1
-    auto maskMid = _mm_and_ps(_mm_cmpge_ps(x, pm03), _mm_cmple_ps(x, p09)); // the middle
+    auto maskNeg = _mm_cmple_ps(x, pm17);                            // in <= -1.7f
+    auto maskPos = _mm_cmpge_ps(x, p11);                             // in > 1.1f
+    auto maskLow = NAND(maskNeg, _mm_cmplt_ps(x, pm03));             // in > -1.7 && in < =0.3
+    auto maskHigh = NAND(maskPos, _mm_cmpgt_ps(x, p09));             // in > 0.9 && in < 1.1
+    auto maskMid = AND(_mm_cmpge_ps(x, pm03), _mm_cmple_ps(x, p09)); // the middle
 
-    const auto vNeg = _mm_set1_ps(-1.0);
-    const auto vPos = _mm_set1_ps(1.0);
     auto vMid = x;
 
-    auto xlow = _mm_sub_ps(x, pm03);
-    auto vLow = _mm_add_ps(xlow, _mm_mul_ps(denLow, _mm_mul_ps(xlow, xlow)));
-    vLow = _mm_add_ps(vLow, pm03);
+    auto xlow = S(x, pm03);
+    auto vLow = A(xlow, M(denLow, M(xlow, xlow)));
+    vLow = A(vLow, pm03);
 
-    auto xhi = _mm_sub_ps(x, p09);
-    auto vHi = _mm_sub_ps(xhi, _mm_mul_ps(denHigh, _mm_mul_ps(xhi, xhi)));
-    vHi = _mm_add_ps(vHi, p09);
+    auto xhi = S(x, p09);
+    auto vHi = S(xhi, M(denHigh, M(xhi, xhi)));
+    vHi = A(vHi, p09);
 
-    return _mm_add_ps(_mm_add_ps(_mm_add_ps(_mm_and_ps(maskNeg, vNeg), _mm_and_ps(maskLow, vLow)),
-                                 _mm_add_ps(_mm_and_ps(maskHigh, vHi), _mm_and_ps(maskPos, vPos))),
-                      _mm_and_ps(maskMid, vMid));
+    return A(A(A(AND(maskNeg, m128_minusone), AND(maskLow, vLow)),
+               A(AND(maskHigh, vHi), AND(maskPos, m128_one))),
+             AND(maskMid, vMid));
 }
 
 static inline __m128 doNLFilter(const __m128 input, const __m128 a1, const __m128 a2,
@@ -83,7 +83,8 @@ static inline __m128 doNLFilter(const __m128 input, const __m128 a1, const __m12
     switch (sat)
     {
     case SAT_SOFT:
-        nf = basic_blocks::dsp::softclip_ps(out); // note, this is a bit different to Jatin's softclipper
+        nf = basic_blocks::dsp::softclip_ps(
+            out); // note, this is a bit different to Jatin's softclipper
         break;
     case SAT_OJD:
         nf = ojd_waveshaper_ps(out);
@@ -240,6 +241,8 @@ inline __m128 process(QuadFilterUnitState *__restrict f, __m128 input)
 #undef M
 #undef A
 #undef S
+#undef AND
+#undef NAND
 
 } // namespace sst::filters::CutoffWarp
 
