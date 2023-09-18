@@ -348,7 +348,7 @@ template <typename D, size_t BLOCK_SIZE, typename Adapter> inline void BiquadFil
 
 template <typename D, size_t BLOCK_SIZE, typename Adapter> inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::coeff_LPHPmorph(double omega, double Q, double morph)
 {
-    double HP = std::clamp(morph, 0.0, 1.0), LP = 1 - HP, BP = LP * HP;
+    double HP = std::clamp(morph, 0.0, 1.0), LP = 1 - HP; // , BP = LP * HP;
     HP *= HP;
     LP *= LP;
 
@@ -380,12 +380,12 @@ template <typename DT, size_t BLOCK_SIZE, typename Adapter> inline void BiquadFi
 {
     // For the curious http://eceweb1.rutgers.edu/~orfanidi/ece521/hpeq.pdf appears to be the source
     // of this
-    double limit = 0.95;
+    // double limit = 0.95;
     double w0 = omega; // min(M_PI-0.000001,omega);
     BW = std::max(minBW, BW);
     double Dww = 2 * w0 * sinh((log(2.0) / 2.0) * BW); // sinh = (e^x - e^-x)/2
 
-    double gainscale = 1;
+    // double gainscale = 1;
     // if(omega>M_PI) gainscale = 1 / (1 + (omega-M_PI)*(4/Dw));
 
     if (abs(G - G0) > 0.00001)
