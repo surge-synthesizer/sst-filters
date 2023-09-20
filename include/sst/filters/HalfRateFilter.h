@@ -33,7 +33,7 @@ class alignas(16) HalfRateFilter
      * @param steep Steepness. Set false for softer slopes, more attenuation and less stopband
      * ripple
      */
-    HalfRateFilter(int M, bool steep)
+    HalfRateFilter(uint32_t M, bool steep)
     {
         assert(!(M > halfrate_max_M));
         this->M = M;
@@ -59,7 +59,7 @@ class alignas(16) HalfRateFilter
         }
 
         // process filters
-        for (int j = 0; j < M; j++)
+        for (auto j = 0U; j < M; j++)
         {
             __m128 tx0 = vx0[j];
             __m128 tx1 = vx1[j];
@@ -194,7 +194,7 @@ class alignas(16) HalfRateFilter
          * o_i: AllPassCascade_B(L_i), AllPassCascade_A(L_i), AllPassCascade_B(R_i),
          * AllPassCascade_A(R_i)
          */
-        for (int j = 0; j < M; j++)
+        for (auto j = 0U; j < M; j++)
         {
             __m128 tx0 = vx0[j];
             __m128 tx1 = vx1[j];
@@ -391,7 +391,7 @@ class alignas(16) HalfRateFilter
         }
 
         // process filters
-        for (int j = 0; j < M; j++)
+        for (auto j = 0U; j < M; j++)
         {
             __m128 tx0 = vx0[j];
             __m128 tx1 = vx1[j];
@@ -480,7 +480,7 @@ class alignas(16) HalfRateFilter
 
     void load_coefficients()
     {
-        for (int i = 0; i < M; i++)
+        for (auto i = 0U; i < M; i++)
         {
             va[i] = _mm_setzero_ps();
         }
@@ -615,7 +615,7 @@ class alignas(16) HalfRateFilter
     }
     void set_coefficients(float *cA, float *cB)
     {
-        for (int i = 0; i < M; i++)
+        for (auto i = 0U; i < M; i++)
         {
             // va[i] = _mm_set_ps(cA[i],cB[i],cA[i],cB[i]);
             va[i] = _mm_set_ps(cB[i], cA[i], cB[i], cA[i]);
@@ -623,7 +623,7 @@ class alignas(16) HalfRateFilter
     }
     void reset()
     {
-        for (int i = 0; i < M; i++)
+        for (auto i = 0U; i < M; i++)
         {
             vx0[i] = _mm_setzero_ps();
             vx1[i] = _mm_setzero_ps();
@@ -636,9 +636,8 @@ class alignas(16) HalfRateFilter
     }
 
   private:
-    int M;
+    uint32_t M;
     bool steep;
-    float oldoutL, oldoutR;
     // unsigned int BLOCK_SIZE;
 };
 
