@@ -90,7 +90,7 @@ template <typename TuningProvider>
 void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, float freq, float reso, int type,
                       float sampleRate, TuningProvider *provider)
 {
-    float C[n_cm_coeffs];
+    float C[n_cm_coeffs]{};
 
     reso = std::clamp(reso, 0.f, 1.f);
 

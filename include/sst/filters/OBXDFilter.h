@@ -84,7 +84,7 @@ template <typename TuningProvider>
 inline void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, Poles p, float freq, float reso, int sub,
                       float sampleRateInv, TuningProvider *provider)
 {
-    float lC[n_cm_coeffs];
+    float lC[n_cm_coeffs]{};
     float rcrate = sqrt(44000.0f * sampleRateInv);
     float cutoff = fmin(provider->note_to_pitch(freq + 69) * (float)TuningProvider::MIDI_0_FREQ, 22000.0f) *
                    sampleRateInv * (float) M_PI;
