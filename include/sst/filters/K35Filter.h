@@ -69,7 +69,7 @@ void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, float freq, fl
                       bool is_lowpass, float saturation, float sampleRate, float sampleRateInv,
                       TuningProvider *provider)
 {
-    float C[n_cm_coeffs];
+    float C[n_cm_coeffs]{};
 
     const float wd = clampedFrequency(freq, sampleRate, provider) * 2.0f * (float)M_PI;
     const float wa = (2.0f * sampleRate) * basic_blocks::dsp::fasttan(wd * sampleRateInv * 0.5f);

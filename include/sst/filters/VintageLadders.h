@@ -109,7 +109,7 @@ inline void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, float f
                              float sampleRate, bool applyGainCompensation, TuningProvider *provider)
 {
     // Consideration: Do we want tuning aware or not?
-    float lc[n_cm_coeffs];
+    float lc[n_cm_coeffs]{};
     auto pitch = VintageLadder::Common::clampedFrequency(freq, sampleRate, provider);
 
     lc[rkm_cutoff] = pitch * 2.0f * (float)M_PI;
@@ -310,7 +310,7 @@ inline void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, float f
                              float sampleRate, float sampleRateInv, bool applyGainCompensation,
                              TuningProvider *provider)
 {
-    float lC[n_cm_coeffs];
+    float lC[n_cm_coeffs]{};
     auto cutoff = VintageLadder::Common::clampedFrequency(freq, sampleRate, provider);
     lC[h_cutoff] = cutoff;
 
