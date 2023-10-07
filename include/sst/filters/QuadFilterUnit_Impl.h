@@ -589,7 +589,16 @@ __m128 COMBquad_SSE2(QuadFilterUnitState *__restrict f, __m128 in)
     return _mm_add_ps(_mm_mul_ps(f->C[3], DBRead), _mm_mul_ps(f->C[2], in));
 }
 
-inline FilterUnitQFPtr GetQFPtrFilterUnit(FilterType type, FilterSubType subtype)
+template<int32_t scaleTimes1000, __m128 (*F)(QuadFilterUnitState *__restrict, __m128)>
+__m128 ScaleQFPtr(QuadFilterUnitState *__restrict s, __m128 in)
+{
+    const auto scale = _mm_set1_ps(scaleTimes1000  /1000.f);
+    auto res = F(s, in);
+    return _mm_mul_ps(res, scale);
+}
+
+template<bool Compensated>
+inline FilterUnitQFPtr GetCompensatedQFPtrFilterUnit(FilterType type, FilterSubType subtype)
 {
     switch (type)
     {
@@ -721,7 +730,11 @@ inline FilterUnitQFPtr GetQFPtrFilterUnit(FilterType type, FilterSubType subtype
         {
         case 0:
         case 1:
-            return VintageLadder::RK::process;
+            if constexpr (Compensated)
+                // Scale up by 6db = 1.994 amplitudes
+                return ScaleQFPtr<1994, VintageLadder::RK::process>;
+            else
+                return VintageLadder::RK::process;
         case 2:
         case 3:
             return VintageLadder::Huov::process;
@@ -740,7 +753,10 @@ inline FilterUnitQFPtr GetQFPtrFilterUnit(FilterType type, FilterSubType subtype
         return OBXDFilter::process_4_pole;
         break;
     case fut_k35_lp:
-        return K35Filter::process_lp;
+        if (Compensated && subtype == 2)
+            return ScaleQFPtr<0700, K35Filter::process_lp>;
+        else
+            return K35Filter::process_lp;
         break;
     case fut_k35_hp:
         return K35Filter::process_hp;
@@ -788,7 +804,10 @@ inline FilterUnitQFPtr GetQFPtrFilterUnit(FilterType type, FilterSubType subtype
         case st_cutoffwarp_ojd2:
             return CutoffWarp::process<st_cutoffwarp_ojd2>;
         case st_cutoffwarp_ojd3:
-            return CutoffWarp::process<st_cutoffwarp_ojd3>;
+            if constexpr (Compensated)
+                return ScaleQFPtr<0400, CutoffWarp::process<st_cutoffwarp_ojd3>>;
+            else
+                return CutoffWarp::process<st_cutoffwarp_ojd3>;
         case st_cutoffwarp_ojd4:
             return CutoffWarp::process<st_cutoffwarp_ojd4>;
         default:
@@ -809,7 +828,10 @@ inline FilterUnitQFPtr GetQFPtrFilterUnit(FilterType type, FilterSubType subtype
         case st_resonancewarp_tanh3:
             return ResonanceWarp::process<st_resonancewarp_tanh3>;
         case st_resonancewarp_tanh4:
-            return ResonanceWarp::process<st_resonancewarp_tanh4>;
+            if constexpr (Compensated)
+                return ScaleQFPtr<1584, ResonanceWarp::process<st_resonancewarp_tanh4>>;
+            else
+                return ResonanceWarp::process<st_resonancewarp_tanh4>;
         case st_resonancewarp_softclip1:
             return ResonanceWarp::process<st_resonancewarp_softclip1>;
         case st_resonancewarp_softclip2:
