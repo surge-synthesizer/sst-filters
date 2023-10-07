@@ -42,8 +42,21 @@ struct alignas(16) QuadFilterUnitState
 /** Typedef alias for a filter unit processing method. */
 typedef __m128 (*FilterUnitQFPtr)(QuadFilterUnitState *__restrict, __m128 in);
 
+/**
+ * Returns a filter unit pointer and optionally applies gain scaling. The gain
+ * scaling attempts to make levels at cutoff extream (so open for LP closed for HP)
+ * the same as bypassing the filter when sent a full spectrum saw wave. Roughly.
+ * But really it's just some constants we bodge in to turn up vintage and turn down
+ * saturated ones.
+ */
+template<bool Compensate>
+FilterUnitQFPtr GetCompensatedQFPtrFilterUnit(FilterType type, FilterSubType subtype);
+
 /** Returns a filter unit pointer for a given filter type and sub-type. */
-FilterUnitQFPtr GetQFPtrFilterUnit(FilterType type, FilterSubType subtype);
+inline FilterUnitQFPtr GetQFPtrFilterUnit(FilterType type, FilterSubType subtype)
+{
+    return GetCompensatedQFPtrFilterUnit<false>(type, subtype);
+}
 
 /*
  * Subtypes are integers below 16 - maybe one day go as high as 32. So we have space in the
