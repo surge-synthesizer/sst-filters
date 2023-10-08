@@ -1,7 +1,7 @@
 #ifndef SST_FILTERS_VINTAGELADDERS_H
 #define SST_FILTERS_VINTAGELADDERS_H
 
-#include "sst/utilities/globals.h"
+#include "sst/utilities/shared.h"
 #include "sst/basic-blocks/dsp/FastMath.h"
 #include "QuadFilterUnit.h"
 #include "FilterCoefficientMaker.h"
@@ -88,6 +88,8 @@ namespace RK
 **
 */
 
+using namespace sst::filters::utilities;
+
 enum rkm_coeffs
 {
     rkm_cutoff = 0,
@@ -126,16 +128,16 @@ inline void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, float f
     cm->FromDirect(lc);
 }
 
-#define F(a) _mm_set_ps1(a)
+#define F(a) _mm_set1_ps(a)
 #define M(a, b) _mm_mul_ps(a, b)
 #define A(a, b) _mm_add_ps(a, b)
 #define S(a, b) _mm_sub_ps(a, b)
 
 inline __m128 clip(__m128 value, __m128 _saturation, __m128 _saturationinverse)
 {
-    const __m128 minusone = F(-1), one = F(1), onethird = F(1.f / 3.f);
+    const __m128 onethird = F(1.f / 3.f);
     auto vtsi = M(value, _saturationinverse);
-    auto v2 = _mm_min_ps(one, _mm_max_ps(minusone, vtsi));
+    auto v2 = _mm_min_ps(m128_one, _mm_max_ps(m128_minusone, vtsi));
     auto v23 = M(v2, M(v2, v2));
     auto vkern = S(v2, M(onethird, v23));
     auto res = M(_saturation, vkern);
@@ -178,8 +180,8 @@ inline __m128 process(QuadFilterUnitState *__restrict f, __m128 input)
     auto stepSize = F(f->sampleRateInv * extraOversampleInv),
          halfStepSize = F(0.5f * f->sampleRateInv * extraOversampleInv);
 
-    const __m128 oneoversix = F(1.f / 6.f), two = F(2.f), dFac = F(extraOversampleInv),
-                        sat = F(saturation), satInv = F(saturationInverse);
+    const __m128 oneoversix = F(1.f / 6.f), dFac = F(extraOversampleInv), sat = F(saturation),
+                 satInv = F(saturationInverse);
 
     __m128 outputOS[extraOversample];
 
@@ -217,10 +219,10 @@ inline __m128 process(QuadFilterUnitState *__restrict f, __m128 input)
         {
             // state[i] += (1.0 / 6.0) * stepSize * (deriv1[i] + 2.0 * deriv2[i] + 2.0 * deriv3[i] +
             // deriv4[i]);
-            state[i] = A(state[i],
-                         M(oneoversix,
-                           M(stepSize,
-                             A(deriv1[i], A(M(two, deriv2[i]), A(M(two, deriv3[i]), deriv4[i]))))));
+            state[i] =
+                A(state[i], M(oneoversix,
+                              M(stepSize, A(deriv1[i], A(M(m128_two, deriv2[i]),
+                                                         A(M(m128_two, deriv3[i]), deriv4[i]))))));
         }
 
         outputOS[osi] = state[3];
@@ -245,7 +247,7 @@ inline __m128 process(QuadFilterUnitState *__restrict f, __m128 input)
     windowFactors[0] = F(-0.0636844f);
     windowFactors[1] = _mm_setzero_ps();
     windowFactors[2] = F(0.57315917f);
-    windowFactors[3] = F(1);
+    windowFactors[3] = m128_one;
 
     for (int k = 0; k < extraOversample; ++k)
     {
@@ -286,6 +288,8 @@ namespace Huov
 ** http://www.synthmaker.co.uk/dokuwiki/doku.php?id=tutorials:oversampling
 */
 
+using namespace sst::filters::utilities;
+
 enum huov_coeffs
 {
     h_cutoff = 0,
@@ -319,8 +323,7 @@ inline void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, float f
     float co = std::max(cutoff - sampleRate * 0.33333f, 0.0f) * 0.1f * sampleRateInv;
     float gctrim = applyGainCompensation ? 0.05f : 0.0f;
 
-    reso = std::clamp(std::clamp(reso, 0.0f, 0.9925f), 0.0f,
-                                  0.994f - co - gctrim);
+    reso = std::clamp(std::clamp(reso, 0.0f, 0.9925f), 0.0f, 0.994f - co - gctrim);
     lC[h_res] = reso;
     lC[h_fc] = cutoff * sampleRateInv;
 
@@ -336,16 +339,15 @@ inline void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, float f
 
 inline __m128 process(QuadFilterUnitState *__restrict f, __m128 in)
 {
-#define F(a) _mm_set_ps1(a)
+#define F(a) _mm_set1_ps(a)
 #define M(a, b) _mm_mul_ps(a, b)
 #define A(a, b) _mm_add_ps(a, b)
 #define S(a, b) _mm_sub_ps(a, b)
 
-    const __m128 dFac = F(0.5f), half = F(0.5f), one = F(1.0f), four = F(4.0f),
-                        m18730 = F(1.8730f), m04955 = F(0.4995f), mneg06490 = F(-0.6490f),
-                        m09988 = F(0.9988f), mneg39364 = F(-3.9364f), m18409 = F(1.8409f),
-                        m09968 = F(0.9968f), thermal = F(1.f / 70.f), oneoverthermal = F(70.0f),
-                        neg2pi = F(-2.0f * (float)M_PI);
+    const __m128 dFac = m128_half, m18730 = F(1.8730f), m04955 = F(0.4995f),
+                 mneg06490 = F(-0.6490f), m09988 = F(0.9988f), mneg39364 = F(-3.9364f),
+                 m18409 = F(1.8409f), m09968 = F(0.9968f), thermal = F(1.f / 70.f),
+                 oneoverthermal = F(70.0f), neg2pi = F(-2.0f * (float)M_PI);
 
     __m128 outputOS[2];
 
@@ -354,7 +356,7 @@ inline __m128 process(QuadFilterUnitState *__restrict f, __m128 in)
         auto fc = f->C[h_fc];
         auto res = f->C[h_res];
 
-        auto fr = M(fc, half);
+        auto fr = M(fc, m128_half);
         auto fc2 = M(fc, fc);
         auto fc3 = M(fc, fc2);
 
@@ -364,9 +366,10 @@ inline __m128 process(QuadFilterUnitState *__restrict f, __m128 in)
         auto acr = A(M(mneg39364, fc2), A(M(m18409, fc), m09968));
 
         // auto tune = (1.0 - exp(-((2 * M_PI) * f * fcr))) / thermal;
-        auto tune = M(S(one, basic_blocks::dsp::fastexpSSE(M(neg2pi, M(fr, fcr)))), oneoverthermal);
+        auto tune =
+            M(S(m128_one, basic_blocks::dsp::fastexpSSE(M(neg2pi, M(fr, fcr)))), oneoverthermal);
         // auto resquad = 4.0 * res * arc;
-        auto resquad = M(four, M(res, acr));
+        auto resquad = M(m128_four, M(res, acr));
 
         for (int k = 0; k < n_hcoeffs; ++k)
         {
@@ -403,7 +406,7 @@ inline __m128 process(QuadFilterUnitState *__restrict f, __m128 in)
 
         // 0.5 sample delay for phase compensation
         // delay[5] = (stage[3] + delay[4]) * 0.5;
-        f->R[h_delay + 5] = M(_mm_set_ps1(0.5), A(f->R[h_stage + 3], f->R[h_delay + 4]));
+        f->R[h_delay + 5] = M(m128_half, A(f->R[h_stage + 3], f->R[h_delay + 4]));
 
         // delay[4] = stage[3];
         f->R[h_delay + 4] = f->R[h_stage + 3];
