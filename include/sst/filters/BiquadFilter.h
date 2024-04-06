@@ -7,8 +7,7 @@
 
 namespace sst::filters::Biquad
 {
-template<typename TuningAndDBProvider>
-struct DefaultTuningAndDBAdapter
+template <typename TuningAndDBProvider> struct DefaultTuningAndDBAdapter
 {
     using ST = TuningAndDBProvider;
     static inline float noteToPitchIgnoringTuning(ST *s, float n)
@@ -16,24 +15,16 @@ struct DefaultTuningAndDBAdapter
         return s->note_to_pitch_ignoring_tuning(n);
     }
 
-    static inline float dbToLinear(ST *s, float n)
-    {
-        return s->db_to_linear(n);
-    }
+    static inline float dbToLinear(ST *s, float n) { return s->db_to_linear(n); }
 
-    static inline double sampleRateInv(ST *s)
-    {
-        return s->dsamplerate_inv;
-    }
-
+    static inline double sampleRateInv(ST *s) { return s->dsamplerate_inv; }
 };
 
-template<typename TuningAndDBProvider, size_t BLOCK_SIZE,
-    typename Adapter = DefaultTuningAndDBAdapter<TuningAndDBProvider>>
+template <typename TuningAndDBProvider, size_t BLOCK_SIZE,
+          typename Adapter = DefaultTuningAndDBAdapter<TuningAndDBProvider>>
 struct alignas(16) BiquadFilter
 {
   private:
-
     static constexpr double minBW = 0.0001;
     static constexpr double d_lp = 0.004;
     static constexpr double d_lpinv = 1.0 - 0.004;
@@ -54,7 +45,6 @@ struct alignas(16) BiquadFilter
             target_v.d[0] = 0;
             target_v.d[1] = 0;
         }
-
 
         inline void process() { v.d[0] = v.d[0] * d_lpinv + target_v.d[0] * d_lp; }
         inline void newValue(double f) { target_v.d[0] = f; }
@@ -204,7 +194,7 @@ struct alignas(16) BiquadFilter
     }
     double calc_omega_from_Hz(double Hz)
     {
-        return (2 * 3.14159265358979323846) * Hz * storage->dsamplerate_inv;
+        return (2 * 3.14159265358979323846) * Hz * Adapter::sampleRateInv(storage);
     }
     double calc_v1_Q(double reso) { return 1 / (1.02 - std::clamp(reso, 0.0, 1.0)); }
     // inline void process_block_stereo(float *dataL,float *dataR);
@@ -233,10 +223,10 @@ struct alignas(16) BiquadFilter
     bool first_run;
 };
 
-
 inline double square(double x) { return x * x; }
 
-template<typename D, size_t BLOCK_SIZE, typename Adapter> inline BiquadFilter<D, BLOCK_SIZE, Adapter>::BiquadFilter(D *d) : storage(d)
+template <typename D, size_t BLOCK_SIZE, typename Adapter>
+inline BiquadFilter<D, BLOCK_SIZE, Adapter>::BiquadFilter(D *d) : storage(d)
 {
     reg0.d[0] = 0;
     reg1.d[0] = 0;
@@ -253,7 +243,8 @@ template<typename D, size_t BLOCK_SIZE, typename Adapter> inline BiquadFilter<D,
     }
 }
 
-template <typename D, size_t BLOCK_SIZE, typename Adapter> inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::coeff_LP(double omega, double Q)
+template <typename D, size_t BLOCK_SIZE, typename Adapter>
+inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::coeff_LP(double omega, double Q)
 {
     if (omega > M_PI)
         set_coef(1, 0, 0, 1, 0, 0);
@@ -266,7 +257,8 @@ template <typename D, size_t BLOCK_SIZE, typename Adapter> inline void BiquadFil
     }
 }
 
-template <typename D, size_t BLOCK_SIZE, typename Adapter> inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::coeff_LP2B(double omega, double Q)
+template <typename D, size_t BLOCK_SIZE, typename Adapter>
+inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::coeff_LP2B(double omega, double Q)
 {
     if (omega > M_PI)
         set_coef(1, 0, 0, 1, 0, 0);
@@ -288,7 +280,8 @@ template <typename D, size_t BLOCK_SIZE, typename Adapter> inline void BiquadFil
     }
 }
 
-template <typename D, size_t BLOCK_SIZE, typename Adapter> inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::coeff_HP(double omega, double Q)
+template <typename D, size_t BLOCK_SIZE, typename Adapter>
+inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::coeff_HP(double omega, double Q)
 {
     if (omega > M_PI)
         set_coef(1, 0, 0, 0, 0, 0);
@@ -302,7 +295,8 @@ template <typename D, size_t BLOCK_SIZE, typename Adapter> inline void BiquadFil
     }
 }
 
-template <typename D, size_t BLOCK_SIZE, typename Adapter> inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::coeff_BP(double omega, double Q)
+template <typename D, size_t BLOCK_SIZE, typename Adapter>
+inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::coeff_BP(double omega, double Q)
 {
     double cosi = cos(omega), sinu = sin(omega), alpha = sinu / (2.0 * Q), b0 = alpha, b2 = -alpha,
            a0 = 1 + alpha, a1 = -2 * cosi, a2 = 1 - alpha;
@@ -310,7 +304,8 @@ template <typename D, size_t BLOCK_SIZE, typename Adapter> inline void BiquadFil
     set_coef(a0, a1, a2, b0, 0, b2);
 }
 
-template <typename D, size_t BLOCK_SIZE, typename Adapter> inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::coeff_BP2A(double omega, double BW)
+template <typename D, size_t BLOCK_SIZE, typename Adapter>
+inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::coeff_BP2A(double omega, double BW)
 {
     double cosi = cos(omega), sinu = sin(omega), q = 1 / (0.02 + 30 * BW * BW),
            alpha = sinu / (2 * q), b0 = alpha, b2 = -alpha, a0 = 1 + alpha, a1 = -2 * cosi,
@@ -319,7 +314,8 @@ template <typename D, size_t BLOCK_SIZE, typename Adapter> inline void BiquadFil
     set_coef(a0, a1, a2, b0, 0, b2);
 }
 
-template <typename D, size_t BLOCK_SIZE, typename Adapter> inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::coeff_PKA(double omega, double QQ)
+template <typename D, size_t BLOCK_SIZE, typename Adapter>
+inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::coeff_PKA(double omega, double QQ)
 {
     double cosi = cos(omega), sinu = sin(omega), reso = std::clamp(QQ, 0.0, 1.0),
            q = 0.1 + 10 * reso * reso, alpha = sinu / (2 * q), b0 = q * alpha, b2 = -q * alpha,
@@ -328,7 +324,8 @@ template <typename D, size_t BLOCK_SIZE, typename Adapter> inline void BiquadFil
     set_coef(a0, a1, a2, b0, 0, b2);
 }
 
-template <typename D, size_t BLOCK_SIZE, typename Adapter> inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::coeff_NOTCH(double omega, double QQ)
+template <typename D, size_t BLOCK_SIZE, typename Adapter>
+inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::coeff_NOTCH(double omega, double QQ)
 {
     if (omega > M_PI)
         set_coef(1, 0, 0, 1, 0, 0);
@@ -342,11 +339,21 @@ template <typename D, size_t BLOCK_SIZE, typename Adapter> inline void BiquadFil
     }
 }
 
-template <typename D, size_t BLOCK_SIZE, typename Adapter> inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::coeff_LP_with_BW(double omega, double BW) { coeff_LP(omega, 1 / BW); }
+template <typename D, size_t BLOCK_SIZE, typename Adapter>
+inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::coeff_LP_with_BW(double omega, double BW)
+{
+    coeff_LP(omega, 1 / BW);
+}
 
-template <typename D, size_t BLOCK_SIZE, typename Adapter> inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::coeff_HP_with_BW(double omega, double BW) { coeff_HP(omega, 1 / BW); }
+template <typename D, size_t BLOCK_SIZE, typename Adapter>
+inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::coeff_HP_with_BW(double omega, double BW)
+{
+    coeff_HP(omega, 1 / BW);
+}
 
-template <typename D, size_t BLOCK_SIZE, typename Adapter> inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::coeff_LPHPmorph(double omega, double Q, double morph)
+template <typename D, size_t BLOCK_SIZE, typename Adapter>
+inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::coeff_LPHPmorph(double omega, double Q,
+                                                                  double morph)
 {
     double HP = std::clamp(morph, 0.0, 1.0), LP = 1 - HP; // , BP = LP * HP;
     HP *= HP;
@@ -358,7 +365,8 @@ template <typename D, size_t BLOCK_SIZE, typename Adapter> inline void BiquadFil
     set_coef(a0, a1, a2, b0, b1, b2);
 }
 
-template <typename D, size_t BLOCK_SIZE, typename Adapter> inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::coeff_APF(double omega, double Q)
+template <typename D, size_t BLOCK_SIZE, typename Adapter>
+inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::coeff_APF(double omega, double Q)
 {
     if ((omega < 0.0) || (omega > M_PI))
         set_coef(1, 0, 0, 1, 0, 0);
@@ -371,12 +379,16 @@ template <typename D, size_t BLOCK_SIZE, typename Adapter> inline void BiquadFil
     }
 }
 
-template <typename D, size_t BLOCK_SIZE, typename Adapter> inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::coeff_peakEQ(double omega, double BW, double gain)
+template <typename D, size_t BLOCK_SIZE, typename Adapter>
+inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::coeff_peakEQ(double omega, double BW, double gain)
 {
-    coeff_orfanidisEQ(omega, BW, Adapter::dbToLinear(storage, gain), Adapter::dbToLinear(storage, gain * 0.5), 1);
+    coeff_orfanidisEQ(omega, BW, Adapter::dbToLinear(storage, gain),
+                      Adapter::dbToLinear(storage, gain * 0.5), 1);
 }
 
-template <typename DT, size_t BLOCK_SIZE, typename Adapter> inline void BiquadFilter<DT, BLOCK_SIZE, Adapter>::coeff_orfanidisEQ(double omega, double BW, double G, double GB, double G0)
+template <typename DT, size_t BLOCK_SIZE, typename Adapter>
+inline void BiquadFilter<DT, BLOCK_SIZE, Adapter>::coeff_orfanidisEQ(double omega, double BW,
+                                                                     double G, double GB, double G0)
 {
     // For the curious http://eceweb1.rutgers.edu/~orfanidi/ece521/hpeq.pdf appears to be the source
     // of this
@@ -432,12 +444,14 @@ template <typename DT, size_t BLOCK_SIZE, typename Adapter> inline void BiquadFi
     }
 }
 
-template <typename D, size_t BLOCK_SIZE, typename Adapter> inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::coeff_same_as_last_time()
+template <typename D, size_t BLOCK_SIZE, typename Adapter>
+inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::coeff_same_as_last_time()
 {
     // If you want to change interpolation then set dv = 0 here
 }
 
-template <typename D, size_t BLOCK_SIZE, typename Adapter> inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::coeff_instantize()
+template <typename D, size_t BLOCK_SIZE, typename Adapter>
+inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::coeff_instantize()
 {
     a1.instantize();
     a2.instantize();
@@ -446,7 +460,9 @@ template <typename D, size_t BLOCK_SIZE, typename Adapter> inline void BiquadFil
     b2.instantize();
 }
 
-template <typename D, size_t BLOCK_SIZE, typename Adapter> inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::set_coef(double a0, double a1, double a2, double b0, double b1, double b2)
+template <typename D, size_t BLOCK_SIZE, typename Adapter>
+inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::set_coef(double a0, double a1, double a2,
+                                                           double b0, double b1, double b2)
 {
     double a0inv = 1 / a0;
 
@@ -471,7 +487,8 @@ template <typename D, size_t BLOCK_SIZE, typename Adapter> inline void BiquadFil
     this->b2.newValue(b2);
 }
 
-template <typename D, size_t BLOCK_SIZE, typename Adapter> inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::process_block(float *data)
+template <typename D, size_t BLOCK_SIZE, typename Adapter>
+inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::process_block(float *data)
 {
     {
         int k;
@@ -497,7 +514,9 @@ template <typename D, size_t BLOCK_SIZE, typename Adapter> inline void BiquadFil
     }
 }
 
-template <typename D, size_t BLOCK_SIZE, typename Adapter> inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::process_block_to(float *__restrict data, float *__restrict dataout)
+template <typename D, size_t BLOCK_SIZE, typename Adapter>
+inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::process_block_to(float *__restrict data,
+                                                                   float *__restrict dataout)
 {
     {
         int k;
@@ -523,7 +542,9 @@ template <typename D, size_t BLOCK_SIZE, typename Adapter> inline void BiquadFil
     }
 }
 
-template <typename D, size_t BLOCK_SIZE, typename Adapter> inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::process_block_slowlag(float *__restrict dataL, float *__restrict dataR)
+template <typename D, size_t BLOCK_SIZE, typename Adapter>
+inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::process_block_slowlag(float *__restrict dataL,
+                                                                        float *__restrict dataR)
 {
     {
         a1.process();
@@ -558,7 +579,8 @@ template <typename D, size_t BLOCK_SIZE, typename Adapter> inline void BiquadFil
     }
 }
 
-template <typename D, size_t BLOCK_SIZE, typename Adapter> inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::process_block(float *dataL, float *dataR)
+template <typename D, size_t BLOCK_SIZE, typename Adapter>
+inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::process_block(float *dataL, float *dataR)
 {
     {
         int k;
@@ -593,7 +615,9 @@ template <typename D, size_t BLOCK_SIZE, typename Adapter> inline void BiquadFil
     }
 }
 
-template <typename D, size_t BLOCK_SIZE, typename Adapter> inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::process_block_to(float *dataL, float *dataR, float *dstL, float *dstR)
+template <typename D, size_t BLOCK_SIZE, typename Adapter>
+inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::process_block_to(float *dataL, float *dataR,
+                                                                   float *dstL, float *dstR)
 {
     {
         int k;
@@ -628,7 +652,8 @@ template <typename D, size_t BLOCK_SIZE, typename Adapter> inline void BiquadFil
     }
 }
 
-template <typename D, size_t BLOCK_SIZE, typename Adapter> inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::process_block(double *data)
+template <typename D, size_t BLOCK_SIZE, typename Adapter>
+inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::process_block(double *data)
 {
     {
         int k;
@@ -654,7 +679,8 @@ template <typename D, size_t BLOCK_SIZE, typename Adapter> inline void BiquadFil
     }
 }
 
-template <typename D, size_t BLOCK_SIZE, typename Adapter> inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::setBlockSize(int bs)
+template <typename D, size_t BLOCK_SIZE, typename Adapter>
+inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::setBlockSize(int bs)
 {
     /*	a1.setBlockSize(bs);
             a2.setBlockSize(bs);
@@ -663,7 +689,7 @@ template <typename D, size_t BLOCK_SIZE, typename Adapter> inline void BiquadFil
             b2.setBlockSize(bs);*/
 }
 
-template<typename D, size_t BLOCK_SIZE, typename Adapter>
+template <typename D, size_t BLOCK_SIZE, typename Adapter>
 inline float BiquadFilter<D, BLOCK_SIZE, Adapter>::plot_magnitude(float f)
 {
     std::complex<double> ca0(1, 0), ca1(a1.v.d[0], 0), ca2(a2.v.d[0], 0), cb0(b0.v.d[0], 0),
@@ -678,7 +704,6 @@ inline float BiquadFilter<D, BLOCK_SIZE, Adapter>::plot_magnitude(float f)
     return r;
 }
 
-
-}
+} // namespace sst::filters::Biquad
 
 #endif // SURGE_BIQUADFILTER_H
