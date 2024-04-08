@@ -7,6 +7,7 @@ target_sources(sst-filters-tests
         BasicFiltersTest.cpp
         BiquadTest.cpp
         CutoffWarpTest.cpp
+        CytomicSVFTests.cpp
         DiodeLadderTest.cpp
         K35FilterTest.cpp
         HalfRateTest.cpp
