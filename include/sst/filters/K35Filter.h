@@ -20,7 +20,7 @@ static float clampedFrequency(float pitch, float sampleRate, TuningProvider *pro
     return std::clamp(freq, 5.f, (sampleRate * 0.3f));
 }
 
-#define F(a) _mm_set_ps1(a)
+#define F(a) _mm_set1_ps(a)
 #define M(a, b) _mm_mul_ps(a, b)
 #define D(a, b) _mm_div_ps(a, b)
 #define A(a, b) _mm_add_ps(a, b)
@@ -155,11 +155,13 @@ inline __m128 process_hp(QuadFilterUnitState *__restrict f, __m128 input)
 
     return result;
 }
+
 #undef F
 #undef M
 #undef D
 #undef A
 #undef S
+
 } // namespace sst::filters::K35Filter
 
 #endif // SST_FILTERS_K35FILTER_H

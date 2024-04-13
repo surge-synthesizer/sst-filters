@@ -25,8 +25,7 @@ static float clampedFrequency(float pitch, float sampleRate, TuningProvider *pro
 #define D(a, b) _mm_div_ps(a, b)
 #define A(a, b) _mm_add_ps(a, b)
 #define S(a, b) _mm_sub_ps(a, b)
-// reciprocal
-#define reci(a) _mm_rcp_ps(a)
+#define RECI(a) _mm_rcp_ps(a)
 
 static inline __m128 getFO(const __m128 beta, const __m128 delta, const __m128 feedback,
                            const __m128 z) noexcept
@@ -115,12 +114,6 @@ inline __m128 process(QuadFilterUnitState *__restrict f, __m128 input)
         f->C[i] = A(f->C[i], f->dC[i]);
     }
 
-    // hopefully the optimiser will take care of the duplicatey bits
-
-    const __m128 zero = F(0.0f);
-    const __m128 one = F(1.0f);
-    const __m128 half = F(0.5f);
-
     const __m128 sg3 = f->C[dlf_G4];
     const __m128 sg2 = M(sg3, f->C[dlf_G3]);
     const __m128 sg1 = M(sg2, f->C[dlf_G2]);
@@ -128,61 +121,63 @@ inline __m128 process(QuadFilterUnitState *__restrict f, __m128 input)
 
     const __m128 g = f->C[dlf_g];
     // g plus one, common so do it only once
-    const __m128 gp1 = A(g, one);
+    const __m128 gp1 = A(g, m128_one);
     // half of g
-    const __m128 hg = M(f->C[dlf_g], half);
+    const __m128 hg = M(f->C[dlf_g], m128_half);
 
     // 1.0 / (gp1 - g * G2)
-    const __m128 beta1 = reci(S(gp1, M(g, f->C[dlf_G2])));
+    const __m128 beta1 = RECI(S(gp1, M(g, f->C[dlf_G2])));
     // 1.0 / (gp1 - g * 0.5 * G3
-    const __m128 beta2 = reci(S(gp1, M(hg, f->C[dlf_G3])));
+    const __m128 beta2 = RECI(S(gp1, M(hg, f->C[dlf_G3])));
     // 1.0 / (gp1 - g * 0.5 * G4
-    const __m128 beta3 = reci(S(gp1, M(hg, f->C[dlf_G4])));
+    const __m128 beta3 = RECI(S(gp1, M(hg, f->C[dlf_G4])));
     // 1.0 / gp1
-    const __m128 beta4 = reci(gp1);
+    const __m128 beta4 = RECI(gp1);
 
     // nothing to compute for deltas, inline them
 
     // G1 * G2 + 1.0
-    const __m128 gamma1 = A(M(f->C[dlf_G1], f->C[dlf_G2]), one);
+    const __m128 gamma1 = A(M(f->C[dlf_G1], f->C[dlf_G2]), m128_one);
     // G2 * G3 + 1.0
-    const __m128 gamma2 = A(M(f->C[dlf_G2], f->C[dlf_G3]), one);
+    const __m128 gamma2 = A(M(f->C[dlf_G2], f->C[dlf_G3]), m128_one);
     // G3 * G4 + 1.0
-    const __m128 gamma3 = A(M(f->C[dlf_G3], f->C[dlf_G4]), one);
+    const __m128 gamma3 = A(M(f->C[dlf_G3], f->C[dlf_G4]), m128_one);
     // gamma4 is always 1.0, just inline it
 
     // nothing to compute for epsilons or ma0, inline them
 
     // feedback4 is always zero, inline it
-    const __m128 feedback3 = getFO(beta4, zero, zero, f->R[dlf_z4]);
+    const __m128 feedback3 = getFO(beta4, m128_zero, m128_zero, f->R[dlf_z4]);
     const __m128 feedback2 = getFO(beta3, hg, f->R[dlf_feedback3], f->R[dlf_z3]);
     const __m128 feedback1 = getFO(beta2, hg, f->R[dlf_feedback2], f->R[dlf_z2]);
 
     const __m128 sigma = A(A(A(M(sg1, getFO(beta1, g, feedback1, f->R[dlf_z1])),
                                M(sg2, getFO(beta2, hg, feedback2, f->R[dlf_z2]))),
                              M(sg3, getFO(beta3, hg, feedback3, f->R[dlf_z3]))),
-                           M(one, getFO(beta4, zero, zero, f->R[dlf_z4])));
+                           M(m128_one, getFO(beta4, m128_zero, m128_zero, f->R[dlf_z4])));
 
     f->R[dlf_feedback3] = feedback3;
     f->R[dlf_feedback2] = feedback2;
     f->R[dlf_feedback1] = feedback1;
 
     // gain compensation
-    const __m128 comp = M(A(M(F(0.3f), f->C[dlf_km]), one), input);
+    const __m128 comp = M(A(M(F(0.3f), f->C[dlf_km]), m128_one), input);
 
     // (comp - km * sigma) / (km * gamma + 1.0)
-    const __m128 u = D(S(comp, M(f->C[dlf_km], sigma)), A(M(f->C[dlf_km], f->C[dlf_gamma]), one));
+    const __m128 u =
+        D(S(comp, M(f->C[dlf_km], sigma)), A(M(f->C[dlf_km], f->C[dlf_gamma]), m128_one));
 
-    const __m128 result1 = doLpf(u, f->C[dlf_alpha], beta1, gamma1, g, f->C[dlf_G2], one, feedback1,
-                                 getFO(beta1, g, feedback1, f->R[dlf_z1]), f->R[dlf_z1]);
+    const __m128 result1 = doLpf(u, f->C[dlf_alpha], beta1, gamma1, g, f->C[dlf_G2], m128_one,
+                                 feedback1, getFO(beta1, g, feedback1, f->R[dlf_z1]), f->R[dlf_z1]);
     const __m128 result2 =
-        doLpf(result1, f->C[dlf_alpha], beta2, gamma2, hg, f->C[dlf_G3], half, feedback2,
+        doLpf(result1, f->C[dlf_alpha], beta2, gamma2, hg, f->C[dlf_G3], m128_half, feedback2,
               getFO(beta2, hg, feedback2, f->R[dlf_z2]), f->R[dlf_z2]);
     const __m128 result3 =
-        doLpf(result2, f->C[dlf_alpha], beta3, gamma3, hg, f->C[dlf_G4], half, feedback3,
+        doLpf(result2, f->C[dlf_alpha], beta3, gamma3, hg, f->C[dlf_G4], m128_half, feedback3,
               getFO(beta3, hg, feedback3, f->R[dlf_z3]), f->R[dlf_z3]);
-    const __m128 result4 = doLpf(result3, f->C[dlf_alpha], beta4, one, zero, zero, half, zero,
-                                 getFO(beta4, zero, zero, f->R[dlf_z4]), f->R[dlf_z4]);
+    const __m128 result4 =
+        doLpf(result3, f->C[dlf_alpha], beta4, m128_one, m128_zero, m128_zero, m128_half, m128_zero,
+              getFO(beta4, m128_zero, m128_zero, f->R[dlf_z4]), f->R[dlf_z4]);
 
     // Just like in QuadFilterUnit.cpp/LPMOOGquad, it's fine for the whole quad to return the same
     // subtype because integer parameters like f->WP are not modulatable and QuadFilterUnit is only
@@ -206,7 +201,7 @@ inline __m128 process(QuadFilterUnitState *__restrict f, __m128 input)
 #undef D
 #undef A
 #undef S
-#undef reci
+#undef RECI
 
 } // namespace sst::filters::DiodeLadderFilter
 

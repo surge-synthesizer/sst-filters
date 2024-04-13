@@ -1,7 +1,7 @@
 #ifndef SST_FILTERS_FILTERCOEFFICIENTMAKER_H
 #define SST_FILTERS_FILTERCOEFFICIENTMAKER_H
 
-#include "sst/utilities/globals.h"
+#include "sst/utilities/shared.h"
 #include "FilterConfiguration.h"
 #include "TuningProvider.h"
 
@@ -26,9 +26,8 @@ template <typename TuningProvider = detail::BasicTuningProvider> class FilterCoe
     FilterCoefficientMaker();
 
     /** Sets the sample rate and block size to use for processing the filters */
-    void setSampleRateAndBlockSize(float newSampleRate,
-                                   int newBlockSize); // @NOTE: for Surge, this should be called
-                                                      // with samplerate_os, and BLOCK_SIZE_OS
+    // @NOTE: for Surge XT, this should be called with samplerate_os, and BLOCK_SIZE_OS
+    void setSampleRateAndBlockSize(float newSampleRate, int newBlockSize);
 
     /** Resets the coefficients to zero, and the tuning provider to nullptr */
     void Reset();
@@ -62,10 +61,10 @@ template <typename TuningProvider = detail::BasicTuningProvider> class FilterCoe
     /** Current filter coefficients */
     float C[n_cm_coeffs]{};
 
-    /** Filter coefficients "delta" to update current coefficients */
+    /** Filter coefficients delta to update current coefficients */
     float dC[n_cm_coeffs]{};
 
-    /** "Target" filter coefficients */
+    /** Target filter coefficients */
     float tC[n_cm_coeffs]{};
 
   private:
