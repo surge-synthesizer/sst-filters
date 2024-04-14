@@ -1,6 +1,8 @@
 #ifndef SST_FILTERS_FILTERCONFIGURATION_H
 #define SST_FILTERS_FILTERCONFIGURATION_H
 
+#include <string>
+
 namespace sst::filters
 {
 /** These are the filter types we have to choose from! */
