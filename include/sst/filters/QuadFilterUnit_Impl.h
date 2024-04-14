@@ -1,3 +1,17 @@
+/*
+ * sst-filters - A header-only collection of SIMD filter
+ * implementations by the Surge Synth Team
+ *
+ * Copyright 2019-2024, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * sst-filters is released under the Gnu General Public Licens
+ * version 3 or later. Some of the filters in this package
+ * originated in the version of Surge open sourced in 2018.
+ *
+ * All source in sst-filters available at
+ * https://github.com/surge-synthesizer/sst-filters
+ */
 #include "QuadFilterUnit.h"
 #include "FilterConfiguration.h"
 
@@ -358,7 +372,8 @@ inline __m128 IIR12CFLquad(QuadFilterUnitState *__restrict f, __m128 in)
     const __m128 m1 = _mm_set1_ps(1.0f);
     const __m128 m2 = _mm_set1_ps(2.0f);
 
-    __m128 m = _mm_rsqrt_ps(_mm_max_ps(m1, _mm_mul_ps(m2, _mm_and_ps(y, basic_blocks::mechanics::m128_mask_absval))));
+    __m128 m = _mm_rsqrt_ps(
+        _mm_max_ps(m1, _mm_mul_ps(m2, _mm_and_ps(y, basic_blocks::mechanics::m128_mask_absval))));
     f->R[2] = _mm_add_ps(_mm_mul_ps(f->R[2], m099), _mm_mul_ps(m, m001));
 
     return y;
@@ -443,7 +458,8 @@ inline __m128 IIR24CFLquad(QuadFilterUnitState *__restrict f, __m128 in)
     const __m128 m1 = _mm_set1_ps(1.0f);
     const __m128 m2 = _mm_set1_ps(2.0f);
 
-    __m128 m = _mm_rsqrt_ps(_mm_max_ps(m1, _mm_mul_ps(m2, _mm_and_ps(y2, basic_blocks::mechanics::m128_mask_absval))));
+    __m128 m = _mm_rsqrt_ps(
+        _mm_max_ps(m1, _mm_mul_ps(m2, _mm_and_ps(y2, basic_blocks::mechanics::m128_mask_absval))));
     f->R[2] = _mm_add_ps(_mm_mul_ps(f->R[2], m099), _mm_mul_ps(m, m001));
 
     return y2;
@@ -515,9 +531,9 @@ inline __m128 SNHquad(QuadFilterUnitState *__restrict f, __m128 in)
 
     __m128 mask = _mm_cmpgt_ps(f->R[0], _mm_setzero_ps());
 
-    f->R[1] =
-        _mm_or_ps(_mm_andnot_ps(mask, f->R[1]),
-                  _mm_and_ps(mask, basic_blocks::dsp::softclip_ps(_mm_sub_ps(in, _mm_mul_ps(f->C[1], f->R[1])))));
+    f->R[1] = _mm_or_ps(_mm_andnot_ps(mask, f->R[1]),
+                        _mm_and_ps(mask, basic_blocks::dsp::softclip_ps(
+                                             _mm_sub_ps(in, _mm_mul_ps(f->C[1], f->R[1])))));
 
     const __m128 m1 = _mm_set1_ps(-1.f);
     f->R[0] = _mm_add_ps(f->R[0], _mm_and_ps(m1, mask));
@@ -525,10 +541,11 @@ inline __m128 SNHquad(QuadFilterUnitState *__restrict f, __m128 in)
     return f->R[1];
 }
 
- template <int COMB_SIZE> // COMB_SIZE must be a power of 2
+template <int COMB_SIZE> // COMB_SIZE must be a power of 2
 __m128 COMBquad_SSE2(QuadFilterUnitState *__restrict f, __m128 in)
 {
-    static_assert(utilities::SincTable::FIRipol_M == 256); // changing the constant requires updating the code below
+    static_assert(utilities::SincTable::FIRipol_M ==
+                  256); // changing the constant requires updating the code below
     const __m128 m256 = _mm_set1_ps(256.f);
     const __m128i m0xff = _mm_set1_epi32(0xff);
 
@@ -589,15 +606,15 @@ __m128 COMBquad_SSE2(QuadFilterUnitState *__restrict f, __m128 in)
     return _mm_add_ps(_mm_mul_ps(f->C[3], DBRead), _mm_mul_ps(f->C[2], in));
 }
 
-template<int32_t scaleTimes1000, __m128 (*F)(QuadFilterUnitState *__restrict, __m128)>
+template <int32_t scaleTimes1000, __m128 (*F)(QuadFilterUnitState *__restrict, __m128)>
 __m128 ScaleQFPtr(QuadFilterUnitState *__restrict s, __m128 in)
 {
-    const auto scale = _mm_set1_ps(scaleTimes1000  /1000.f);
+    const auto scale = _mm_set1_ps(scaleTimes1000 / 1000.f);
     auto res = F(s, in);
     return _mm_mul_ps(res, scale);
 }
 
-template<bool Compensated>
+template <bool Compensated>
 inline FilterUnitQFPtr GetCompensatedQFPtrFilterUnit(FilterType type, FilterSubType subtype)
 {
     switch (type)

@@ -1,5 +1,19 @@
-#ifndef SST_FILTERS_VINTAGELADDERS_H
-#define SST_FILTERS_VINTAGELADDERS_H
+/*
+ * sst-filters - A header-only collection of SIMD filter
+ * implementations by the Surge Synth Team
+ *
+ * Copyright 2019-2024, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * sst-filters is released under the Gnu General Public Licens
+ * version 3 or later. Some of the filters in this package
+ * originated in the version of Surge open sourced in 2018.
+ *
+ * All source in sst-filters available at
+ * https://github.com/surge-synthesizer/sst-filters
+ */
+#ifndef INCLUDE_SST_FILTERS_VINTAGELADDERS_H
+#define INCLUDE_SST_FILTERS_VINTAGELADDERS_H
 
 #include "sst/utilities/globals.h"
 #include "sst/basic-blocks/dsp/FastMath.h"
@@ -179,7 +193,7 @@ inline __m128 process(QuadFilterUnitState *__restrict f, __m128 input)
          halfStepSize = F(0.5f * f->sampleRateInv * extraOversampleInv);
 
     const __m128 oneoversix = F(1.f / 6.f), two = F(2.f), dFac = F(extraOversampleInv),
-                        sat = F(saturation), satInv = F(saturationInverse);
+                 sat = F(saturation), satInv = F(saturationInverse);
 
     __m128 outputOS[extraOversample];
 
@@ -319,8 +333,7 @@ inline void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, float f
     float co = std::max(cutoff - sampleRate * 0.33333f, 0.0f) * 0.1f * sampleRateInv;
     float gctrim = applyGainCompensation ? 0.05f : 0.0f;
 
-    reso = std::clamp(std::clamp(reso, 0.0f, 0.9925f), 0.0f,
-                                  0.994f - co - gctrim);
+    reso = std::clamp(std::clamp(reso, 0.0f, 0.9925f), 0.0f, 0.994f - co - gctrim);
     lC[h_res] = reso;
     lC[h_fc] = cutoff * sampleRateInv;
 
@@ -341,11 +354,11 @@ inline __m128 process(QuadFilterUnitState *__restrict f, __m128 in)
 #define A(a, b) _mm_add_ps(a, b)
 #define S(a, b) _mm_sub_ps(a, b)
 
-    const __m128 dFac = F(0.5f), half = F(0.5f), one = F(1.0f), four = F(4.0f),
-                        m18730 = F(1.8730f), m04955 = F(0.4995f), mneg06490 = F(-0.6490f),
-                        m09988 = F(0.9988f), mneg39364 = F(-3.9364f), m18409 = F(1.8409f),
-                        m09968 = F(0.9968f), thermal = F(1.f / 70.f), oneoverthermal = F(70.0f),
-                        neg2pi = F(-2.0f * (float)M_PI);
+    const __m128 dFac = F(0.5f), half = F(0.5f), one = F(1.0f), four = F(4.0f), m18730 = F(1.8730f),
+                 m04955 = F(0.4995f), mneg06490 = F(-0.6490f), m09988 = F(0.9988f),
+                 mneg39364 = F(-3.9364f), m18409 = F(1.8409f), m09968 = F(0.9968f),
+                 thermal = F(1.f / 70.f), oneoverthermal = F(70.0f),
+                 neg2pi = F(-2.0f * (float)M_PI);
 
     __m128 outputOS[2];
 

@@ -1,5 +1,19 @@
-#ifndef SST_FILTERS_CUTOFFWARP_H
-#define SST_FILTERS_CUTOFFWARP_H
+/*
+ * sst-filters - A header-only collection of SIMD filter
+ * implementations by the Surge Synth Team
+ *
+ * Copyright 2019-2024, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * sst-filters is released under the Gnu General Public Licens
+ * version 3 or later. Some of the filters in this package
+ * originated in the version of Surge open sourced in 2018.
+ *
+ * All source in sst-filters available at
+ * https://github.com/surge-synthesizer/sst-filters
+ */
+#ifndef INCLUDE_SST_FILTERS_CUTOFFWARP_H
+#define INCLUDE_SST_FILTERS_CUTOFFWARP_H
 
 #include "QuadFilterUnit.h"
 #include "FilterCoefficientMaker.h"
@@ -83,7 +97,8 @@ static inline __m128 doNLFilter(const __m128 input, const __m128 a1, const __m12
     switch (sat)
     {
     case SAT_SOFT:
-        nf = basic_blocks::dsp::softclip_ps(out); // note, this is a bit different to Jatin's softclipper
+        nf = basic_blocks::dsp::softclip_ps(
+            out); // note, this is a bit different to Jatin's softclipper
         break;
     case SAT_OJD:
         nf = ojd_waveshaper_ps(out);

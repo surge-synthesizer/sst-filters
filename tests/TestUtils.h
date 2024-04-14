@@ -1,4 +1,5 @@
-#pragma once
+#ifndef TESTS_TESTUTILS_H
+#define TESTS_TESTUTILS_H
 
 #include <array>
 #include <iostream>
@@ -99,3 +100,5 @@ inline void runTest(const TestConfig& testConfig)
     }
 };
 }
+
+#endif // TESTS_TESTUTILS_H

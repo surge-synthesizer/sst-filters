@@ -1,4 +1,5 @@
-#pragma once
+#ifndef SSTFILTERS_EXAMPLES_FILTERS_EXAMPLE_PLUGIN_FILTERSPLUGIN_H
+#define SSTFILTERS_EXAMPLES_FILTERS_EXAMPLE_PLUGIN_FILTERSPLUGIN_H
 
 #include <juce_audio_utils/juce_audio_utils.h>
 #include <sst/filters.h>
@@ -97,3 +98,5 @@ class FiltersPlugin : public juce::AudioProcessor
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FiltersPlugin)
 };
+
+#endif // SSTFILTERS_EXAMPLES_FILTERS_EXAMPLE_PLUGIN_FILTERSPLUGIN_H

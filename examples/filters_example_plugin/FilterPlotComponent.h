@@ -1,4 +1,5 @@
-#pragma once
+#ifndef SSTFILTERS_EXAMPLES_FILTERS_EXAMPLE_PLUGIN_FILTERPLOTCOMPONENT_H
+#define SSTFILTERS_EXAMPLES_FILTERS_EXAMPLE_PLUGIN_FILTERPLOTCOMPONENT_H
 
 #include <juce_gui_basics/juce_gui_basics.h>
 #include <juce_graphics/juce_graphics.h>
@@ -34,3 +35,5 @@ class FilterPlotComponent : public juce::Component,
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FilterPlotComponent)
 };
+
+#endif // SSTFILTERS_EXAMPLES_FILTERS_EXAMPLE_PLUGIN_FILTERPLOTCOMPONENT_H
