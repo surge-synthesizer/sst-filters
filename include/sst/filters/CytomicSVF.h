@@ -204,6 +204,82 @@ struct CytomicSVF
                           _mm_add_ps(_mm_mul_ps(that.m1, v1), _mm_mul_ps(that.m2, v2)));
     }
 
+    /*
+     * Process across a block with smoothing
+     */
+    __m128 a1_prior, a2_prior, a3_prior;
+    __m128 da1, da2, da3;
+    bool firstBlock{true};
+
+    template <int blockSize>
+    void setCoeffForBlock(Mode mode, float freq, float res, float srInv, float bellShelfAmp = 1.f)
+    {
+        // Preserve the prior values
+        a1_prior = a1;
+        a2_prior = a2;
+        a3_prior = a3;
+
+        // calculate the new a1s
+        setCoeff(mode, freq, res, srInv, bellShelfAmp);
+
+        // If its the first time around snap them
+        if (firstBlock)
+        {
+            a1_prior = a1;
+            a2_prior = a2;
+            a3_prior = a3;
+            firstBlock = false;
+        }
+
+        // then for each one calculate the change across the block
+        static constexpr float obsf = 1.f / blockSize;
+        auto obs = _mm_set1_ps(obsf);
+
+        // and set the changeup, and reset a1 to the prior value so we move in the block
+        da1 = _mm_mul_ps(_mm_sub_ps(a1, a1_prior), obs);
+        a1 = a1_prior;
+
+        da2 = _mm_mul_ps(_mm_sub_ps(a2, a2_prior), obs);
+        a2 = a2_prior;
+
+        da3 = _mm_mul_ps(_mm_sub_ps(a3, a3_prior), obs);
+        a3 = a3_prior;
+    }
+
+    template <int blockSize> void retainCoeffForBlock()
+    {
+        da1 = _mm_setzero_ps();
+        da2 = _mm_setzero_ps();
+        da3 = _mm_setzero_ps();
+    }
+
+    template <int blockSize> void processBlock(float *inL, float *inR, float *outL, float *outR)
+    {
+        for (int i = 0; i < blockSize; ++i)
+        {
+            outL[i] = inL[i];
+            outR[i] = inR[i];
+            step(*this, outL[i], outR[i]);
+            a1 = _mm_add_ps(a1, da1);
+            a2 = _mm_add_ps(a2, da2);
+            a3 = _mm_add_ps(a3, da3);
+        }
+    }
+
+    template <int blockSize> void processBlock(float *inL, float *outL)
+    {
+        for (int i = 0; i < blockSize; ++i)
+        {
+            outL[i] = inL[i];
+            auto tmp{0.f};
+            step(*this, outL[i], tmp);
+            // std::cout << "A1 is " << a1[0] << std::endl;
+            a1 = _mm_add_ps(a1, da1);
+            a2 = _mm_add_ps(a2, da2);
+            a3 = _mm_add_ps(a3, da3);
+        }
+    }
+
     void init()
     {
         ic1eq = _mm_setzero_ps();
