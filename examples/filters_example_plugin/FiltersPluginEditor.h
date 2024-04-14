@@ -1,4 +1,5 @@
-#pragma once
+#ifndef SSTFILTERS_EXAMPLES_FILTERS_EXAMPLE_PLUGIN_FILTERSPLUGINEDITOR_H
+#define SSTFILTERS_EXAMPLES_FILTERS_EXAMPLE_PLUGIN_FILTERSPLUGINEDITOR_H
 
 #include "FiltersPlugin.h"
 #include "FilterPlotComponent.h"
@@ -36,3 +37,5 @@ class FiltersPluginEditor : public juce::AudioProcessorEditor,
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FiltersPluginEditor)
 };
+
+#endif // SSTFILTERS_EXAMPLES_FILTERS_EXAMPLE_PLUGIN_FILTERSPLUGINEDITOR_H

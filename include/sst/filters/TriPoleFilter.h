@@ -1,5 +1,19 @@
-#ifndef SST_FILTERS_TRIPOLEFILTER_H
-#define SST_FILTERS_TRIPOLEFILTER_H
+/*
+ * sst-filters - A header-only collection of SIMD filter
+ * implementations by the Surge Synth Team
+ *
+ * Copyright 2019-2024, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * sst-filters is released under the Gnu General Public Licens
+ * version 3 or later. Some of the filters in this package
+ * originated in the version of Surge open sourced in 2018.
+ *
+ * All source in sst-filters available at
+ * https://github.com/surge-synthesizer/sst-filters
+ */
+#ifndef INCLUDE_SST_FILTERS_TRIPOLEFILTER_H
+#define INCLUDE_SST_FILTERS_TRIPOLEFILTER_H
 
 #include "QuadFilterUnit.h"
 #include "FilterCoefficientMaker.h"
@@ -262,8 +276,9 @@ static inline __m128 res_func_ps(__m128 x)
     auto x_abs = basic_blocks::mechanics::abs_ps(x);
     auto x_less_than = _mm_cmplt_ps(x_abs, F(max_val));
 
-    auto y =
-        A(N(basic_blocks::dsp::fastexpSSE(M(F(beta_exp), N(basic_blocks::mechanics::abs_ps(A(x, F(c))))))), F(bias));
+    auto y = A(N(basic_blocks::dsp::fastexpSSE(
+                   M(F(beta_exp), N(basic_blocks::mechanics::abs_ps(A(x, F(c))))))),
+               F(bias));
     y = M(sign_ps(x), M(y, F(oneOverMult)));
 
     return _mm_or_ps(_mm_and_ps(x_less_than, M(x, F(oneOverMult))), _mm_andnot_ps(x_less_than, y));
@@ -276,7 +291,8 @@ static inline __m128 res_deriv_ps(__m128 x)
     auto x_abs = basic_blocks::mechanics::abs_ps(x);
     auto x_less_than = _mm_cmplt_ps(x_abs, F(max_val));
 
-    auto y = A(basic_blocks::dsp::fastexpSSE(M(F(beta_exp), N(basic_blocks::mechanics::abs_ps(A(x, F(c)))))),
+    auto y = A(basic_blocks::dsp::fastexpSSE(
+                   M(F(beta_exp), N(basic_blocks::mechanics::abs_ps(A(x, F(c)))))),
                F(betaExpOverMult));
 
     return _mm_or_ps(_mm_and_ps(x_less_than, F(one)), _mm_andnot_ps(x_less_than, y));

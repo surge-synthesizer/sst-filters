@@ -1,22 +1,20 @@
 /*
-==============================================================================
-This file is derived from part of part of Obxd synthesizer.
-Copyright © 2013-2014 Filatov Vadim (justdat_@_e1.ru)
-This file may be licensed under the terms of of the
-GNU General Public License Version 2 (the ``GPL'').
-Software distributed under the License is distributed
-on an ``AS IS'' basis, WITHOUT WARRANTY OF ANY KIND, either
-express or implied. See the GPL for the specific language
-governing rights and limitations.
-You should have received a copy of the GPL along with this
-program. If not, go to http://www.gnu.org/licenses/gpl.html
-or write to the Free Software Foundation, Inc.,
-51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
-==============================================================================
-*/
+ * sst-filters - A header-only collection of SIMD filter
+ * implementations by the Surge Synth Team
+ *
+ * Copyright 2019-2024, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * sst-filters is released under the Gnu General Public Licens
+ * version 3 or later. Some of the filters in this package
+ * originated in the version of Surge open sourced in 2018.
+ *
+ * All source in sst-filters available at
+ * https://github.com/surge-synthesizer/sst-filters
+ */
 
-#ifndef SST_FILTERS_OBXDFILTER_H
-#define SST_FILTERS_OBXDFILTER_H
+#ifndef INCLUDE_SST_FILTERS_OBXDFILTER_H
+#define INCLUDE_SST_FILTERS_OBXDFILTER_H
 
 #include "QuadFilterUnit.h"
 #include "FilterCoefficientMaker.h"
@@ -81,13 +79,14 @@ const __m128 gainAdjustment2Pole = _mm_set1_ps(0.74f);
 const __m128 gainAdjustment4Pole = _mm_set1_ps(0.6f);
 
 template <typename TuningProvider>
-inline void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, Poles p, float freq, float reso, int sub,
-                      float sampleRateInv, TuningProvider *provider)
+inline void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, Poles p, float freq,
+                             float reso, int sub, float sampleRateInv, TuningProvider *provider)
 {
     float lC[n_cm_coeffs]{};
     float rcrate = sqrt(44000.0f * sampleRateInv);
-    float cutoff = fmin(provider->note_to_pitch(freq + 69) * (float)TuningProvider::MIDI_0_FREQ, 22000.0f) *
-                   sampleRateInv * (float) M_PI;
+    float cutoff =
+        fmin(provider->note_to_pitch(freq + 69) * (float)TuningProvider::MIDI_0_FREQ, 22000.0f) *
+        sampleRateInv * (float)M_PI;
 
     if (p == TWO_POLE)
     {
@@ -126,8 +125,8 @@ inline void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, Poles p
         lC[rcor24inv] = 1.0f / lC[rcor24];
         lC[g24] = tanf(cutoff);
         lC[R24] = 3.5f * reso;
-        lC[pole_mix] = 1.f - ((float) sub / 3.f);
-        lC[pole_mix_inv_int] = (float) (int)(3.f - (float) sub);
+        lC[pole_mix] = 1.f - ((float)sub / 3.f);
+        lC[pole_mix_inv_int] = (float)(int)(3.f - (float)sub);
         lC[pole_mix_scaled] = (lC[pole_mix] * 3) - lC[pole_mix_inv_int];
     }
 
@@ -307,6 +306,6 @@ inline __m128 process_4_pole(QuadFilterUnitState *__restrict f, __m128 sample)
     auto out = _mm_mul_ps(mc, _mm_add_ps(one, _mm_mul_ps(f->C[R24], zero_four_five)));
     return _mm_mul_ps(out, gainAdjustment4Pole);
 }
-}
+} // namespace sst::filters::OBXDFilter
 
 #endif // SST_FILTERS_OBXDFILTER_H
