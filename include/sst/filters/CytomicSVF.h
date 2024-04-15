@@ -253,16 +253,30 @@ struct CytomicSVF
         da3 = _mm_setzero_ps();
     }
 
+    void processBlockStep(float &L, float &R)
+    {
+        step(*this, L, R);
+        a1 = _mm_add_ps(a1, da1);
+        a2 = _mm_add_ps(a2, da2);
+        a3 = _mm_add_ps(a3, da3);
+    }
+
+    void processBlockStep(float &L)
+    {
+        float tmp{0.f};
+        step(*this, L, tmp);
+        a1 = _mm_add_ps(a1, da1);
+        a2 = _mm_add_ps(a2, da2);
+        a3 = _mm_add_ps(a3, da3);
+    }
+
     template <int blockSize> void processBlock(float *inL, float *inR, float *outL, float *outR)
     {
         for (int i = 0; i < blockSize; ++i)
         {
             outL[i] = inL[i];
             outR[i] = inR[i];
-            step(*this, outL[i], outR[i]);
-            a1 = _mm_add_ps(a1, da1);
-            a2 = _mm_add_ps(a2, da2);
-            a3 = _mm_add_ps(a3, da3);
+            processBlockStep(outL[i], outR[i]);
         }
     }
 
@@ -271,12 +285,7 @@ struct CytomicSVF
         for (int i = 0; i < blockSize; ++i)
         {
             outL[i] = inL[i];
-            auto tmp{0.f};
-            step(*this, outL[i], tmp);
-            // std::cout << "A1 is " << a1[0] << std::endl;
-            a1 = _mm_add_ps(a1, da1);
-            a2 = _mm_add_ps(a2, da2);
-            a3 = _mm_add_ps(a3, da3);
+            processBlockStep(outL[i]);
         }
     }
 
