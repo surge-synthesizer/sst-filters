@@ -103,6 +103,30 @@ struct CytomicSVF
         {
             k = _mm_div_ps(k, _mm_set1_ps(bellShelfAmp));
         }
+        setCoeffPostGK(mode, _mm_set1_ps(bellShelfAmp));
+    }
+
+    void setCoeff(Mode mode, float freqL, float freqR, float resL, float resR, float srInv,
+                  float bellShelfAmpL, float bellShelfAmpR)
+    {
+        auto coL = M_PI * std::clamp(freqL * srInv, 0.f, 0.499f); // stable until nyquist
+        auto coR = M_PI * std::clamp(freqR * srInv, 0.f, 0.499f); // stable until nyquist
+        g = sst::basic_blocks::dsp::fasttanhSSE(_mm_set_ps(0, 0, coR, coL));
+        auto res = _mm_set_ps(0, 0, std::clamp(resR, 0.01f, 0.99f), std::clamp(resL, 0.01f, 0.99f));
+
+        auto bellShelfAmp =
+            _mm_set_ps(0, 0, std::max(bellShelfAmpL, 0.001f), std::max(bellShelfAmpR, 0.001f));
+
+        k = _mm_div_ps(oneSSE, res);
+        if (mode == BELL)
+        {
+            k = _mm_div_ps(k, bellShelfAmp);
+        }
+        setCoeffPostGK(mode, bellShelfAmp);
+    }
+
+    void setCoeffPostGK(Mode mode, __m128 bellShelfSSE)
+    {
         gk = _mm_add_ps(g, k);
         a1 = _mm_div_ps(oneSSE, _mm_add_ps(oneSSE, _mm_mul_ps(g, gk)));
         a2 = _mm_mul_ps(g, a1);
@@ -142,7 +166,7 @@ struct CytomicSVF
             break;
         case BELL:
         {
-            auto A = _mm_set1_ps(bellShelfAmp);
+            auto A = bellShelfSSE;
             m0 = oneSSE;
             m1 = _mm_mul_ps(k, _mm_sub_ps(_mm_mul_ps(A, A), oneSSE));
             m2 = _mm_setzero_ps();
@@ -150,7 +174,7 @@ struct CytomicSVF
         break;
         case LOW_SHELF:
         {
-            auto A = _mm_set1_ps(bellShelfAmp);
+            auto A = bellShelfSSE;
             m0 = oneSSE;
             m1 = _mm_mul_ps(k, _mm_sub_ps(A, oneSSE));
             m2 = _mm_sub_ps(_mm_mul_ps(A, A), oneSSE);
@@ -158,7 +182,7 @@ struct CytomicSVF
         break;
         case HIGH_SHELF:
         {
-            auto A = _mm_set1_ps(bellShelfAmp);
+            auto A = bellShelfSSE;
             m0 = _mm_mul_ps(A, A);
             m1 = _mm_mul_ps(_mm_mul_ps(k, _mm_sub_ps(oneSSE, A)), A);
             m2 = _mm_sub_ps(oneSSE, _mm_mul_ps(A, A));
@@ -221,6 +245,43 @@ struct CytomicSVF
 
         // calculate the new a1s
         setCoeff(mode, freq, res, srInv, bellShelfAmp);
+
+        // If its the first time around snap them
+        if (firstBlock)
+        {
+            a1_prior = a1;
+            a2_prior = a2;
+            a3_prior = a3;
+            firstBlock = false;
+        }
+
+        // then for each one calculate the change across the block
+        static constexpr float obsf = 1.f / blockSize;
+        auto obs = _mm_set1_ps(obsf);
+
+        // and set the changeup, and reset a1 to the prior value so we move in the block
+        da1 = _mm_mul_ps(_mm_sub_ps(a1, a1_prior), obs);
+        a1 = a1_prior;
+
+        da2 = _mm_mul_ps(_mm_sub_ps(a2, a2_prior), obs);
+        a2 = a2_prior;
+
+        da3 = _mm_mul_ps(_mm_sub_ps(a3, a3_prior), obs);
+        a3 = a3_prior;
+    }
+
+    // it's a bit annoying this is a copy but I am sure a clever future me will do better
+    template <int blockSize>
+    void setCoeffForBlock(Mode mode, float freqL, float freqR, float resL, float resR, float srInv,
+                          float bellShelfAmpL, float bellShelfAmpR)
+    {
+        // Preserve the prior values
+        a1_prior = a1;
+        a2_prior = a2;
+        a3_prior = a3;
+
+        // calculate the new a1s
+        setCoeff(mode, freqL, freqR, resL, resR, srInv, bellShelfAmpL, bellShelfAmpR);
 
         // If its the first time around snap them
         if (firstBlock)
