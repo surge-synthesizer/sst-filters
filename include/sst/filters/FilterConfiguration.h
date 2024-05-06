@@ -288,6 +288,11 @@ enum FilterSubType
     st_cutoffwarp_ojd3 = 10,     /**< Cutoff Warp - 3 Stages OJD */
     st_cutoffwarp_ojd4 = 11,     /**< Cutoff Warp - 4 Stages OJD */
 
+    st_vintage_type1 = 0,             /**< Vintage Ladder - Runge Kutta  */
+    st_vintage_type1_compensated = 1, /**<  and with bass compensation */
+    st_vintage_type2 = 2,             /**< Vintage Ladder - Huovilean Model */
+    st_vintage_type2_compensated = 3, /**<  and with bass compensation */
+
     st_resonancewarp_tanh1 = 0,     /**< Resonance Warp - 1 Stage tanh */
     st_resonancewarp_tanh2 = 1,     /**< Resonance Warp - 2 Stages tanh */
     st_resonancewarp_tanh3 = 2,     /**< Resonance Warp - 3 Stages tanh */

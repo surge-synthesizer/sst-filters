@@ -170,15 +170,16 @@ void FilterCoefficientMaker<TuningProvider>::MakeCoeffs(float Freq, float Reso, 
     case fut_vintageladder:
         switch (SubType)
         {
-        case 0:
-        case 1:
-            VintageLadder::RK::makeCoefficients(this, Freq, Reso, sampleRate, SubType == 1,
-                                                providerI);
+        case st_vintage_type1:
+        case st_vintage_type1_compensated:
+            VintageLadder::RK::makeCoefficients(this, Freq, Reso, sampleRate,
+                                                SubType == st_vintage_type1_compensated, providerI);
             break;
-        case 2:
-        case 3:
+        case st_vintage_type2:
+        case st_vintage_type2_compensated:
             VintageLadder::Huov::makeCoefficients(this, Freq, Reso, sampleRate, sampleRateInv,
-                                                  SubType == 3, providerI);
+                                                  SubType == st_vintage_type2_compensated,
+                                                  providerI);
             break;
         default:
             // SOFTWARE ERROR
