@@ -11,10 +11,8 @@ struct TP
 
 TEST_CASE("Simple Biquad")
 {
-    using bqt = sst::filters::Biquad::BiquadFilter<TP, 32>;
-
     TP tp;
-    bqt bq(&tp);
+    sst::filters::Biquad::BiquadFilter<TP, 32> bq(&tp);
 
     bq.coeff_LP(0.6, 0.01);
 
