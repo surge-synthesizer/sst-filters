@@ -16,10 +16,10 @@ jobs:
           imageName: 'macos-latest'
           isMac: True
         win:
-          imageName: 'windows-2019'
+          imageName: 'windows-latest'
           isWindows: True
         lin:
-          imageName: 'ubuntu-20.04'
+          imageName: 'ubuntu-22.04'
           isLinux: True
 
     pool:

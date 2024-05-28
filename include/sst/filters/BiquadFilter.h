@@ -19,23 +19,20 @@
 #include <algorithm>
 #include <complex>
 
+#include <concepts>
+
+#include "sst/basic-blocks/concepts/concepts.h"
+
 namespace sst::filters::Biquad
 {
-template <typename TuningAndDBProvider> struct DefaultTuningAndDBAdapter
-{
-    using ST = TuningAndDBProvider;
-    static inline float noteToPitchIgnoringTuning(ST *s, float n)
-    {
-        return s->note_to_pitch_ignoring_tuning(n);
-    }
+template <typename D, size_t BLOCK_SIZE>
+concept ValidBiquad = sst::basic_blocks::concepts::is_power_of_two_ge(BLOCK_SIZE, (size_t)4) &&
+                      sst::basic_blocks::concepts::providesNoteToPitch<D> &&
+                      sst::basic_blocks::concepts::providesDbToLinear<D> &&
+                      sst::basic_blocks::concepts::supportsSampleRateInv<D>;
 
-    static inline float dbToLinear(ST *s, float n) { return s->db_to_linear(n); }
-
-    static inline double sampleRateInv(ST *s) { return s->dsamplerate_inv; }
-};
-
-template <typename TuningAndDBProvider, size_t BLOCK_SIZE,
-          typename Adapter = DefaultTuningAndDBAdapter<TuningAndDBProvider>>
+template <typename D, size_t BLOCK_SIZE>
+    requires(ValidBiquad<D, BLOCK_SIZE>)
 struct alignas(16) BiquadFilter
 {
   private:
@@ -82,7 +79,7 @@ struct alignas(16) BiquadFilter
     }
 
   public:
-    BiquadFilter(TuningAndDBProvider *d = nullptr);
+    BiquadFilter(D *d = nullptr);
     void coeff_LP(double omega, double Q);
     /** Compared to coeff_LP, this version adds a small boost at high frequencies */
     void coeff_LP2B(double omega, double Q);
@@ -203,12 +200,13 @@ struct alignas(16) BiquadFilter
     double calc_omega(double scfreq)
     {
         return (2 * 3.14159265358979323846) * 440 *
-               Adapter::noteToPitchIgnoringTuning(storage, (float)(12.f * scfreq)) *
-               Adapter::sampleRateInv(storage);
+               sst::basic_blocks::concepts::convertNoteToPitch(storage, (float)(12.f * scfreq)) *
+               sst::basic_blocks::concepts::getSampleRateInv(storage);
     }
     double calc_omega_from_Hz(double Hz)
     {
-        return (2 * 3.14159265358979323846) * Hz * Adapter::sampleRateInv(storage);
+        return (2 * 3.14159265358979323846) * Hz *
+               sst::basic_blocks::concepts::getSampleRateInv(storage);
     }
     double calc_v1_Q(double reso) { return 1 / (1.02 - std::clamp(reso, 0.0, 1.0)); }
     // inline void process_block_stereo(float *dataL,float *dataR);
@@ -230,7 +228,7 @@ struct alignas(16) BiquadFilter
     }
 
     float plot_magnitude(float f);
-    TuningAndDBProvider *storage{nullptr};
+    D *storage{nullptr};
 
   protected:
     void set_coef(double a0, double a1, double a2, double b0, double b1, double b2);
@@ -239,8 +237,9 @@ struct alignas(16) BiquadFilter
 
 inline double square(double x) { return x * x; }
 
-template <typename D, size_t BLOCK_SIZE, typename Adapter>
-inline BiquadFilter<D, BLOCK_SIZE, Adapter>::BiquadFilter(D *d) : storage(d)
+template <typename D, size_t BLOCK_SIZE>
+    requires(ValidBiquad<D, BLOCK_SIZE>)
+inline BiquadFilter<D, BLOCK_SIZE>::BiquadFilter(D *d) : storage(d)
 {
     reg0.d[0] = 0;
     reg1.d[0] = 0;
@@ -257,8 +256,9 @@ inline BiquadFilter<D, BLOCK_SIZE, Adapter>::BiquadFilter(D *d) : storage(d)
     }
 }
 
-template <typename D, size_t BLOCK_SIZE, typename Adapter>
-inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::coeff_LP(double omega, double Q)
+template <typename D, size_t BLOCK_SIZE>
+    requires(ValidBiquad<D, BLOCK_SIZE>)
+inline void BiquadFilter<D, BLOCK_SIZE>::coeff_LP(double omega, double Q)
 {
     if (omega > M_PI)
         set_coef(1, 0, 0, 1, 0, 0);
@@ -271,8 +271,9 @@ inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::coeff_LP(double omega, double 
     }
 }
 
-template <typename D, size_t BLOCK_SIZE, typename Adapter>
-inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::coeff_LP2B(double omega, double Q)
+template <typename D, size_t BLOCK_SIZE>
+    requires(ValidBiquad<D, BLOCK_SIZE>)
+inline void BiquadFilter<D, BLOCK_SIZE>::coeff_LP2B(double omega, double Q)
 {
     if (omega > M_PI)
         set_coef(1, 0, 0, 1, 0, 0);
@@ -294,8 +295,9 @@ inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::coeff_LP2B(double omega, doubl
     }
 }
 
-template <typename D, size_t BLOCK_SIZE, typename Adapter>
-inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::coeff_HP(double omega, double Q)
+template <typename D, size_t BLOCK_SIZE>
+    requires(ValidBiquad<D, BLOCK_SIZE>)
+inline void BiquadFilter<D, BLOCK_SIZE>::coeff_HP(double omega, double Q)
 {
     if (omega > M_PI)
         set_coef(1, 0, 0, 0, 0, 0);
@@ -309,8 +311,9 @@ inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::coeff_HP(double omega, double 
     }
 }
 
-template <typename D, size_t BLOCK_SIZE, typename Adapter>
-inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::coeff_BP(double omega, double Q)
+template <typename D, size_t BLOCK_SIZE>
+    requires(ValidBiquad<D, BLOCK_SIZE>)
+inline void BiquadFilter<D, BLOCK_SIZE>::coeff_BP(double omega, double Q)
 {
     double cosi = cos(omega), sinu = sin(omega), alpha = sinu / (2.0 * Q), b0 = alpha, b2 = -alpha,
            a0 = 1 + alpha, a1 = -2 * cosi, a2 = 1 - alpha;
@@ -318,8 +321,9 @@ inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::coeff_BP(double omega, double 
     set_coef(a0, a1, a2, b0, 0, b2);
 }
 
-template <typename D, size_t BLOCK_SIZE, typename Adapter>
-inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::coeff_BP2A(double omega, double BW)
+template <typename D, size_t BLOCK_SIZE>
+    requires(ValidBiquad<D, BLOCK_SIZE>)
+inline void BiquadFilter<D, BLOCK_SIZE>::coeff_BP2A(double omega, double BW)
 {
     double cosi = cos(omega), sinu = sin(omega), q = 1 / (0.02 + 30 * BW * BW),
            alpha = sinu / (2 * q), b0 = alpha, b2 = -alpha, a0 = 1 + alpha, a1 = -2 * cosi,
@@ -328,8 +332,9 @@ inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::coeff_BP2A(double omega, doubl
     set_coef(a0, a1, a2, b0, 0, b2);
 }
 
-template <typename D, size_t BLOCK_SIZE, typename Adapter>
-inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::coeff_PKA(double omega, double QQ)
+template <typename D, size_t BLOCK_SIZE>
+    requires(ValidBiquad<D, BLOCK_SIZE>)
+inline void BiquadFilter<D, BLOCK_SIZE>::coeff_PKA(double omega, double QQ)
 {
     double cosi = cos(omega), sinu = sin(omega), reso = std::clamp(QQ, 0.0, 1.0),
            q = 0.1 + 10 * reso * reso, alpha = sinu / (2 * q), b0 = q * alpha, b2 = -q * alpha,
@@ -338,8 +343,9 @@ inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::coeff_PKA(double omega, double
     set_coef(a0, a1, a2, b0, 0, b2);
 }
 
-template <typename D, size_t BLOCK_SIZE, typename Adapter>
-inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::coeff_NOTCH(double omega, double QQ)
+template <typename D, size_t BLOCK_SIZE>
+    requires(ValidBiquad<D, BLOCK_SIZE>)
+inline void BiquadFilter<D, BLOCK_SIZE>::coeff_NOTCH(double omega, double QQ)
 {
     if (omega > M_PI)
         set_coef(1, 0, 0, 1, 0, 0);
@@ -353,21 +359,23 @@ inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::coeff_NOTCH(double omega, doub
     }
 }
 
-template <typename D, size_t BLOCK_SIZE, typename Adapter>
-inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::coeff_LP_with_BW(double omega, double BW)
+template <typename D, size_t BLOCK_SIZE>
+    requires(ValidBiquad<D, BLOCK_SIZE>)
+inline void BiquadFilter<D, BLOCK_SIZE>::coeff_LP_with_BW(double omega, double BW)
 {
     coeff_LP(omega, 1 / BW);
 }
 
-template <typename D, size_t BLOCK_SIZE, typename Adapter>
-inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::coeff_HP_with_BW(double omega, double BW)
+template <typename D, size_t BLOCK_SIZE>
+    requires(ValidBiquad<D, BLOCK_SIZE>)
+inline void BiquadFilter<D, BLOCK_SIZE>::coeff_HP_with_BW(double omega, double BW)
 {
     coeff_HP(omega, 1 / BW);
 }
 
-template <typename D, size_t BLOCK_SIZE, typename Adapter>
-inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::coeff_LPHPmorph(double omega, double Q,
-                                                                  double morph)
+template <typename D, size_t BLOCK_SIZE>
+    requires(ValidBiquad<D, BLOCK_SIZE>)
+inline void BiquadFilter<D, BLOCK_SIZE>::coeff_LPHPmorph(double omega, double Q, double morph)
 {
     double HP = std::clamp(morph, 0.0, 1.0), LP = 1 - HP; // , BP = LP * HP;
     HP *= HP;
@@ -379,8 +387,9 @@ inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::coeff_LPHPmorph(double omega, 
     set_coef(a0, a1, a2, b0, b1, b2);
 }
 
-template <typename D, size_t BLOCK_SIZE, typename Adapter>
-inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::coeff_APF(double omega, double Q)
+template <typename D, size_t BLOCK_SIZE>
+    requires(ValidBiquad<D, BLOCK_SIZE>)
+inline void BiquadFilter<D, BLOCK_SIZE>::coeff_APF(double omega, double Q)
 {
     if ((omega < 0.0) || (omega > M_PI))
         set_coef(1, 0, 0, 1, 0, 0);
@@ -393,16 +402,18 @@ inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::coeff_APF(double omega, double
     }
 }
 
-template <typename D, size_t BLOCK_SIZE, typename Adapter>
-inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::coeff_peakEQ(double omega, double BW, double gain)
+template <typename D, size_t BLOCK_SIZE>
+    requires(ValidBiquad<D, BLOCK_SIZE>)
+inline void BiquadFilter<D, BLOCK_SIZE>::coeff_peakEQ(double omega, double BW, double gain)
 {
-    coeff_orfanidisEQ(omega, BW, Adapter::dbToLinear(storage, gain),
-                      Adapter::dbToLinear(storage, gain * 0.5), 1);
+    coeff_orfanidisEQ(omega, BW, sst::basic_blocks::concepts::convertDbToLinear(storage, gain),
+                      sst::basic_blocks::concepts::convertDbToLinear(storage, gain * 0.5), 1);
 }
 
-template <typename DT, size_t BLOCK_SIZE, typename Adapter>
-inline void BiquadFilter<DT, BLOCK_SIZE, Adapter>::coeff_orfanidisEQ(double omega, double BW,
-                                                                     double G, double GB, double G0)
+template <typename DT, size_t BLOCK_SIZE>
+    requires(ValidBiquad<DT, BLOCK_SIZE>)
+inline void BiquadFilter<DT, BLOCK_SIZE>::coeff_orfanidisEQ(double omega, double BW, double G,
+                                                            double GB, double G0)
 {
     // For the curious http://eceweb1.rutgers.edu/~orfanidi/ece521/hpeq.pdf appears to be the source
     // of this
@@ -458,14 +469,16 @@ inline void BiquadFilter<DT, BLOCK_SIZE, Adapter>::coeff_orfanidisEQ(double omeg
     }
 }
 
-template <typename D, size_t BLOCK_SIZE, typename Adapter>
-inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::coeff_same_as_last_time()
+template <typename D, size_t BLOCK_SIZE>
+    requires(ValidBiquad<D, BLOCK_SIZE>)
+inline void BiquadFilter<D, BLOCK_SIZE>::coeff_same_as_last_time()
 {
     // If you want to change interpolation then set dv = 0 here
 }
 
-template <typename D, size_t BLOCK_SIZE, typename Adapter>
-inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::coeff_instantize()
+template <typename D, size_t BLOCK_SIZE>
+    requires(ValidBiquad<D, BLOCK_SIZE>)
+inline void BiquadFilter<D, BLOCK_SIZE>::coeff_instantize()
 {
     a1.instantize();
     a2.instantize();
@@ -474,9 +487,10 @@ inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::coeff_instantize()
     b2.instantize();
 }
 
-template <typename D, size_t BLOCK_SIZE, typename Adapter>
-inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::set_coef(double a0, double a1, double a2,
-                                                           double b0, double b1, double b2)
+template <typename D, size_t BLOCK_SIZE>
+    requires(ValidBiquad<D, BLOCK_SIZE>)
+inline void BiquadFilter<D, BLOCK_SIZE>::set_coef(double a0, double a1, double a2, double b0,
+                                                  double b1, double b2)
 {
     double a0inv = 1 / a0;
 
@@ -501,8 +515,9 @@ inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::set_coef(double a0, double a1,
     this->b2.newValue(b2);
 }
 
-template <typename D, size_t BLOCK_SIZE, typename Adapter>
-inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::process_block(float *data)
+template <typename D, size_t BLOCK_SIZE>
+    requires(ValidBiquad<D, BLOCK_SIZE>)
+inline void BiquadFilter<D, BLOCK_SIZE>::process_block(float *data)
 {
     {
         int k;
@@ -528,9 +543,10 @@ inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::process_block(float *data)
     }
 }
 
-template <typename D, size_t BLOCK_SIZE, typename Adapter>
-inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::process_block_to(float *__restrict data,
-                                                                   float *__restrict dataout)
+template <typename D, size_t BLOCK_SIZE>
+    requires(ValidBiquad<D, BLOCK_SIZE>)
+inline void BiquadFilter<D, BLOCK_SIZE>::process_block_to(float *__restrict data,
+                                                          float *__restrict dataout)
 {
     {
         int k;
@@ -556,9 +572,10 @@ inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::process_block_to(float *__rest
     }
 }
 
-template <typename D, size_t BLOCK_SIZE, typename Adapter>
-inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::process_block_slowlag(float *__restrict dataL,
-                                                                        float *__restrict dataR)
+template <typename D, size_t BLOCK_SIZE>
+    requires(ValidBiquad<D, BLOCK_SIZE>)
+inline void BiquadFilter<D, BLOCK_SIZE>::process_block_slowlag(float *__restrict dataL,
+                                                               float *__restrict dataR)
 {
     {
         a1.process();
@@ -593,8 +610,9 @@ inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::process_block_slowlag(float *_
     }
 }
 
-template <typename D, size_t BLOCK_SIZE, typename Adapter>
-inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::process_block(float *dataL, float *dataR)
+template <typename D, size_t BLOCK_SIZE>
+    requires(ValidBiquad<D, BLOCK_SIZE>)
+inline void BiquadFilter<D, BLOCK_SIZE>::process_block(float *dataL, float *dataR)
 {
     {
         int k;
@@ -629,9 +647,10 @@ inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::process_block(float *dataL, fl
     }
 }
 
-template <typename D, size_t BLOCK_SIZE, typename Adapter>
-inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::process_block_to(float *dataL, float *dataR,
-                                                                   float *dstL, float *dstR)
+template <typename D, size_t BLOCK_SIZE>
+    requires(ValidBiquad<D, BLOCK_SIZE>)
+inline void BiquadFilter<D, BLOCK_SIZE>::process_block_to(float *dataL, float *dataR, float *dstL,
+                                                          float *dstR)
 {
     {
         int k;
@@ -666,8 +685,9 @@ inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::process_block_to(float *dataL,
     }
 }
 
-template <typename D, size_t BLOCK_SIZE, typename Adapter>
-inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::process_block(double *data)
+template <typename D, size_t BLOCK_SIZE>
+    requires(ValidBiquad<D, BLOCK_SIZE>)
+inline void BiquadFilter<D, BLOCK_SIZE>::process_block(double *data)
 {
     {
         int k;
@@ -693,8 +713,9 @@ inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::process_block(double *data)
     }
 }
 
-template <typename D, size_t BLOCK_SIZE, typename Adapter>
-inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::setBlockSize(int bs)
+template <typename D, size_t BLOCK_SIZE>
+    requires(ValidBiquad<D, BLOCK_SIZE>)
+inline void BiquadFilter<D, BLOCK_SIZE>::setBlockSize(int bs)
 {
     /*	a1.setBlockSize(bs);
             a2.setBlockSize(bs);
@@ -703,8 +724,9 @@ inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::setBlockSize(int bs)
             b2.setBlockSize(bs);*/
 }
 
-template <typename D, size_t BLOCK_SIZE, typename Adapter>
-inline float BiquadFilter<D, BLOCK_SIZE, Adapter>::plot_magnitude(float f)
+template <typename D, size_t BLOCK_SIZE>
+    requires(ValidBiquad<D, BLOCK_SIZE>)
+inline float BiquadFilter<D, BLOCK_SIZE>::plot_magnitude(float f)
 {
     std::complex<double> ca0(1, 0), ca1(a1.v.d[0], 0), ca2(a2.v.d[0], 0), cb0(b0.v.d[0], 0),
         cb1(b1.v.d[0], 0), cb2(b2.v.d[0], 0);
