@@ -19,7 +19,7 @@ jobs:
           imageName: 'windows-2019'
           isWindows: True
         lin:
-          imageName: 'ubuntu-20.04'
+          imageName: 'ubuntu-22.04'
           isLinux: True
 
     pool:
