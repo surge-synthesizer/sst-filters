@@ -26,7 +26,7 @@
 namespace sst::filters::Biquad
 {
 template <typename D, size_t BLOCK_SIZE>
-concept ValidBiquad = sst::basic_blocks::concepts::is_power_of_two_ge(BLOCK_SIZE, 4UL) &&
+concept ValidBiquad = sst::basic_blocks::concepts::is_power_of_two_ge(BLOCK_SIZE, (size_t)4) &&
                       sst::basic_blocks::concepts::providesNoteToPitch<D> &&
                       sst::basic_blocks::concepts::providesDbToLinear<D> &&
                       sst::basic_blocks::concepts::supportsSampleRateInv<D>;
