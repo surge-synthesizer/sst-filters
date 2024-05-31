@@ -94,11 +94,11 @@ struct CytomicSVF
     void setCoeff(Mode mode, float freq, float res, float srInv, float bellShelfAmp = 1.f)
     {
         auto conorm = std::clamp(freq * srInv, 0.f, 0.499f); // stable until nyquist
-        res = std::clamp(res, 0.01f, 0.99f);
+        res = std::clamp(res, 0.f, 0.98f);
         bellShelfAmp = std::max(bellShelfAmp, 0.001f);
 
         g = _mm_set1_ps(sst::basic_blocks::dsp::fasttan(M_PI * conorm));
-        k = _mm_div_ps(oneSSE, _mm_set1_ps(res));
+        k = _mm_set1_ps(2.0 - 2 * res);
         if (mode == BELL)
         {
             k = _mm_div_ps(k, _mm_set1_ps(bellShelfAmp));
@@ -112,12 +112,12 @@ struct CytomicSVF
         auto coL = M_PI * std::clamp(freqL * srInv, 0.f, 0.499f); // stable until nyquist
         auto coR = M_PI * std::clamp(freqR * srInv, 0.f, 0.499f); // stable until nyquist
         g = sst::basic_blocks::dsp::fasttanhSSE(_mm_set_ps(0, 0, coR, coL));
-        auto res = _mm_set_ps(0, 0, std::clamp(resR, 0.01f, 0.99f), std::clamp(resL, 0.01f, 0.99f));
+        auto res = _mm_set_ps(0, 0, std::clamp(resR, 0.f, 0.98f), std::clamp(resL, 0.f, 0.98f));
 
         auto bellShelfAmp =
             _mm_set_ps(0, 0, std::max(bellShelfAmpL, 0.001f), std::max(bellShelfAmpR, 0.001f));
 
-        k = _mm_div_ps(oneSSE, res);
+        k = _mm_sub_ps(twoSSE, _mm_mul_ps(twoSSE, res));
         if (mode == BELL)
         {
             k = _mm_div_ps(k, bellShelfAmp);
