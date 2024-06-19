@@ -74,9 +74,6 @@ struct CytomicSVF
         NOTCH,
         PEAK,
         ALL,
-
-        // Note to use these three modes after you call
-        // setCoef you need setCoefExtended with the mode
         BELL,
         LOW_SHELF,
         HIGH_SHELF
@@ -194,6 +191,19 @@ struct CytomicSVF
             m2 = _mm_setzero_ps();
             break;
         }
+    }
+    
+    void fetchCoeffs(const CytomicSVF& that) //TODO: Block smoothed version
+    {
+        g = that.g;
+        k = that.k;
+        gk = that.gk;
+        a1 = that.a1;
+        a2 = that.a2;
+        a3 = that.a3;
+        m0 = that.m0;
+        m1 = that.m1;
+        m2 = that.m2;
     }
 
     static void step(CytomicSVF &that, float &L, float &R)
