@@ -1,4 +1,4 @@
-name: Tests and Examples
+name: Test Runner
 
 on:
   pull_request:
@@ -39,39 +39,3 @@ jobs:
         run: |
           ls ${{ matrix.testExe }}
           ${{ matrix.testExe }}
-
-  build_examples:
-    name: Examples ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ ubuntu-latest, macos-latest, windows-latest ]
-        include:
-          - os: ubuntu-latest
-            name: linux
-            testExe: build/sst-filters-tests
-          - os: macos-latest
-            name: mac
-            testExe: build/sst-filters-tests
-          - os: windows-latest
-            name: win
-            testExe: build/Release/sst-filters-tests.exe
-
-    steps:
-
-      - name: Checkout code
-        uses: actions/checkout@v2
-        with:
-          submodules: recursive
-
-      - name: Prepare for JUCE
-        uses: surge-synthesizer/sst-githubactions/prepare-for-juce@main
-        with:
-          os: ${{ runner.os }}
-          gccversion: 9
-
-      - name: Build Examples
-        run: |
-          cmake -Bbuild -DCMAKE_BUILD_TYPE=Debug -DSST_FILTERS_BUILD_EXAMPLES=ON
-          cmake --build build --config Debug --target filter_plot_tool
-          cmake --build build --config Debug --target FiltersPlugin_VST3
