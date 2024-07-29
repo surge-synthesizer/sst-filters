@@ -2,10 +2,10 @@
 
 #include "TestUtils.h"
 
-template<int BS=32>
+template <int BS = 32>
 std::array<double, 3> upDown(int M, bool steep, const std::function<float(float)> &gen)
 {
-    static constexpr int BSUP=BS << 1;
+    static constexpr int BSUP = BS << 1;
     static constexpr int nblocks = 256;
     float L alignas(16)[BSUP], R alignas(16)[BSUP];
     float Lu alignas(16)[BSUP], Ru alignas(16)[BSUP];
@@ -19,14 +19,15 @@ std::array<double, 3> upDown(int M, bool steep, const std::function<float(float)
     double avgRatioUp{0}, avgRatioDn{0};
     auto hrfUp = sst::filters::HalfRate::HalfRateFilter(M, steep);
     auto hrfDn = sst::filters::HalfRate::HalfRateFilter(M, steep);
-    for (int i=0; i<nblocks; ++i)
+    for (int i = 0; i < nblocks; ++i)
     {
         int s0 = i * BS;
-        for (int s=0; s<BS; ++s)
+        for (int s = 0; s < BS; ++s)
         {
             // This is just a test - doesn't have to be efficient
             float phase = (s0 + s) * sri;
-            while(phase > 1) phase -= 1;
+            while (phase > 1)
+                phase -= 1;
 
             L[s] = gen(phase);
             R[s] = gen(phase);
@@ -71,7 +72,7 @@ std::array<double, 3> upDown(int M, bool steep, const std::function<float(float)
                 rmsDn += dL * dL + dR * dR;
             }
 
-            for (int s=0; s<BS; ++s)
+            for (int s = 0; s < BS; ++s)
             {
                 auto dL = Ld[s] - Lu[s * 2];
                 auto dR = Rd[s] - Ru[s * 2];
@@ -88,18 +89,20 @@ std::array<double, 3> upDown(int M, bool steep, const std::function<float(float)
     rmsDn /= smp;
     rmsSelf /= smp;
 
-    // std::cout << "AvgRatio is " << avgRatioUp / ( smp * 2 ) << " " << avgRatioDn / (smp) << std::endl;
+    // std::cout << "AvgRatio is " << avgRatioUp / ( smp * 2 ) << " " << avgRatioDn / (smp) <<
+    // std::endl;
     return {rmsUp, rmsDn, rmsSelf};
 };
 
-TEST_CASE("HalfRate Filter") {
+TEST_CASE("HalfRate Filter")
+{
 
-    for (int order=1; order <=sst::filters::HalfRate::halfrate_max_M; ++order)
+    for (int order = 1; order <= sst::filters::HalfRate::halfrate_max_M; ++order)
     {
-        for (const auto &steep : { true, false})
+        for (const auto &steep : {true, false})
         {
 
-            DYNAMIC_SECTION( "Silence order=" << order << " steep=" << (steep? "true":"false") )
+            DYNAMIC_SECTION("Silence order=" << order << " steep=" << (steep ? "true" : "false"))
             {
                 auto hrf = sst::filters::HalfRate::HalfRateFilter(order, steep);
                 auto res = upDown(order, steep, [](float phase) { return 0.f; });
@@ -109,7 +112,7 @@ TEST_CASE("HalfRate Filter") {
                 REQUIRE(res[2] == 0.0);
             }
 
-            DYNAMIC_SECTION( "Naive Saw order=" << order << " steep=" << (steep? "true":"false") )
+            DYNAMIC_SECTION("Naive Saw order=" << order << " steep=" << (steep ? "true" : "false"))
             {
                 auto hrf = sst::filters::HalfRate::HalfRateFilter(order, steep);
                 auto res = upDown(order, steep, [](float phase) { return 2 * phase - 1; });
@@ -119,21 +122,23 @@ TEST_CASE("HalfRate Filter") {
                 REQUIRE(res[2] < 5e-5);
             }
 
-            DYNAMIC_SECTION( "Slow Sin order=" << order << " steep=" << (steep? "true":"false") )
+            DYNAMIC_SECTION("Slow Sin order=" << order << " steep=" << (steep ? "true" : "false"))
             {
                 auto hrf = sst::filters::HalfRate::HalfRateFilter(order, steep);
-                auto res = upDown(order, steep, [](float phase) { return std::sin(2 * M_PI * phase); });
+                auto res =
+                    upDown(order, steep, [](float phase) { return std::sin(2 * M_PI * phase); });
 
                 REQUIRE(res[0] < 5e-5);
                 REQUIRE(res[1] < 5e-5);
-                REQUIRE(res[2] < 5e-5);;
+                REQUIRE(res[2] < 5e-5);
+                ;
             }
 
-
-            DYNAMIC_SECTION( "Fast Sin order=" << order << " steep=" << (steep? "true":"false") )
+            DYNAMIC_SECTION("Fast Sin order=" << order << " steep=" << (steep ? "true" : "false"))
             {
                 auto hrf = sst::filters::HalfRate::HalfRateFilter(order, steep);
-                auto res = upDown(order, steep, [](float phase) { return std::sin(10 * 2 * M_PI * phase); });
+                auto res = upDown(order, steep,
+                                  [](float phase) { return std::sin(10 * 2 * M_PI * phase); });
 
                 REQUIRE(res[0] < 5e-5);
                 REQUIRE(res[1] < 5e-5);

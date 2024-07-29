@@ -192,8 +192,8 @@ struct CytomicSVF
             break;
         }
     }
-    
-    void fetchCoeffs(const CytomicSVF& that) //TODO: Block smoothed version
+
+    void fetchCoeffs(const CytomicSVF &that) // TODO: Block smoothed version
     {
         g = that.g;
         k = that.k;
