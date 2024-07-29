@@ -15,13 +15,13 @@ jobs:
         include:
           - os: ubuntu-latest
             name: linux
-            testExe: build/sst-filters-tests
+            testExe: build/tests/sst-filters-tests
           - os: macos-latest
             name: mac
-            testExe: build/sst-filters-tests
+            testExe: build/tests/sst-filters-tests
           - os: windows-latest
             name: win
-            testExe: build/Release/sst-filters-tests.exe
+            testExe: build/tests/Release/sst-filters-tests.exe
 
     steps:
 
