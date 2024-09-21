@@ -104,8 +104,9 @@ struct alignas(16) BiquadFilter
     // void process_block_SSE2(float *data);
     void process_block(float *dataL, float *dataR);
     // void process_block_SSE2(float *dataL,float *dataR);
-    void process_block_to(float *, float *);
-    void process_block_to(float *dataL, float *dataR, float *dstL, float *dstR);
+    void process_block_to(const float *const, float *);
+    void process_block_to(const float *const dataL, const float *const dataR, float *dstL,
+                          float *dstR);
     // void process_block_to_SSE2(float *dataL,float *dataR, float *dstL,float *dstR);
     void process_block_slowlag(float *dataL, float *dataR);
     // void process_block_slowlag_SSE2(float *dataL,float *dataR);
@@ -529,8 +530,9 @@ inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::process_block(float *data)
 }
 
 template <typename D, size_t BLOCK_SIZE, typename Adapter>
-inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::process_block_to(float *__restrict data,
-                                                                   float *__restrict dataout)
+inline void
+BiquadFilter<D, BLOCK_SIZE, Adapter>::process_block_to(const float *__restrict const data,
+                                                       float *__restrict dataout)
 {
     {
         int k;
@@ -630,7 +632,8 @@ inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::process_block(float *dataL, fl
 }
 
 template <typename D, size_t BLOCK_SIZE, typename Adapter>
-inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::process_block_to(float *dataL, float *dataR,
+inline void BiquadFilter<D, BLOCK_SIZE, Adapter>::process_block_to(const float *const dataL,
+                                                                   const float *const dataR,
                                                                    float *dstL, float *dstR)
 {
     {

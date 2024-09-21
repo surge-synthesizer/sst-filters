@@ -192,8 +192,8 @@ struct CytomicSVF
             break;
         }
     }
-    
-    void fetchCoeffs(const CytomicSVF& that) //TODO: Block smoothed version
+
+    void fetchCoeffs(const CytomicSVF &that) // TODO: Block smoothed version
     {
         g = that.g;
         k = that.k;
@@ -341,7 +341,8 @@ struct CytomicSVF
         a3 = _mm_add_ps(a3, da3);
     }
 
-    template <int blockSize> void processBlock(float *inL, float *inR, float *outL, float *outR)
+    template <int blockSize>
+    void processBlock(const float *const inL, const float *const inR, float *outL, float *outR)
     {
         for (int i = 0; i < blockSize; ++i)
         {
@@ -351,7 +352,7 @@ struct CytomicSVF
         }
     }
 
-    template <int blockSize> void processBlock(float *inL, float *outL)
+    template <int blockSize> void processBlock(const float *const inL, float *outL)
     {
         for (int i = 0; i < blockSize; ++i)
         {
