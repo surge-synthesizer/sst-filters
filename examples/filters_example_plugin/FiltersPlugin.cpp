@@ -1,3 +1,17 @@
+/*
+ * sst-filters - A header-only collection of SIMD filter
+ * implementations by the Surge Synth Team
+ *
+ * Copyright 2019-2024, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * sst-filters is released under the Gnu General Public Licens
+ * version 3 or later. Some of the filters in this package
+ * originated in the version of Surge open sourced in 2018.
+ *
+ * All source in sst-filters available at
+ * https://github.com/surge-synthesizer/sst-filters
+ */
 #include "FiltersPlugin.h"
 #include "FiltersPluginEditor.h"
 
@@ -13,10 +27,10 @@ FiltersPlugin::FiltersPlugin()
       vts(*this, nullptr, juce::Identifier("Parameters"), createParameters())
 {
     using namespace ParamTags;
-    freqHzParam = vts.getRawParameterValue (freqTag);
-    resParam = vts.getRawParameterValue (resTag);
-    filterTypeParam = vts.getRawParameterValue (filterTypeTag);
-    filterSubTypeParam = vts.getRawParameterValue (filterSubTypeTag);
+    freqHzParam = vts.getRawParameterValue(freqTag);
+    resParam = vts.getRawParameterValue(resTag);
+    filterTypeParam = vts.getRawParameterValue(filterTypeTag);
+    filterSubTypeParam = vts.getRawParameterValue(filterSubTypeTag);
 }
 
 juce::AudioProcessorValueTreeState::ParameterLayout FiltersPlugin::createParameters()
@@ -49,11 +63,13 @@ juce::AudioProcessorValueTreeState::ParameterLayout FiltersPlugin::createParamet
         resTag, "Resonance", juce::NormalisableRange{0.0f, 1.0f}, 0.5f));
 
     juce::StringArray filterTypeChoices;
-    for (const auto& filter_type_name : sst::filters::filter_type_names)
+    for (const auto &filter_type_name : sst::filters::filter_type_names)
         filterTypeChoices.add(filter_type_name);
 
-    params.push_back(std::make_unique<juce::AudioParameterChoice> (filterTypeTag, "Filter Type", filterTypeChoices, 0));
-    params.push_back(std::make_unique<juce::AudioParameterInt>(filterSubTypeTag, "Filter Sub-Type", 0, sst::filters::FilterSubType::st_tripole_HHH3, 0));
+    params.push_back(std::make_unique<juce::AudioParameterChoice>(filterTypeTag, "Filter Type",
+                                                                  filterTypeChoices, 0));
+    params.push_back(std::make_unique<juce::AudioParameterInt>(
+        filterSubTypeTag, "Filter Sub-Type", 0, sst::filters::FilterSubType::st_tripole_HHH3, 0));
 
     return {params.begin(), params.end()};
 }
@@ -80,8 +96,8 @@ void FiltersPlugin::prepareToPlay(double sampleRate, int samplesPerBlock)
     for (auto &filt : filterUnits)
         filt.reset();
 
-    lastFilterType = ParamConversions::getFilterType (filterTypeParam);
-    lastFilterSubType = ParamConversions::getFilterSubType (filterSubTypeParam);
+    lastFilterType = ParamConversions::getFilterType(filterTypeParam);
+    lastFilterSubType = ParamConversions::getFilterSubType(filterSubTypeParam);
 }
 
 void FiltersPlugin::processBlock(juce::AudioBuffer<float> &buffer, juce::MidiBuffer &)
@@ -102,51 +118,48 @@ void FiltersPlugin::processBlock(juce::AudioBuffer<float> &buffer, juce::MidiBuf
     }
 
     auto filterUnitPtr = sst::filters::GetQFPtrFilterUnit(filterType, filterSubType);
-    coeffMaker.MakeCoeffs(ParamConversions::freq_hz_to_note_num (*freqHzParam), *resParam, filterType, filterSubType, nullptr, false);
+    coeffMaker.MakeCoeffs(ParamConversions::freq_hz_to_note_num(*freqHzParam), *resParam,
+                          filterType, filterSubType, nullptr, false);
 
     if (filterUnitPtr == nullptr)
         return; // no filter to process!
 
     for (int ch = 0; ch < numChannels; ++ch)
     {
-        auto* x = buffer.getWritePointer (ch);
+        auto *x = buffer.getWritePointer(ch);
 
-        auto& filter = filterUnits[ch];
-        coeffMaker.updateState (filter.filterState);
+        auto &filter = filterUnits[ch];
+        coeffMaker.updateState(filter.filterState);
 
         for (int n = 0; n < numSamples; ++n)
         {
             auto yVec = filterUnitPtr(&filter.filterState, _mm_set_ps1(x[n]));
 
             float yArr alignas(16)[4];
-            _mm_store_ps (yArr, yVec);
+            _mm_store_ps(yArr, yVec);
             x[n] = yArr[0];
         }
-
     }
 
     coeffMaker.updateCoefficients(filterUnits[0].filterState);
 }
 
-juce::AudioProcessorEditor *FiltersPlugin::createEditor()
-{
-    return new FiltersPluginEditor (*this);
-}
+juce::AudioProcessorEditor *FiltersPlugin::createEditor() { return new FiltersPluginEditor(*this); }
 
 void FiltersPlugin::getStateInformation(juce::MemoryBlock &data)
 {
     auto state = vts.copyState();
-    std::unique_ptr<juce::XmlElement> xml (state.createXml());
-    copyXmlToBinary (*xml, data);
+    std::unique_ptr<juce::XmlElement> xml(state.createXml());
+    copyXmlToBinary(*xml, data);
 }
 
 void FiltersPlugin::setStateInformation(const void *data, int sizeInBytes)
 {
-    std::unique_ptr<juce::XmlElement> xmlState (getXmlFromBinary (data, sizeInBytes));
+    std::unique_ptr<juce::XmlElement> xmlState(getXmlFromBinary(data, sizeInBytes));
 
     if (xmlState != nullptr)
-        if (xmlState->hasTagName (vts.state.getType()))
-            vts.replaceState (juce::ValueTree::fromXml (*xmlState));
+        if (xmlState->hasTagName(vts.state.getType()))
+            vts.replaceState(juce::ValueTree::fromXml(*xmlState));
 }
 
 // This creates new instances of the plugin

@@ -1,3 +1,17 @@
+/*
+ * sst-filters - A header-only collection of SIMD filter
+ * implementations by the Surge Synth Team
+ *
+ * Copyright 2019-2024, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * sst-filters is released under the Gnu General Public Licens
+ * version 3 or later. Some of the filters in this package
+ * originated in the version of Surge open sourced in 2018.
+ *
+ * All source in sst-filters available at
+ * https://github.com/surge-synthesizer/sst-filters
+ */
 #ifndef INCLUDE_EXTRAS_SST_FILTERS_FILTERPLOTTER_H
 #define INCLUDE_EXTRAS_SST_FILTERS_FILTERPLOTTER_H
 
@@ -28,7 +42,7 @@ class FilterPlotter
     std::pair<std::vector<float>, std::vector<float>>
     plotFilterMagnitudeResponse(sst::filters::FilterType filterType,
                                 sst::filters::FilterSubType filterSubType, float pitch, float res,
-                                const FilterPlotParameters& params = {})
+                                const FilterPlotParameters &params = {})
     {
         // set up input sweep
         std::vector<float> sweepBuffer(fftSize, 0.0f);
@@ -36,9 +50,9 @@ class FilterPlotter
 
         // set up filter
         float delayBuffer[4][sst::filters::utilities::MAX_FB_COMB +
-                       sst::filters::utilities::SincTable::FIRipol_N];
+                             sst::filters::utilities::SincTable::FIRipol_N];
         auto filterState = sst::filters::QuadFilterUnitState{};
-        for (auto i=0; i<4; ++i)
+        for (auto i = 0; i < 4; ++i)
         {
             filterState.DB[i] = &(delayBuffer[i][0]);
         }
@@ -52,37 +66,45 @@ class FilterPlotter
         // process filter
         std::vector<float> filterBuffer(fftSize, 0.0f);
         if (filterUnitPtr != nullptr)
-            runFilter (filterState, filterUnitPtr, sweepBuffer.data(), filterBuffer.data(), fftSize);
+            runFilter(filterState, filterUnitPtr, sweepBuffer.data(), filterBuffer.data(), fftSize);
         else
-            std::copy (sweepBuffer.begin(), sweepBuffer.end(), filterBuffer.begin());
+            std::copy(sweepBuffer.begin(), sweepBuffer.end(), filterBuffer.begin());
 
-        auto magResponseDB = computeFrequencyResponse(sweepBuffer.data(), filterBuffer.data(), fftSize);
-        auto magResponseDBSmoothed = freqSmooth(magResponseDB.data(), (int) magResponseDB.size(), params.freqSmoothOctaves);
-        auto freqAxis = fftFreqs((int) magResponseDB.size(), 1.0f / params.sampleRate);
+        auto magResponseDB =
+            computeFrequencyResponse(sweepBuffer.data(), filterBuffer.data(), fftSize);
+        auto magResponseDBSmoothed =
+            freqSmooth(magResponseDB.data(), (int)magResponseDB.size(), params.freqSmoothOctaves);
+        auto freqAxis = fftFreqs((int)magResponseDB.size(), 1.0f / params.sampleRate);
 
-        return { std::move (freqAxis), std::move (magResponseDBSmoothed) };
+        return {std::move(freqAxis), std::move(magResponseDBSmoothed)};
     }
 
   private:
-    static void generateLogSweep(float *buffer, int nSamples, const FilterPlotParameters& params)
+    static void generateLogSweep(float *buffer, int nSamples, const FilterPlotParameters &params)
     {
         const auto beta = (float)nSamples / std::log(params.endFreqHz / params.startFreqHz);
 
         for (int i = 0; i < nSamples; i++)
         {
-            float phase = 2.0f * (float)M_PI * beta * params.startFreqHz *
-                          (std::pow(params.endFreqHz / params.startFreqHz, (float)i / (float)nSamples) - 1.0f);
+            float phase =
+                2.0f * (float)M_PI * beta * params.startFreqHz *
+                (std::pow(params.endFreqHz / params.startFreqHz, (float)i / (float)nSamples) -
+                 1.0f);
 
-            buffer[i] = params.inputAmplitude * std::sin((phase + (float)M_PI / 180.0f) / params.sampleRate);
+            buffer[i] = params.inputAmplitude *
+                        std::sin((phase + (float)M_PI / 180.0f) / params.sampleRate);
         }
     }
 
-    static void runFilter (sst::filters::QuadFilterUnitState &filterState, sst::filters::FilterUnitQFPtr &filterUnitPtr, const float* inBuffer, float* outBuffer, int numSamples)
+    static void runFilter(sst::filters::QuadFilterUnitState &filterState,
+                          sst::filters::FilterUnitQFPtr &filterUnitPtr, const float *inBuffer,
+                          float *outBuffer, int numSamples)
     {
         // reset filter state
-        std::fill (filterState.R, &filterState.R[sst::filters::n_filter_registers], _mm_setzero_ps());
+        std::fill(filterState.R, &filterState.R[sst::filters::n_filter_registers],
+                  _mm_setzero_ps());
 
-        for (int i=0; i<4; ++i)
+        for (int i = 0; i < 4; ++i)
         {
             filterState.WP[i] = 0;
             filterState.active[i] = 0;
@@ -94,24 +116,25 @@ class FilterPlotter
             auto yVec = filterUnitPtr(&filterState, _mm_set_ps1(inBuffer[i]));
 
             float yArr alignas(16)[4];
-            _mm_store_ps (yArr, yVec);
+            _mm_store_ps(yArr, yVec);
             outBuffer[i] = yArr[0];
         }
     };
 
-    std::vector<float> computeFrequencyResponse(float* sweepBuffer, float* filterBuffer, int numSamples)
+    std::vector<float> computeFrequencyResponse(float *sweepBuffer, float *filterBuffer,
+                                                int numSamples)
     {
         const auto fftDataSize = numSamples * 2;
-        std::vector<float> sweepFFT (fftDataSize, 0.0f);
-        std::copy (sweepBuffer, sweepBuffer + numSamples, sweepFFT.begin());
-        fft.performFrequencyOnlyForwardTransform (sweepFFT.data(), true);
+        std::vector<float> sweepFFT(fftDataSize, 0.0f);
+        std::copy(sweepBuffer, sweepBuffer + numSamples, sweepFFT.begin());
+        fft.performFrequencyOnlyForwardTransform(sweepFFT.data(), true);
 
-        std::vector<float> filtFFT (fftDataSize, 0.0f);
-        std::copy (filterBuffer, filterBuffer + numSamples, filtFFT.begin());
-        fft.performFrequencyOnlyForwardTransform (filtFFT.data(), true);
+        std::vector<float> filtFFT(fftDataSize, 0.0f);
+        std::copy(filterBuffer, filterBuffer + numSamples, filtFFT.begin());
+        fft.performFrequencyOnlyForwardTransform(filtFFT.data(), true);
 
         const auto fftOutSize = numSamples / 2 + 1;
-        std::vector<float> magnitudeResponseDB (fftOutSize, 0.0f);
+        std::vector<float> magnitudeResponseDB(fftOutSize, 0.0f);
         for (int i = 0; i < fftOutSize; ++i)
             magnitudeResponseDB[i] = juce::Decibels::gainToDecibels(filtFFT[i] / sweepFFT[i]);
 
@@ -120,26 +143,29 @@ class FilterPlotter
 
     static std::vector<float> fftFreqs(int N, float T)
     {
-        auto val = 0.5f / ((float) N * T);
+        auto val = 0.5f / ((float)N * T);
 
-        std::vector<float> results (N, 0.0f);
-        std::iota (results.begin(), results.end(), 0.0f);
-        std::transform(results.begin(), results.end(), results.begin(), [val] (auto x) { return x * val; });
+        std::vector<float> results(N, 0.0f);
+        std::iota(results.begin(), results.end(), 0.0f);
+        std::transform(results.begin(), results.end(), results.begin(),
+                       [val](auto x) { return x * val; });
 
         return results;
     }
 
-    static std::vector<float> freqSmooth (const float* data, int numSamples, float smFactor = 1.0f / 24.0f)
+    static std::vector<float> freqSmooth(const float *data, int numSamples,
+                                         float smFactor = 1.0f / 24.0f)
     {
-        const auto s = smFactor > 1.0f ? smFactor : std::sqrt (std::pow (2.0f, smFactor));
+        const auto s = smFactor > 1.0f ? smFactor : std::sqrt(std::pow(2.0f, smFactor));
 
-        std::vector<float> smoothedVec (numSamples, 0.0f);
+        std::vector<float> smoothedVec(numSamples, 0.0f);
         for (int i = 0; i < numSamples; ++i)
         {
-            auto i1 = std::max (int ((float) i / s), 0);
-            auto i2 = std::min (int ((float) i * s) + 1, numSamples - 1);
+            auto i1 = std::max(int((float)i / s), 0);
+            auto i2 = std::min(int((float)i * s) + 1, numSamples - 1);
 
-            smoothedVec[i] = i2 > i1 ? std::accumulate(data + i1, data + i2, 0.0f) / float (i2 - i1) : 0.0f;
+            smoothedVec[i] =
+                i2 > i1 ? std::accumulate(data + i1, data + i2, 0.0f) / float(i2 - i1) : 0.0f;
         }
 
         return smoothedVec;
