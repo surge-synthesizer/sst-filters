@@ -11,11 +11,11 @@ find(
     'include'
 );
 
-ind(
+find(
     {
         wanted => \&findfiles,
     },
-    'include0extras'
+    'include-extras'
 );
 
 

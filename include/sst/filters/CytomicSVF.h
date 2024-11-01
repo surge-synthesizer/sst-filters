@@ -59,13 +59,13 @@ namespace sst::filters
 {
 struct CytomicSVF
 {
-    __m128 ic1eq{_mm_setzero_ps()}, ic2eq{_mm_setzero_ps()};
-    __m128 g, k, gk, a1, a2, a3, m0, m1, m2;
+    SIMD_M128 ic1eq{SIMD_MM(setzero_ps)()}, ic2eq{SIMD_MM(setzero_ps)()};
+    SIMD_M128 g, k, gk, a1, a2, a3, m0, m1, m2;
 
-    __m128 oneSSE{_mm_set1_ps(1.0)};
-    __m128 negoneSSE{_mm_set1_ps(-1.0)};
-    __m128 twoSSE{_mm_set1_ps(2.0)};
-    __m128 negtwoSSE{_mm_set1_ps(-2.0)};
+    SIMD_M128 oneSSE{SIMD_MM(set1_ps)(1.0)};
+    SIMD_M128 negoneSSE{SIMD_MM(set1_ps)(-1.0)};
+    SIMD_M128 twoSSE{SIMD_MM(set1_ps)(2.0)};
+    SIMD_M128 negtwoSSE{SIMD_MM(set1_ps)(-2.0)};
     enum Mode
     {
         LP,
@@ -94,13 +94,13 @@ struct CytomicSVF
         res = std::clamp(res, 0.f, 0.98f);
         bellShelfAmp = std::max(bellShelfAmp, 0.001f);
 
-        g = _mm_set1_ps(sst::basic_blocks::dsp::fasttan(M_PI * conorm));
-        k = _mm_set1_ps(2.0 - 2 * res);
+        g = SIMD_MM(set1_ps)(sst::basic_blocks::dsp::fasttan(M_PI * conorm));
+        k = SIMD_MM(set1_ps)(2.0 - 2 * res);
         if (mode == BELL)
         {
-            k = _mm_div_ps(k, _mm_set1_ps(bellShelfAmp));
+            k = SIMD_MM(div_ps)(k, SIMD_MM(set1_ps)(bellShelfAmp));
         }
-        setCoeffPostGK(mode, _mm_set1_ps(bellShelfAmp));
+        setCoeffPostGK(mode, SIMD_MM(set1_ps)(bellShelfAmp));
     }
 
     void setCoeff(Mode mode, float freqL, float freqR, float resL, float resR, float srInv,
@@ -108,87 +108,88 @@ struct CytomicSVF
     {
         auto coL = M_PI * std::clamp(freqL * srInv, 0.f, 0.499f); // stable until nyquist
         auto coR = M_PI * std::clamp(freqR * srInv, 0.f, 0.499f); // stable until nyquist
-        g = sst::basic_blocks::dsp::fasttanhSSE(_mm_set_ps(0, 0, coR, coL));
-        auto res = _mm_set_ps(0, 0, std::clamp(resR, 0.f, 0.98f), std::clamp(resL, 0.f, 0.98f));
+        g = sst::basic_blocks::dsp::fasttanhSSE(SIMD_MM(set_ps)(0, 0, coR, coL));
+        auto res =
+            SIMD_MM(set_ps)(0, 0, std::clamp(resR, 0.f, 0.98f), std::clamp(resL, 0.f, 0.98f));
 
         auto bellShelfAmp =
-            _mm_set_ps(0, 0, std::max(bellShelfAmpL, 0.001f), std::max(bellShelfAmpR, 0.001f));
+            SIMD_MM(set_ps)(0, 0, std::max(bellShelfAmpL, 0.001f), std::max(bellShelfAmpR, 0.001f));
 
-        k = _mm_sub_ps(twoSSE, _mm_mul_ps(twoSSE, res));
+        k = SIMD_MM(sub_ps)(twoSSE, SIMD_MM(mul_ps)(twoSSE, res));
         if (mode == BELL)
         {
-            k = _mm_div_ps(k, bellShelfAmp);
+            k = SIMD_MM(div_ps)(k, bellShelfAmp);
         }
         setCoeffPostGK(mode, bellShelfAmp);
     }
 
-    void setCoeffPostGK(Mode mode, __m128 bellShelfSSE)
+    void setCoeffPostGK(Mode mode, SIMD_M128 bellShelfSSE)
     {
-        gk = _mm_add_ps(g, k);
-        a1 = _mm_div_ps(oneSSE, _mm_add_ps(oneSSE, _mm_mul_ps(g, gk)));
-        a2 = _mm_mul_ps(g, a1);
-        a3 = _mm_mul_ps(g, a2);
+        gk = SIMD_MM(add_ps)(g, k);
+        a1 = SIMD_MM(div_ps)(oneSSE, SIMD_MM(add_ps)(oneSSE, SIMD_MM(mul_ps)(g, gk)));
+        a2 = SIMD_MM(mul_ps)(g, a1);
+        a3 = SIMD_MM(mul_ps)(g, a2);
 
         switch (mode)
         {
         case LP:
-            m0 = _mm_setzero_ps();
-            m1 = _mm_setzero_ps();
+            m0 = SIMD_MM(setzero_ps)();
+            m1 = SIMD_MM(setzero_ps)();
             m2 = oneSSE;
             break;
         case BP:
-            m0 = _mm_setzero_ps();
+            m0 = SIMD_MM(setzero_ps)();
             m1 = oneSSE;
-            m2 = _mm_setzero_ps();
+            m2 = SIMD_MM(setzero_ps)();
             break;
         case HP:
             m0 = oneSSE;
-            m1 = _mm_sub_ps(_mm_setzero_ps(), k);
+            m1 = SIMD_MM(sub_ps)(SIMD_MM(setzero_ps)(), k);
             m2 = negoneSSE;
             break;
         case NOTCH:
             m0 = oneSSE;
-            m1 = _mm_sub_ps(_mm_setzero_ps(), k);
-            m2 = _mm_setzero_ps();
+            m1 = SIMD_MM(sub_ps)(SIMD_MM(setzero_ps)(), k);
+            m2 = SIMD_MM(setzero_ps)();
             break;
         case PEAK:
             m0 = oneSSE;
-            m1 = _mm_sub_ps(_mm_setzero_ps(), k);
+            m1 = SIMD_MM(sub_ps)(SIMD_MM(setzero_ps)(), k);
             m2 = negtwoSSE;
             break;
         case ALL:
             m0 = oneSSE;
-            m1 = _mm_mul_ps(negtwoSSE, k);
-            m2 = _mm_setzero_ps();
+            m1 = SIMD_MM(mul_ps)(negtwoSSE, k);
+            m2 = SIMD_MM(setzero_ps)();
             break;
         case BELL:
         {
             auto A = bellShelfSSE;
             m0 = oneSSE;
-            m1 = _mm_mul_ps(k, _mm_sub_ps(_mm_mul_ps(A, A), oneSSE));
-            m2 = _mm_setzero_ps();
+            m1 = SIMD_MM(mul_ps)(k, SIMD_MM(sub_ps)(SIMD_MM(mul_ps)(A, A), oneSSE));
+            m2 = SIMD_MM(setzero_ps)();
         }
         break;
         case LOW_SHELF:
         {
             auto A = bellShelfSSE;
             m0 = oneSSE;
-            m1 = _mm_mul_ps(k, _mm_sub_ps(A, oneSSE));
-            m2 = _mm_sub_ps(_mm_mul_ps(A, A), oneSSE);
+            m1 = SIMD_MM(mul_ps)(k, SIMD_MM(sub_ps)(A, oneSSE));
+            m2 = SIMD_MM(sub_ps)(SIMD_MM(mul_ps)(A, A), oneSSE);
         }
         break;
         case HIGH_SHELF:
         {
             auto A = bellShelfSSE;
-            m0 = _mm_mul_ps(A, A);
-            m1 = _mm_mul_ps(_mm_mul_ps(k, _mm_sub_ps(oneSSE, A)), A);
-            m2 = _mm_sub_ps(oneSSE, _mm_mul_ps(A, A));
+            m0 = SIMD_MM(mul_ps)(A, A);
+            m1 = SIMD_MM(mul_ps)(SIMD_MM(mul_ps)(k, SIMD_MM(sub_ps)(oneSSE, A)), A);
+            m2 = SIMD_MM(sub_ps)(oneSSE, SIMD_MM(mul_ps)(A, A));
         }
         break;
         default:
-            m0 = _mm_setzero_ps();
-            m1 = _mm_setzero_ps();
-            m2 = _mm_setzero_ps();
+            m0 = SIMD_MM(setzero_ps)();
+            m1 = SIMD_MM(setzero_ps)();
+            m2 = SIMD_MM(setzero_ps)();
             break;
         }
     }
@@ -208,41 +209,43 @@ struct CytomicSVF
 
     static void step(CytomicSVF &that, float &L, float &R)
     {
-        auto vin = _mm_set_ps(0, 0, R, L);
+        auto vin = SIMD_MM(set_ps)(0, 0, R, L);
         auto res = stepSSE(that, vin);
         float r4 alignas(16)[4];
-        _mm_store_ps(r4, res);
+        SIMD_MM(store_ps)(r4, res);
         L = r4[0];
         R = r4[1];
     }
 
-    static __m128 stepSSE(CytomicSVF &that, __m128 vin)
+    static SIMD_M128 stepSSE(CytomicSVF &that, SIMD_M128 vin)
     {
         // v3 = v0 - ic2eq
-        auto v3 = _mm_sub_ps(vin, that.ic2eq);
+        auto v3 = SIMD_MM(sub_ps)(vin, that.ic2eq);
 
         // v1 = a1 * ic1eq + a2 * v3
-        auto v1 = _mm_add_ps(_mm_mul_ps(that.a1, that.ic1eq), _mm_mul_ps(that.a2, v3));
+        auto v1 =
+            SIMD_MM(add_ps)(SIMD_MM(mul_ps)(that.a1, that.ic1eq), SIMD_MM(mul_ps)(that.a2, v3));
 
         // v2 = ic2eq + a2 * ic1eq + a3 * v3
-        auto v2 = _mm_add_ps(that.ic2eq,
-                             _mm_add_ps(_mm_mul_ps(that.a2, that.ic1eq), _mm_mul_ps(that.a3, v3)));
+        auto v2 = SIMD_MM(add_ps)(that.ic2eq, SIMD_MM(add_ps)(SIMD_MM(mul_ps)(that.a2, that.ic1eq),
+                                                              SIMD_MM(mul_ps)(that.a3, v3)));
 
         // ic1eq = 2 * v1 - ic1eq
-        that.ic1eq = _mm_sub_ps(_mm_mul_ps(that.twoSSE, v1), that.ic1eq);
+        that.ic1eq = SIMD_MM(sub_ps)(SIMD_MM(mul_ps)(that.twoSSE, v1), that.ic1eq);
 
         // ic2eq = 2 * v2 - ic2eq
-        that.ic2eq = _mm_sub_ps(_mm_mul_ps(that.twoSSE, v2), that.ic2eq);
+        that.ic2eq = SIMD_MM(sub_ps)(SIMD_MM(mul_ps)(that.twoSSE, v2), that.ic2eq);
 
-        return _mm_add_ps(_mm_mul_ps(that.m0, vin),
-                          _mm_add_ps(_mm_mul_ps(that.m1, v1), _mm_mul_ps(that.m2, v2)));
+        return SIMD_MM(add_ps)(
+            SIMD_MM(mul_ps)(that.m0, vin),
+            SIMD_MM(add_ps)(SIMD_MM(mul_ps)(that.m1, v1), SIMD_MM(mul_ps)(that.m2, v2)));
     }
 
     /*
      * Process across a block with smoothing
      */
-    __m128 a1_prior, a2_prior, a3_prior;
-    __m128 da1, da2, da3;
+    SIMD_M128 a1_prior, a2_prior, a3_prior;
+    SIMD_M128 da1, da2, da3;
     bool firstBlock{true};
 
     template <int blockSize>
@@ -267,16 +270,16 @@ struct CytomicSVF
 
         // then for each one calculate the change across the block
         static constexpr float obsf = 1.f / blockSize;
-        auto obs = _mm_set1_ps(obsf);
+        auto obs = SIMD_MM(set1_ps)(obsf);
 
         // and set the changeup, and reset a1 to the prior value so we move in the block
-        da1 = _mm_mul_ps(_mm_sub_ps(a1, a1_prior), obs);
+        da1 = SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(a1, a1_prior), obs);
         a1 = a1_prior;
 
-        da2 = _mm_mul_ps(_mm_sub_ps(a2, a2_prior), obs);
+        da2 = SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(a2, a2_prior), obs);
         a2 = a2_prior;
 
-        da3 = _mm_mul_ps(_mm_sub_ps(a3, a3_prior), obs);
+        da3 = SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(a3, a3_prior), obs);
         a3 = a3_prior;
     }
 
@@ -304,41 +307,41 @@ struct CytomicSVF
 
         // then for each one calculate the change across the block
         static constexpr float obsf = 1.f / blockSize;
-        auto obs = _mm_set1_ps(obsf);
+        auto obs = SIMD_MM(set1_ps)(obsf);
 
         // and set the changeup, and reset a1 to the prior value so we move in the block
-        da1 = _mm_mul_ps(_mm_sub_ps(a1, a1_prior), obs);
+        da1 = SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(a1, a1_prior), obs);
         a1 = a1_prior;
 
-        da2 = _mm_mul_ps(_mm_sub_ps(a2, a2_prior), obs);
+        da2 = SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(a2, a2_prior), obs);
         a2 = a2_prior;
 
-        da3 = _mm_mul_ps(_mm_sub_ps(a3, a3_prior), obs);
+        da3 = SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(a3, a3_prior), obs);
         a3 = a3_prior;
     }
 
     template <int blockSize> void retainCoeffForBlock()
     {
-        da1 = _mm_setzero_ps();
-        da2 = _mm_setzero_ps();
-        da3 = _mm_setzero_ps();
+        da1 = SIMD_MM(setzero_ps)();
+        da2 = SIMD_MM(setzero_ps)();
+        da3 = SIMD_MM(setzero_ps)();
     }
 
     void processBlockStep(float &L, float &R)
     {
         step(*this, L, R);
-        a1 = _mm_add_ps(a1, da1);
-        a2 = _mm_add_ps(a2, da2);
-        a3 = _mm_add_ps(a3, da3);
+        a1 = SIMD_MM(add_ps)(a1, da1);
+        a2 = SIMD_MM(add_ps)(a2, da2);
+        a3 = SIMD_MM(add_ps)(a3, da3);
     }
 
     void processBlockStep(float &L)
     {
         float tmp{0.f};
         step(*this, L, tmp);
-        a1 = _mm_add_ps(a1, da1);
-        a2 = _mm_add_ps(a2, da2);
-        a3 = _mm_add_ps(a3, da3);
+        a1 = SIMD_MM(add_ps)(a1, da1);
+        a2 = SIMD_MM(add_ps)(a2, da2);
+        a3 = SIMD_MM(add_ps)(a3, da3);
     }
 
     template <int blockSize>
@@ -363,8 +366,8 @@ struct CytomicSVF
 
     void init()
     {
-        ic1eq = _mm_setzero_ps();
-        ic2eq = _mm_setzero_ps();
+        ic1eq = SIMD_MM(setzero_ps)();
+        ic2eq = SIMD_MM(setzero_ps)();
     }
 };
 } // namespace sst::filters

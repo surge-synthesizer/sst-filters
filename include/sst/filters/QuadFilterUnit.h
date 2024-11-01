@@ -29,13 +29,13 @@ constexpr int n_filter_registers = 16;
 struct alignas(16) QuadFilterUnitState
 {
     /** Filter coefficients */
-    __m128 C[n_cm_coeffs];
+    SIMD_M128 C[n_cm_coeffs];
 
     /** Filter coefficients "delta" */
-    __m128 dC[n_cm_coeffs];
+    SIMD_M128 dC[n_cm_coeffs];
 
     /** Filter state */
-    __m128 R[n_filter_registers];
+    SIMD_M128 R[n_filter_registers];
 
     /** Array of pointers to the filter's delay buffers */
     float *DB[4];
@@ -54,7 +54,7 @@ struct alignas(16) QuadFilterUnitState
 };
 
 /** Typedef alias for a filter unit processing method. */
-typedef __m128 (*FilterUnitQFPtr)(QuadFilterUnitState *__restrict, __m128 in);
+typedef SIMD_M128 (*FilterUnitQFPtr)(QuadFilterUnitState *__restrict, SIMD_M128 in);
 
 /**
  * Returns a filter unit pointer and optionally applies gain scaling. The gain

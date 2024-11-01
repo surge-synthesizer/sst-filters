@@ -45,9 +45,9 @@ void FilterCoefficientMaker<TuningProvider>::setSampleRateAndBlockSize(float new
 
 namespace detail
 {
-inline void set1f(__m128 &m, int i, float f) { *((float *)&m + i) = f; }
+inline void set1f(SIMD_M128 &m, int i, float f) { *((float *)&m + i) = f; }
 
-inline float get1f(__m128 m, int i) { return *((float *)&m + i); }
+inline float get1f(SIMD_M128 m, int i) { return *((float *)&m + i); }
 } // namespace detail
 
 template <typename TuningProvider>
@@ -58,8 +58,8 @@ void FilterCoefficientMaker<TuningProvider>::updateState(StateType &state, int c
     {
         for (int i = 0; i < n_cm_coeffs; ++i)
         {
-            state.C[i] = _mm_set1_ps(C[i]);
-            state.dC[i] = _mm_set1_ps(dC[i]);
+            state.C[i] = SIMD_MM(set1_ps)(C[i]);
+            state.dC[i] = SIMD_MM(set1_ps)(dC[i]);
         }
     }
     else

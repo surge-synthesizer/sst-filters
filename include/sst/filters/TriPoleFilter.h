@@ -66,23 +66,23 @@ static float clampedFrequency(float pitch, float sampleRate, TuningProvider *pro
     return freq;
 }
 
-#define F(a) _mm_set_ps1(a)
-#define M(a, b) _mm_mul_ps(a, b)
-#define D(a, b) _mm_div_ps(a, b)
-#define A(a, b) _mm_add_ps(a, b)
-#define S(a, b) _mm_sub_ps(a, b)
+#define F(a) SIMD_MM(set_ps1)(a)
+#define M(a, b) SIMD_MM(mul_ps)(a, b)
+#define D(a, b) SIMD_MM(div_ps)(a, b)
+#define A(a, b) SIMD_MM(add_ps)(a, b)
+#define S(a, b) SIMD_MM(sub_ps)(a, b)
 #define N(a) S(F(0.0f), a)
 
 /** inverse square root sigmoid */
-static inline __m128 thr_sigmoid(__m128 x, float beta)
+static inline SIMD_M128 thr_sigmoid(SIMD_M128 x, float beta)
 {
-    __m128 vtmp = _mm_mul_ps(x, x);           // calculate in*in
-    __m128 vtmp2 = _mm_add_ps(vtmp, F(beta)); // in*in+1.f
-    vtmp = _mm_rsqrt_ps(vtmp2);               // 1/sqrt(in*in+1.f)
-    return _mm_mul_ps(vtmp, x);               // in*1/sqrt(in*in+1)
+    auto vtmp = SIMD_MM(mul_ps)(x, x);           // calculate in*in
+    auto vtmp2 = SIMD_MM(add_ps)(vtmp, F(beta)); // in*in+1.f
+    vtmp = SIMD_MM(rsqrt_ps)(vtmp2);             // 1/sqrt(in*in+1.f)
+    return SIMD_MM(mul_ps)(vtmp, x);             // in*1/sqrt(in*in+1)
 }
 
-static inline __m128 sech2_with_tanh(__m128 tanh_value)
+static inline SIMD_M128 sech2_with_tanh(SIMD_M128 tanh_value)
 {
     const auto one = F(1.0f);
     return S(one, M(tanh_value, tanh_value));
@@ -90,29 +90,30 @@ static inline __m128 sech2_with_tanh(__m128 tanh_value)
 
 namespace OnePoleLPF
 {
-static inline __m128 linOutput(__m128 x, __m128 z, __m128 b_coeff, __m128 a_coeff)
+static inline SIMD_M128 linOutput(SIMD_M128 x, SIMD_M128 z, SIMD_M128 b_coeff, SIMD_M128 a_coeff)
 {
     return M(a_coeff, A(M(b_coeff, x), z));
 }
 
-static inline __m128 nonlinOutput(__m128 tanh_x, __m128 tanh_y, __m128 z, __m128 b_coeff)
+static inline SIMD_M128 nonlinOutput(SIMD_M128 tanh_x, SIMD_M128 tanh_y, SIMD_M128 z,
+                                     SIMD_M128 b_coeff)
 {
     return A(M(b_coeff, S(tanh_x, tanh_y)), z);
 }
 
-static inline __m128 getDerivative(__m128 tanh_y, __m128 b_coeff)
+static inline SIMD_M128 getDerivative(SIMD_M128 tanh_y, SIMD_M128 b_coeff)
 {
     const auto one = F(1.0f);
     return S(M(N(b_coeff), sech2_with_tanh(tanh_y)), one);
 }
 
-static inline __m128 getXDerivative(__m128 tanh_x, __m128 b_coeff)
+static inline SIMD_M128 getXDerivative(SIMD_M128 tanh_x, SIMD_M128 b_coeff)
 {
     return M(b_coeff, sech2_with_tanh(tanh_x));
 }
 
-static inline __m128 process(__m128 tanh_x, __m128 z, __m128 estimate, __m128 b_coeff,
-                             __m128 a_coeff, float beta)
+static inline SIMD_M128 process(SIMD_M128 tanh_x, SIMD_M128 z, SIMD_M128 estimate,
+                                SIMD_M128 b_coeff, SIMD_M128 a_coeff, float beta)
 {
     estimate = linOutput(tanh_x, z, b_coeff, a_coeff);
     for (int i = 0; i < nIterStage; ++i)
@@ -128,26 +129,27 @@ static inline __m128 process(__m128 tanh_x, __m128 z, __m128 estimate, __m128 b_
 
 namespace OnePoleHPF
 {
-static inline __m128 linOutput(__m128 x_minus_x1_plus_z, __m128 a_coeff)
+static inline SIMD_M128 linOutput(SIMD_M128 x_minus_x1_plus_z, SIMD_M128 a_coeff)
 {
     return M(a_coeff, x_minus_x1_plus_z);
 }
 
-static inline __m128 nonlinOutput(__m128 x_minus_x1_plus_z, __m128 tanh_y, __m128 b_coeff)
+static inline SIMD_M128 nonlinOutput(SIMD_M128 x_minus_x1_plus_z, SIMD_M128 tanh_y,
+                                     SIMD_M128 b_coeff)
 {
     return A(M(N(b_coeff), tanh_y), x_minus_x1_plus_z);
 }
 
-static inline __m128 getDerivative(__m128 tanh_y, __m128 b_coeff)
+static inline SIMD_M128 getDerivative(SIMD_M128 tanh_y, SIMD_M128 b_coeff)
 {
     const auto neg_one = F(-1.0f);
     return A(M(N(b_coeff), sech2_with_tanh(tanh_y)), neg_one);
 }
 
-static inline __m128 getXDerivative() { return F(2.0f); }
+static inline SIMD_M128 getXDerivative() { return F(2.0f); }
 
-static inline __m128 process(__m128 x, __m128 x1, __m128 z, __m128 estimate, __m128 b_coeff,
-                             __m128 a_coeff, float beta)
+static inline SIMD_M128 process(SIMD_M128 x, SIMD_M128 x1, SIMD_M128 z, SIMD_M128 estimate,
+                                SIMD_M128 b_coeff, SIMD_M128 a_coeff, float beta)
 {
     auto x_minus_x1_plus_z = A(S(x, x1), z);
     estimate = linOutput(x_minus_x1_plus_z, a_coeff);
@@ -164,30 +166,31 @@ static inline __m128 process(__m128 x, __m128 x1, __m128 z, __m128 estimate, __m
 
 namespace OnePoleLPF_FB
 {
-static inline __m128 linOutput(__m128 bx, __m128 z_minus_fb_plus_fb1, __m128 a_coeff)
+static inline SIMD_M128 linOutput(SIMD_M128 bx, SIMD_M128 z_minus_fb_plus_fb1, SIMD_M128 a_coeff)
 {
     return M(a_coeff, A(bx, z_minus_fb_plus_fb1));
 }
 
-static inline __m128 nonlinOutput(__m128 tanh_x, __m128 tanh_y, __m128 z_minus_fb_plus_fb1,
-                                  __m128 b_coeff)
+static inline SIMD_M128 nonlinOutput(SIMD_M128 tanh_x, SIMD_M128 tanh_y,
+                                     SIMD_M128 z_minus_fb_plus_fb1, SIMD_M128 b_coeff)
 {
     return A(M(b_coeff, S(tanh_x, tanh_y)), z_minus_fb_plus_fb1);
 }
 
-static inline __m128 getDerivative(__m128 tanh_y, __m128 b_coeff)
+static inline SIMD_M128 getDerivative(SIMD_M128 tanh_y, SIMD_M128 b_coeff)
 {
     return OnePoleLPF::getDerivative(tanh_y, b_coeff);
 }
 
-static inline __m128 getXDerivative()
+static inline SIMD_M128 getXDerivative()
 {
     const auto two = F(2.0f);
     return two;
 }
 
-static inline __m128 process(__m128 tanh_x, __m128 z, __m128 fb, __m128 fb1, __m128 estimate,
-                             __m128 b_coeff, __m128 a_coeff, __m128 bx)
+static inline SIMD_M128 process(SIMD_M128 tanh_x, SIMD_M128 z, SIMD_M128 fb, SIMD_M128 fb1,
+                                SIMD_M128 estimate, SIMD_M128 b_coeff, SIMD_M128 a_coeff,
+                                SIMD_M128 bx)
 {
     auto z_minus_fb_plus_fb1 = A(S(z, fb), fb1);
     estimate = linOutput(bx, z_minus_fb_plus_fb1, a_coeff);
@@ -204,31 +207,31 @@ static inline __m128 process(__m128 tanh_x, __m128 z, __m128 fb, __m128 fb1, __m
 
 namespace OnePoleHPF_FB
 {
-static inline __m128 linOutput(__m128 x_minus_x1_plus_z, __m128 tanh_fb, __m128 a_coeff,
-                               __m128 b_coeff)
+static inline SIMD_M128 linOutput(SIMD_M128 x_minus_x1_plus_z, SIMD_M128 tanh_fb, SIMD_M128 a_coeff,
+                                  SIMD_M128 b_coeff)
 {
     return M(a_coeff, A(M(b_coeff, tanh_fb), x_minus_x1_plus_z));
 }
 
-static inline __m128 nonlinOutput(__m128 x_minus_x1_plus_z, __m128 tanh_y, __m128 tanh_fb,
-                                  __m128 b_coeff)
+static inline SIMD_M128 nonlinOutput(SIMD_M128 x_minus_x1_plus_z, SIMD_M128 tanh_y,
+                                     SIMD_M128 tanh_fb, SIMD_M128 b_coeff)
 {
     return A(M(b_coeff, S(tanh_fb, tanh_y)), x_minus_x1_plus_z);
 }
 
-static inline __m128 getDerivative(__m128 tanh_y, __m128 b_coeff)
+static inline SIMD_M128 getDerivative(SIMD_M128 tanh_y, SIMD_M128 b_coeff)
 {
     const auto neg_one = F(-1.0f);
     return A(M(N(b_coeff), sech2_with_tanh(tanh_y)), neg_one);
 }
 
-static inline __m128 getFBDerivative(__m128 tanh_fb, __m128 b_coeff)
+static inline SIMD_M128 getFBDerivative(SIMD_M128 tanh_fb, SIMD_M128 b_coeff)
 {
     return M(b_coeff, sech2_with_tanh(tanh_fb));
 }
 
-static inline __m128 process(__m128 x_minus_x1_plus_z, __m128 tanh_fb, __m128 estimate,
-                             __m128 b_coeff, __m128 a_coeff)
+static inline SIMD_M128 process(SIMD_M128 x_minus_x1_plus_z, SIMD_M128 tanh_fb, SIMD_M128 estimate,
+                                SIMD_M128 b_coeff, SIMD_M128 a_coeff)
 {
     estimate = linOutput(x_minus_x1_plus_z, tanh_fb, a_coeff, b_coeff);
     for (int i = 0; i < nIterStage; ++i)
@@ -257,45 +260,46 @@ constexpr float one = 0.99f;
 constexpr float oneOverMult = one / mult;
 const float betaExpOverMult = beta_exp / mult;
 
-static inline __m128 sign_ps(__m128 x)
+static inline SIMD_M128 sign_ps(SIMD_M128 x)
 {
-    const __m128 zero = _mm_setzero_ps();
-    const __m128 one = _mm_set1_ps(1.0f);
-    const __m128 neg_one = _mm_set1_ps(-1.0f);
+    const auto zero = SIMD_MM(setzero_ps)();
+    const auto one = SIMD_MM(set1_ps)(1.0f);
+    const auto neg_one = SIMD_MM(set1_ps)(-1.0f);
 
-    __m128 positive = _mm_and_ps(_mm_cmpgt_ps(x, zero), one);
-    __m128 negative = _mm_and_ps(_mm_cmplt_ps(x, zero), neg_one);
+    auto positive = SIMD_MM(and_ps)(SIMD_MM(cmpgt_ps)(x, zero), one);
+    auto negative = SIMD_MM(and_ps)(SIMD_MM(cmplt_ps)(x, zero), neg_one);
 
-    return _mm_or_ps(positive, negative);
+    return SIMD_MM(or_ps)(positive, negative);
 }
 
-static inline __m128 res_func_ps(__m128 x)
+static inline SIMD_M128 res_func_ps(SIMD_M128 x)
 {
     x = M(F(mult), x);
 
     auto x_abs = basic_blocks::mechanics::abs_ps(x);
-    auto x_less_than = _mm_cmplt_ps(x_abs, F(max_val));
+    auto x_less_than = SIMD_MM(cmplt_ps)(x_abs, F(max_val));
 
     auto y = A(N(basic_blocks::dsp::fastexpSSE(
                    M(F(beta_exp), N(basic_blocks::mechanics::abs_ps(A(x, F(c))))))),
                F(bias));
     y = M(sign_ps(x), M(y, F(oneOverMult)));
 
-    return _mm_or_ps(_mm_and_ps(x_less_than, M(x, F(oneOverMult))), _mm_andnot_ps(x_less_than, y));
+    return SIMD_MM(or_ps)(SIMD_MM(and_ps)(x_less_than, M(x, F(oneOverMult))),
+                          SIMD_MM(andnot_ps)(x_less_than, y));
 }
 
-static inline __m128 res_deriv_ps(__m128 x)
+static inline SIMD_M128 res_deriv_ps(SIMD_M128 x)
 {
     x = M(F(mult), x);
 
     auto x_abs = basic_blocks::mechanics::abs_ps(x);
-    auto x_less_than = _mm_cmplt_ps(x_abs, F(max_val));
+    auto x_less_than = SIMD_MM(cmplt_ps)(x_abs, F(max_val));
 
     auto y = A(basic_blocks::dsp::fastexpSSE(
                    M(F(beta_exp), N(basic_blocks::mechanics::abs_ps(A(x, F(c)))))),
                F(betaExpOverMult));
 
-    return _mm_or_ps(_mm_and_ps(x_less_than, F(one)), _mm_andnot_ps(x_less_than, y));
+    return SIMD_MM(or_ps)(SIMD_MM(and_ps)(x_less_than, F(one)), SIMD_MM(andnot_ps)(x_less_than, y));
 }
 } // namespace ResWaveshaper
 
@@ -354,7 +358,8 @@ void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, float freq, fl
     cm->FromDirect(C);
 }
 
-template <FilterSubType subtype> inline __m128 process(QuadFilterUnitState *__restrict f, __m128 in)
+template <FilterSubType subtype>
+inline SIMD_M128 process(QuadFilterUnitState *__restrict f, SIMD_M128 in)
 {
     // input gain
     in = M(F(in_gain), in);
@@ -389,7 +394,7 @@ template <FilterSubType subtype> inline __m128 process(QuadFilterUnitState *__re
     const auto k_ps = f->C[thr_k];
 
     // define local variables
-    __m128 tanh_x0, tanh_x1, tanh_x2, tanh_fb, f0_deriv, f1_deriv, f2_deriv, bx, hpf_in;
+    SIMD_M128 tanh_x0, tanh_x1, tanh_x2, tanh_fb, f0_deriv, f1_deriv, f2_deriv, bx, hpf_in;
     switch (mode)
     {
     case 0: // lowpass

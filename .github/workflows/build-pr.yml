@@ -7,21 +7,47 @@ on:
 
 jobs:
   build_tests:
-    name: Test ${{ matrix.os }}
+    name: Test ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
-        os: [ ubuntu-latest, macos-latest, windows-latest ]
         include:
           - os: ubuntu-latest
             name: linux
+            runTest: true
             testExe: build/tests/sst-filters-tests
+
           - os: macos-latest
-            name: mac
+            name: mac-x86
+            runTest: true
             testExe: build/tests/sst-filters-tests
+            cmakeArgs: -DCMAKE_OSX_ARCHITECTURES=x86_64
+
+          - os: macos-latest
+            name: mac-arm
+            cmakeArgs: -DCMAKE_OSX_ARCHITECTURES=arm64
+
+          - os: macos-latest
+            name: mac-arm-nonative
+            cmakeArgs: -DCMAKE_OSX_ARCHITECTURES=arm64 -DSST_BASIC_BLOCKS_SIMD_OMIT_NATIVE_ALIASES=TRUE
+
           - os: windows-latest
-            name: win
-            testExe: build/tests/Release/sst-filters-tests.exe
+            name: win-x86
+            runTest: true
+            testExe:  build/tests/Release/sst-filters-tests.exe
+
+          - os: windows-latest
+            name: win-arm64
+            cmakeArgs: -G"Visual Studio 17 2022" -A arm64 -DCMAKE_SYSTEM_VERSION=10
+
+          - os: windows-latest
+            name: win-arm64ec
+            cmakeArgs: -G"Visual Studio 17 2022" -A arm64ec -DCMAKE_SYSTEM_VERSION=10
+
+          - os: windows-latest
+            name: win-arm64-non-native
+            cmakeArgs: -G"Visual Studio 17 2022" -A arm64 -DCMAKE_SYSTEM_VERSION=10 -DSST_BASIC_BLOCKS_SIMD_OMIT_NATIVE_ALIASES=TRUE
 
     steps:
 
@@ -32,10 +58,11 @@ jobs:
 
       - name: Build Smoke test
         run: |
-          cmake -S . -B ./build -DCMAKE_BUILD_TYPE=Release -DSST_FILTERS_BUILD_TESTS=TRUE -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
+          cmake -S . -B ./build -DCMAKE_BUILD_TYPE=Release -DSST_FILTERS_BUILD_TESTS=TRUE ${{ matrix.cmakeArgs }}
           cmake --build ./build --config Release
 
       - name: Run Smoke Test
+        if: ${{ matrix.runTest }}m
         run: |
           ls ${{ matrix.testExe }}
           ${{ matrix.testExe }}

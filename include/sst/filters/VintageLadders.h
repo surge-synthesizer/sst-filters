@@ -140,16 +140,16 @@ inline void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, float f
     cm->FromDirect(lc);
 }
 
-#define F(a) _mm_set_ps1(a)
-#define M(a, b) _mm_mul_ps(a, b)
-#define A(a, b) _mm_add_ps(a, b)
-#define S(a, b) _mm_sub_ps(a, b)
+#define F(a) SIMD_MM(set_ps1)(a)
+#define M(a, b) SIMD_MM(mul_ps)(a, b)
+#define A(a, b) SIMD_MM(add_ps)(a, b)
+#define S(a, b) SIMD_MM(sub_ps)(a, b)
 
-inline __m128 clip(__m128 value, __m128 _saturation, __m128 _saturationinverse)
+inline SIMD_M128 clip(SIMD_M128 value, SIMD_M128 _saturation, SIMD_M128 _saturationinverse)
 {
-    const __m128 minusone = F(-1), one = F(1), onethird = F(1.f / 3.f);
+    const auto minusone = F(-1), one = F(1), onethird = F(1.f / 3.f);
     auto vtsi = M(value, _saturationinverse);
-    auto v2 = _mm_min_ps(one, _mm_max_ps(minusone, vtsi));
+    auto v2 = SIMD_MM(min_ps)(one, SIMD_MM(max_ps)(minusone, vtsi));
     auto v23 = M(v2, M(v2, v2));
     auto vkern = S(v2, M(onethird, v23));
     auto res = M(_saturation, vkern);
@@ -157,9 +157,9 @@ inline __m128 clip(__m128 value, __m128 _saturation, __m128 _saturationinverse)
     return res;
 }
 
-inline void calculateDerivatives(__m128 input, __m128 *dstate, __m128 *state, __m128 cutoff,
-                                 __m128 resonance, __m128 _saturation, __m128 _saturationInv,
-                                 __m128 gComp)
+inline void calculateDerivatives(SIMD_M128 input, SIMD_M128 *dstate, SIMD_M128 *state,
+                                 SIMD_M128 cutoff, SIMD_M128 resonance, SIMD_M128 _saturation,
+                                 SIMD_M128 _saturationInv, SIMD_M128 gComp)
 {
     auto satstate0 = clip(state[0], _saturation, _saturationInv);
     auto satstate1 = clip(state[1], _saturation, _saturationInv);
@@ -182,20 +182,20 @@ inline void calculateDerivatives(__m128 input, __m128 *dstate, __m128 *state, __
     dstate[3] = M(cutoff, S(satstate2, clip(state[3], _saturation, _saturationInv)));
 }
 
-inline __m128 process(QuadFilterUnitState *__restrict f, __m128 input)
+inline SIMD_M128 process(QuadFilterUnitState *__restrict f, SIMD_M128 input)
 {
     int i;
-    __m128 deriv1[4], deriv2[4], deriv3[4], deriv4[4], tempState[4];
+    SIMD_M128 deriv1[4], deriv2[4], deriv3[4], deriv4[4], tempState[4];
 
-    __m128 *state = &(f->R[0]);
+    auto *state = &(f->R[0]);
 
     auto stepSize = F(f->sampleRateInv * extraOversampleInv),
          halfStepSize = F(0.5f * f->sampleRateInv * extraOversampleInv);
 
-    const __m128 oneoversix = F(1.f / 6.f), two = F(2.f), dFac = F(extraOversampleInv),
-                 sat = F(saturation), satInv = F(saturationInverse);
+    const auto oneoversix = F(1.f / 6.f), two = F(2.f), dFac = F(extraOversampleInv),
+               sat = F(saturation), satInv = F(saturationInverse);
 
-    __m128 outputOS[extraOversample];
+    SIMD_M128 outputOS[extraOversample];
 
     for (int osi = 0; osi < extraOversample; ++osi)
     {
@@ -204,9 +204,9 @@ inline __m128 process(QuadFilterUnitState *__restrict f, __m128 input)
             f->C[j] = A(f->C[j], M(dFac, f->dC[j]));
         }
 
-        __m128 cutoff = f->C[rkm_cutoff];
-        __m128 resonance = f->C[rkm_reso];
-        __m128 gComp = f->C[rkm_gComp];
+        auto cutoff = f->C[rkm_cutoff];
+        auto resonance = f->C[rkm_reso];
+        auto gComp = f->C[rkm_gComp];
 
         calculateDerivatives(input, deriv1, state, cutoff, resonance, sat, satInv, gComp);
         for (i = 0; i < 4; i++)
@@ -240,7 +240,7 @@ inline __m128 process(QuadFilterUnitState *__restrict f, __m128 input)
         outputOS[osi] = state[3];
 
         // Zero stuffing
-        input = _mm_setzero_ps();
+        input = SIMD_MM(setzero_ps)();
     }
 
     /*
@@ -254,10 +254,10 @@ inline __m128 process(QuadFilterUnitState *__restrict f, __m128 input)
     ** Anyway: (2 * sin(pi * x) * sin((pi * x) / 2)) / (pi^2 * x^2), for points -1.5, -1, 0.5, and 0
     **
     */
-    auto ov = _mm_setzero_ps();
-    __m128 windowFactors[4];
+    auto ov = SIMD_MM(setzero_ps)();
+    SIMD_M128 windowFactors[4];
     windowFactors[0] = F(-0.0636844f);
-    windowFactors[1] = _mm_setzero_ps();
+    windowFactors[1] = SIMD_MM(setzero_ps)();
     windowFactors[2] = F(0.57315917f);
     windowFactors[3] = F(1);
 
@@ -347,20 +347,19 @@ inline void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, float f
     cm->FromDirect(lC);
 }
 
-inline __m128 process(QuadFilterUnitState *__restrict f, __m128 in)
+inline SIMD_M128 process(QuadFilterUnitState *__restrict f, SIMD_M128 in)
 {
-#define F(a) _mm_set_ps1(a)
-#define M(a, b) _mm_mul_ps(a, b)
-#define A(a, b) _mm_add_ps(a, b)
-#define S(a, b) _mm_sub_ps(a, b)
+#define F(a) SIMD_MM(set_ps1)(a)
+#define M(a, b) SIMD_MM(mul_ps)(a, b)
+#define A(a, b) SIMD_MM(add_ps)(a, b)
+#define S(a, b) SIMD_MM(sub_ps)(a, b)
 
-    const __m128 dFac = F(0.5f), half = F(0.5f), one = F(1.0f), four = F(4.0f), m18730 = F(1.8730f),
-                 m04955 = F(0.4995f), mneg06490 = F(-0.6490f), m09988 = F(0.9988f),
-                 mneg39364 = F(-3.9364f), m18409 = F(1.8409f), m09968 = F(0.9968f),
-                 thermal = F(1.f / 70.f), oneoverthermal = F(70.0f),
-                 neg2pi = F(-2.0f * (float)M_PI);
+    const auto dFac = F(0.5f), half = F(0.5f), one = F(1.0f), four = F(4.0f), m18730 = F(1.8730f),
+               m04955 = F(0.4995f), mneg06490 = F(-0.6490f), m09988 = F(0.9988f),
+               mneg39364 = F(-3.9364f), m18409 = F(1.8409f), m09968 = F(0.9968f),
+               thermal = F(1.f / 70.f), oneoverthermal = F(70.0f), neg2pi = F(-2.0f * (float)M_PI);
 
-    __m128 outputOS[2];
+    SIMD_M128 outputOS[2];
 
     for (int j = 0; j < 2; ++j)
     {
@@ -383,12 +382,12 @@ inline __m128 process(QuadFilterUnitState *__restrict f, __m128 in)
 
         for (int k = 0; k < n_hcoeffs; ++k)
         {
-            f->C[k] = _mm_add_ps(f->C[k], _mm_mul_ps(dFac, f->dC[k]));
+            f->C[k] = SIMD_MM(add_ps)(f->C[k], SIMD_MM(mul_ps)(dFac, f->dC[k]));
         }
 
         // float input = in - resQuad * ( delay[5] - gComp * in )   // Model as an impulse stream
-        auto input =
-            _mm_sub_ps(in, _mm_mul_ps(resquad, S(f->R[h_delay + 5], M(f->C[h_gComp], in))));
+        auto input = SIMD_MM(sub_ps)(
+            in, SIMD_MM(mul_ps)(resquad, S(f->R[h_delay + 5], M(f->C[h_gComp], in))));
 
         // delay[0] = stage[0] = delay[0] + tune * (tanh(input * thermal) - stageTanh[0]);
         f->R[h_stage + 0] =
@@ -416,7 +415,7 @@ inline __m128 process(QuadFilterUnitState *__restrict f, __m128 in)
 
         // 0.5 sample delay for phase compensation
         // delay[5] = (stage[3] + delay[4]) * 0.5;
-        f->R[h_delay + 5] = M(_mm_set_ps1(0.5), A(f->R[h_stage + 3], f->R[h_delay + 4]));
+        f->R[h_delay + 5] = M(SIMD_MM(set_ps1)(0.5), A(f->R[h_stage + 3], f->R[h_delay + 4]));
 
         // delay[4] = stage[3];
         f->R[h_delay + 4] = f->R[h_stage + 3];
