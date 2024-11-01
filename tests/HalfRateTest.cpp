@@ -1,3 +1,4 @@
+#include "sst/utilities/globals.h"
 #include "sst/filters/HalfRateFilter.h"
 
 #include "TestUtils.h"
