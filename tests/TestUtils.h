@@ -27,7 +27,8 @@ inline float runSine(sst::filters::QuadFilterUnitState &filterState,
                      sst::filters::FilterUnitQFPtr &filterUnitPtr, float testFreq, int numSamples)
 {
     // reset filter state
-    std::fill(filterState.R, &filterState.R[sst::filters::n_filter_registers], SIMD_MM(setzero_ps)());
+    std::fill(filterState.R, &filterState.R[sst::filters::n_filter_registers],
+              SIMD_MM(setzero_ps)());
 
     std::vector<float> y(numSamples, 0.0f);
     for (int i = 0; i < numSamples; ++i)
