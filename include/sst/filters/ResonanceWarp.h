@@ -40,10 +40,10 @@ static float clampedFrequency(float pitch, float sampleRate, TuningProvider *pro
     return freq;
 }
 
-#define F(a) _mm_set_ps1(a)
-#define M(a, b) _mm_mul_ps(a, b)
-#define A(a, b) _mm_add_ps(a, b)
-#define S(a, b) _mm_sub_ps(a, b)
+#define F(a) SIMD_MM(set_ps1)(a)
+#define M(a, b) SIMD_MM(mul_ps)(a, b)
+#define A(a, b) SIMD_MM(add_ps)(a, b)
+#define S(a, b) SIMD_MM(sub_ps)(a, b)
 
 enum Saturator
 {
@@ -51,12 +51,12 @@ enum Saturator
     SAT_SOFT
 };
 
-static inline __m128 doNLFilter(const __m128 input, const __m128 a1, const __m128 a2,
-                                const __m128 b0, const __m128 b1, const __m128 b2, const int sat,
-                                __m128 &z1, __m128 &z2) noexcept
+static inline SIMD_M128 doNLFilter(const SIMD_M128 input, const SIMD_M128 a1, const SIMD_M128 a2,
+                                   const SIMD_M128 b0, const SIMD_M128 b1, const SIMD_M128 b2,
+                                   const int sat, SIMD_M128 &z1, SIMD_M128 &z2) noexcept
 {
     // out = z1 + b0 * input
-    const __m128 out = A(z1, M(b0, input));
+    const auto out = A(z1, M(b0, input));
 
     // z1 = z2 + b1 * input - a1 * out
     z1 = A(z2, S(M(b1, input), M(a1, out)));
@@ -157,7 +157,7 @@ void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, float freq, fl
 }
 
 template <FilterSubType subtype>
-inline __m128 process(QuadFilterUnitState *__restrict f, __m128 input)
+inline SIMD_M128 process(QuadFilterUnitState *__restrict f, SIMD_M128 input)
 {
     // lower 2 bits of subtype is the stage count
     const int stages = subtype & 3;

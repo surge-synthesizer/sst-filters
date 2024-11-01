@@ -27,17 +27,17 @@ inline float runSine(sst::filters::QuadFilterUnitState &filterState,
                      sst::filters::FilterUnitQFPtr &filterUnitPtr, float testFreq, int numSamples)
 {
     // reset filter state
-    std::fill(filterState.R, &filterState.R[sst::filters::n_filter_registers], _mm_setzero_ps());
+    std::fill(filterState.R, &filterState.R[sst::filters::n_filter_registers], SIMD_MM(setzero_ps)());
 
     std::vector<float> y(numSamples, 0.0f);
     for (int i = 0; i < numSamples; ++i)
     {
         auto x = (float)std::sin(2.0 * M_PI * (double)i * testFreq / sampleRate);
 
-        auto yVec = filterUnitPtr(&filterState, _mm_set_ps1(x));
+        auto yVec = filterUnitPtr(&filterState, SIMD_MM(set_ps1)(x));
 
         float yArr alignas(16)[4];
-        _mm_store_ps(yArr, yVec);
+        SIMD_MM(store_ps)(yArr, yVec);
         y[i] = yArr[0];
     }
 

@@ -34,11 +34,11 @@ static float clampedFrequency(float pitch, float sampleRate, TuningProvider *pro
     return std::clamp(freq, 5.f, (sampleRate * 0.3f));
 }
 
-#define F(a) _mm_set_ps1(a)
-#define M(a, b) _mm_mul_ps(a, b)
-#define D(a, b) _mm_div_ps(a, b)
-#define A(a, b) _mm_add_ps(a, b)
-#define S(a, b) _mm_sub_ps(a, b)
+#define F(a) SIMD_MM(set_ps1)(a)
+#define M(a, b) SIMD_MM(mul_ps)(a, b)
+#define D(a, b) SIMD_MM(div_ps)(a, b)
+#define A(a, b) SIMD_MM(add_ps)(a, b)
+#define S(a, b) SIMD_MM(sub_ps)(a, b)
 
 // note that things that were NOPs in the Odin code have been removed.
 // m_gamma remains 1.0 so xn * m_gamma == xn; that's a NOP
@@ -47,14 +47,14 @@ static float clampedFrequency(float pitch, float sampleRate, TuningProvider *pro
 // m_a_0 remains 1 so that's also a NOP
 // so we only need to compute:
 // (xn - z) * alpha + za
-static inline __m128 doLpf(const __m128 &G, const __m128 &input, __m128 &z) noexcept
+static inline SIMD_M128 doLpf(const SIMD_M128 &G, const SIMD_M128 &input, SIMD_M128 &z) noexcept
 {
-    const __m128 v = M(S(input, z), G);
-    const __m128 result = A(v, z);
+    const auto v = M(S(input, z), G);
+    const auto result = A(v, z);
     z = A(v, result);
     return result;
 }
-static inline __m128 doHpf(const __m128 &G, const __m128 &input, __m128 &z) noexcept
+static inline SIMD_M128 doHpf(const SIMD_M128 &G, const SIMD_M128 &input, SIMD_M128 &z) noexcept
 {
     return S(input, doLpf(G, input, z));
 }
@@ -125,47 +125,47 @@ inline void processCoeffs(QuadFilterUnitState *__restrict f)
         f->C[i] = A(f->C[i], f->dC[i]);
 }
 
-inline __m128 process_lp(QuadFilterUnitState *__restrict f, __m128 input)
+inline SIMD_M128 process_lp(QuadFilterUnitState *__restrict f, SIMD_M128 input)
 {
     processCoeffs(f);
 
-    const __m128 y1 = doLpf(f->C[k35_G], input, f->R[k35_lz]);
+    const auto y1 = doLpf(f->C[k35_G], input, f->R[k35_lz]);
     // (lpf beta * lpf2 feedback) + (hpf beta * hpf1 feedback)
-    const __m128 s35 = A(M(f->C[k35_lb], f->R[k35_2z]), M(f->C[k35_hb], f->R[k35_hz]));
+    const auto s35 = A(M(f->C[k35_lb], f->R[k35_2z]), M(f->C[k35_hb], f->R[k35_hz]));
     // alpha * (y1 + s35)
-    const __m128 u_clean = M(f->C[k35_alpha], A(y1, s35));
-    const __m128 u_driven = basic_blocks::dsp::fasttanhSSEclamped(M(u_clean, f->C[k35_saturation]));
-    const __m128 u =
+    const auto u_clean = M(f->C[k35_alpha], A(y1, s35));
+    const auto u_driven = basic_blocks::dsp::fasttanhSSEclamped(M(u_clean, f->C[k35_saturation]));
+    const auto u =
         A(M(u_clean, f->C[k35_saturation_blend_inv]), M(u_driven, f->C[k35_saturation_blend]));
 
     // mk * lpf2(u)
-    const __m128 y = M(f->C[k35_k], doLpf(f->C[k35_G], u, f->R[k35_2z]));
+    const auto y = M(f->C[k35_k], doLpf(f->C[k35_G], u, f->R[k35_2z]));
     doHpf(f->C[k35_G], y, f->R[k35_hz]);
 
-    const __m128 result = D(y, f->C[k35_k]);
+    const auto result = D(y, f->C[k35_k]);
 
     return result;
 }
 
-inline __m128 process_hp(QuadFilterUnitState *__restrict f, __m128 input)
+inline SIMD_M128 process_hp(QuadFilterUnitState *__restrict f, SIMD_M128 input)
 {
     processCoeffs(f);
 
-    const __m128 y1 = doHpf(f->C[k35_G], input, f->R[k35_hz]);
+    const auto y1 = doHpf(f->C[k35_G], input, f->R[k35_hz]);
     // (lpf beta * lpf2 feedback) + (hpf beta * hpf1 feedback)
-    const __m128 s35 = A(M(f->C[k35_hb], f->R[k35_2z]), M(f->C[k35_lb], f->R[k35_lz]));
+    const auto s35 = A(M(f->C[k35_hb], f->R[k35_2z]), M(f->C[k35_lb], f->R[k35_lz]));
     // alpha * (y1 + s35)
-    const __m128 u = M(f->C[k35_alpha], A(y1, s35));
+    const auto u = M(f->C[k35_alpha], A(y1, s35));
 
     // mk * lpf2(u)
-    const __m128 y_clean = M(f->C[k35_k], u);
-    const __m128 y_driven = basic_blocks::dsp::fasttanhSSEclamped(M(y_clean, f->C[k35_saturation]));
-    const __m128 y =
+    const auto y_clean = M(f->C[k35_k], u);
+    const auto y_driven = basic_blocks::dsp::fasttanhSSEclamped(M(y_clean, f->C[k35_saturation]));
+    const auto y =
         A(M(y_clean, f->C[k35_saturation_blend_inv]), M(y_driven, f->C[k35_saturation_blend]));
 
     doLpf(f->C[k35_G], doHpf(f->C[k35_G], y, f->R[k35_2z]), f->R[k35_lz]);
 
-    const __m128 result = D(y, f->C[k35_k]);
+    const auto result = D(y, f->C[k35_k]);
 
     return result;
 }

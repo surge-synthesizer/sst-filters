@@ -28,16 +28,16 @@ class alignas(16) HalfRateFilter
 {
   private:
     // Remember leave these first so they stay aligned
-    __m128 va[halfrate_max_M];
-    __m128 vx0[halfrate_max_M];
-    __m128 vx1[halfrate_max_M];
-    __m128 vx2[halfrate_max_M];
-    __m128 vy0[halfrate_max_M];
-    __m128 vy1[halfrate_max_M];
-    __m128 vy2[halfrate_max_M];
-    __m128 oldout;
+    SIMD_M128 va[halfrate_max_M];
+    SIMD_M128 vx0[halfrate_max_M];
+    SIMD_M128 vx1[halfrate_max_M];
+    SIMD_M128 vx2[halfrate_max_M];
+    SIMD_M128 vy0[halfrate_max_M];
+    SIMD_M128 vy1[halfrate_max_M];
+    SIMD_M128 vy2[halfrate_max_M];
+    SIMD_M128 oldout;
 
-    const __m128 half = _mm_set_ps1(0.5f);
+    const SIMD_M128 half = SIMD_MM(set_ps1)(0.5f);
 
   public:
     /**
@@ -58,30 +58,30 @@ class alignas(16) HalfRateFilter
 
     void process_block(float *floatL, float *floatR, int nsamples)
     {
-        __m128 *__restrict L = (__m128 *)floatL;
-        __m128 *__restrict R = (__m128 *)floatR;
-        __m128 o[hr_BLOCK_SIZE];
+        SIMD_M128 *__restrict L = (SIMD_M128 *)floatL;
+        SIMD_M128 *__restrict R = (SIMD_M128 *)floatR;
+        SIMD_M128 o[hr_BLOCK_SIZE];
         auto N = nsamples;
         // fill the buffer with interleaved stereo samples
         for (int k = 0; k < N; k += 4)
         {
             //[o3,o2,o1,o0] = [L0,L0,R0,R0]
-            o[k] = _mm_shuffle_ps(L[k >> 2], R[k >> 2], _MM_SHUFFLE(0, 0, 0, 0));
-            o[k + 1] = _mm_shuffle_ps(L[k >> 2], R[k >> 2], _MM_SHUFFLE(1, 1, 1, 1));
-            o[k + 2] = _mm_shuffle_ps(L[k >> 2], R[k >> 2], _MM_SHUFFLE(2, 2, 2, 2));
-            o[k + 3] = _mm_shuffle_ps(L[k >> 2], R[k >> 2], _MM_SHUFFLE(3, 3, 3, 3));
+            o[k] = SIMD_MM(shuffle_ps)(L[k >> 2], R[k >> 2], SIMD_MM_SHUFFLE(0, 0, 0, 0));
+            o[k + 1] = SIMD_MM(shuffle_ps)(L[k >> 2], R[k >> 2], SIMD_MM_SHUFFLE(1, 1, 1, 1));
+            o[k + 2] = SIMD_MM(shuffle_ps)(L[k >> 2], R[k >> 2], SIMD_MM_SHUFFLE(2, 2, 2, 2));
+            o[k + 3] = SIMD_MM(shuffle_ps)(L[k >> 2], R[k >> 2], SIMD_MM_SHUFFLE(3, 3, 3, 3));
         }
 
         // process filters
         for (auto j = 0U; j < M; j++)
         {
-            __m128 tx0 = vx0[j];
-            __m128 tx1 = vx1[j];
-            __m128 tx2 = vx2[j];
-            __m128 ty0 = vy0[j];
-            __m128 ty1 = vy1[j];
-            __m128 ty2 = vy2[j];
-            __m128 ta = va[j];
+            auto tx0 = vx0[j];
+            auto tx1 = vx1[j];
+            auto tx2 = vx2[j];
+            auto ty0 = vy0[j];
+            auto ty1 = vy1[j];
+            auto ty2 = vy2[j];
+            auto ta = va[j];
 
             for (int k = 0; k < N; k += 2)
             {
@@ -93,7 +93,7 @@ class alignas(16) HalfRateFilter
                 ty2 = ty1;
                 ty1 = ty0;
                 // allpass filter 1
-                ty0 = _mm_add_ps(tx2, _mm_mul_ps(_mm_sub_ps(tx0, ty2), ta));
+                ty0 = SIMD_MM(add_ps)(tx2, SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(tx0, ty2), ta));
                 o[k] = ty0;
 
                 // shuffle inputs
@@ -104,7 +104,7 @@ class alignas(16) HalfRateFilter
                 ty2 = ty1;
                 ty1 = ty0;
                 // allpass filter 1
-                ty0 = _mm_add_ps(tx2, _mm_mul_ps(_mm_sub_ps(tx0, ty2), ta));
+                ty0 = SIMD_MM(add_ps)(tx2, SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(tx0, ty2), ta));
                 o[k + 1] = ty0;
             }
             vx0[j] = tx0;
@@ -135,40 +135,40 @@ class alignas(16) HalfRateFilter
 
         float *fL = (float *)L;
         float *fR = (float *)R;
-        __m128 faR = _mm_setzero_ps();
-        __m128 fbR = _mm_setzero_ps();
+        auto faR = SIMD_MM(setzero_ps)();
+        auto fbR = SIMD_MM(setzero_ps)();
 
         for (int k = 0; k < N; k++)
         {
             //	const double output=(filter_a.process(input)+oldout)*0.5;
             //	oldout=filter_b.process(input);
 
-            __m128 vL = _mm_add_ss(o[k], oldout);
-            vL = _mm_mul_ss(vL, half);
-            _mm_store_ss(&fL[k], vL);
+            auto vL = SIMD_MM(add_ss)(o[k], oldout);
+            vL = SIMD_MM(mul_ss)(vL, half);
+            SIMD_MM(store_ss)(&fL[k], vL);
 
-            faR = _mm_movehl_ps(faR, o[k]);
-            fbR = _mm_movehl_ps(fbR, oldout);
+            faR = SIMD_MM(movehl_ps)(faR, o[k]);
+            fbR = SIMD_MM(movehl_ps)(fbR, oldout);
 
-            __m128 vR = _mm_add_ss(faR, fbR);
-            vR = _mm_mul_ss(vR, half);
-            _mm_store_ss(&fR[k], vR);
+            auto vR = SIMD_MM(add_ss)(faR, fbR);
+            vR = SIMD_MM(mul_ss)(vR, half);
+            SIMD_MM(store_ss)(&fR[k], vR);
 
-            oldout = _mm_shuffle_ps(o[k], o[k], _MM_SHUFFLE(3, 3, 1, 1));
+            oldout = SIMD_MM(shuffle_ps)(o[k], o[k], SIMD_MM_SHUFFLE(3, 3, 1, 1));
         }
     }
     void process_block_D2(float *floatL, float *floatR, int nsamples, float *outL = 0,
                           float *outR = 0) // process in-place. the new block will be half the size
     {
-        __m128 *L = (__m128 *)floatL;
-        __m128 *R = (__m128 *)floatR;
-        __m128 o[hr_BLOCK_SIZE];
+        auto *L = (SIMD_M128 *)floatL;
+        auto *R = (SIMD_M128 *)floatR;
+        SIMD_M128 o[hr_BLOCK_SIZE];
 
         /*
          * fill the buffer with interleaved stereo samples by rotating the
          * input simd-in-time a bit
          *
-         * _mm_shuffle_ps(a,b,_MM_SHUFFLE(i,j,k,l)) returns a[i], a[j], b[k], b[l]
+         * SIMD_MM(shuffle_ps)(a,b,SIMD_MM_SHUFFLE(i,j,k,l)) returns a[i], a[j], b[k], b[l]
          *
          * So this loop makes o look like the rotation of L and R. That is
          *
@@ -178,10 +178,10 @@ class alignas(16) HalfRateFilter
          */
         for (int k = 0; k < nsamples; k += 4)
         {
-            o[k] = _mm_shuffle_ps(L[k >> 2], R[k >> 2], _MM_SHUFFLE(0, 0, 0, 0));
-            o[k + 1] = _mm_shuffle_ps(L[k >> 2], R[k >> 2], _MM_SHUFFLE(1, 1, 1, 1));
-            o[k + 2] = _mm_shuffle_ps(L[k >> 2], R[k >> 2], _MM_SHUFFLE(2, 2, 2, 2));
-            o[k + 3] = _mm_shuffle_ps(L[k >> 2], R[k >> 2], _MM_SHUFFLE(3, 3, 3, 3));
+            o[k] = SIMD_MM(shuffle_ps)(L[k >> 2], R[k >> 2], SIMD_MM_SHUFFLE(0, 0, 0, 0));
+            o[k + 1] = SIMD_MM(shuffle_ps)(L[k >> 2], R[k >> 2], SIMD_MM_SHUFFLE(1, 1, 1, 1));
+            o[k + 2] = SIMD_MM(shuffle_ps)(L[k >> 2], R[k >> 2], SIMD_MM_SHUFFLE(2, 2, 2, 2));
+            o[k + 3] = SIMD_MM(shuffle_ps)(L[k >> 2], R[k >> 2], SIMD_MM_SHUFFLE(3, 3, 3, 3));
         }
 
         /*
@@ -210,13 +210,13 @@ class alignas(16) HalfRateFilter
          */
         for (auto j = 0U; j < M; j++)
         {
-            __m128 tx0 = vx0[j];
-            __m128 tx1 = vx1[j];
-            __m128 tx2 = vx2[j];
-            __m128 ty0 = vy0[j];
-            __m128 ty1 = vy1[j];
-            __m128 ty2 = vy2[j];
-            __m128 ta = va[j];
+            auto tx0 = vx0[j];
+            auto tx1 = vx1[j];
+            auto tx2 = vx2[j];
+            auto ty0 = vy0[j];
+            auto ty1 = vy1[j];
+            auto ty2 = vy2[j];
+            auto ta = va[j];
 
             // Why is this loop hand-unrolled?
             for (int k = 0; k < nsamples; k += 2)
@@ -229,7 +229,7 @@ class alignas(16) HalfRateFilter
                 ty2 = ty1;
                 ty1 = ty0;
                 // allpass filter 1
-                ty0 = _mm_add_ps(tx2, _mm_mul_ps(_mm_sub_ps(tx0, ty2), ta));
+                ty0 = SIMD_MM(add_ps)(tx2, SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(tx0, ty2), ta));
                 o[k] = ty0;
 
                 // shuffle inputs
@@ -240,7 +240,7 @@ class alignas(16) HalfRateFilter
                 ty2 = ty1;
                 ty1 = ty0;
                 // allpass filter 1
-                ty0 = _mm_add_ps(tx2, _mm_mul_ps(_mm_sub_ps(tx0, ty2), ta));
+                ty0 = SIMD_MM(add_ps)(tx2, SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(tx0, ty2), ta));
                 o[k + 1] = ty0;
             }
             vx0[j] = tx0;
@@ -251,20 +251,20 @@ class alignas(16) HalfRateFilter
             vy2[j] = ty2;
         }
 
-        __m128 aR = _mm_setzero_ps();
-        __m128 bR = _mm_setzero_ps();
-        __m128 cR = _mm_setzero_ps();
-        __m128 dR = _mm_setzero_ps();
+        auto aR = SIMD_MM(setzero_ps)();
+        auto bR = SIMD_MM(setzero_ps)();
+        auto cR = SIMD_MM(setzero_ps)();
+        auto dR = SIMD_MM(setzero_ps)();
 
         if (outL)
-            L = (__m128 *)outL;
+            L = (SIMD_M128 *)outL;
         if (outR)
-            R = (__m128 *)outR;
+            R = (SIMD_M128 *)outR;
 
         /*
          * OK so now we have all the filtered signals we want to reconstruct the output.
          * This is basically the sample selection stage. To read this code you need
-         * to remember that _mm_movehl_ps(a,b) results in b[3], b[4], a[3], a[4] as the
+         * to remember that SIMD_MM(movehl_ps)(a,b) results in b[3], b[4], a[3], a[4] as the
          * simd output.
          *
          * The code had this comment
@@ -274,29 +274,29 @@ class alignas(16) HalfRateFilter
          *
          * atop this code
          *
-         * __m128 tL0 = _mm_shuffle_ps(o[k], o[k], _MM_SHUFFLE(1, 1, 1, 1));
-         * __m128 tR0 = _mm_shuffle_ps(o[k], o[k], _MM_SHUFFLE(3, 3, 3, 3));
-         * __m128 aL = _mm_add_ss(tL0, o[k + 1]);
-         * aR = _mm_movehl_ps(aR, o[k + 1]);
-         * aR = _mm_add_ss(aR, tR0);
+         * auto tL0 = SIMD_MM(shuffle_ps)(o[k], o[k], SIMD_MM_SHUFFLE(1, 1, 1, 1));
+         * auto tR0 = SIMD_MM(shuffle_ps)(o[k], o[k], SIMD_MM_SHUFFLE(3, 3, 3, 3));
+         * auto aL = SIMD_MM(add_ss)(tL0, o[k + 1]);
+         * aR = SIMD_MM(movehl_ps)(aR, o[k + 1]);
+         * aR = SIMD_MM(add_ss)(aR, tR0);
          *
          * So can we make that tie out? Remembering o now has the for B_L A_L, B_R, A_R
          *
-         * So tL0 = _mm_shuffle_ps(o[k], o[k], 11111)
+         * So tL0 = SIMD_MM(shuffle_ps)(o[k], o[k], 11111)
          * or tL0 = o[k][1] in every slot or tl0 is A_L across the board at sample k.
          * Similarly tR0 = A_R across the board at sample K.
          *
-         * Now recall _mm_add_ss(a,b) gives you (a[0]+b[0], a[1], a[2], a[3]) so now we do
+         * Now recall SIMD_MM(add_ss)(a,b) gives you (a[0]+b[0], a[1], a[2], a[3]) so now we do
          *
-         * __m128 aL = _mm_add_ss(tL0, o[k + 1]);
+         * auto aL = SIMD_MM(add_ss)(tL0, o[k + 1]);
          * aL = (A_L[k] + B_L[k+1], A_L[k],  A_L[k], A_L[k]);
          *
          * Now
          *
-         * aR = _mm_movehl_ps(aR, o[k + 1]);
+         * aR = SIMD_MM(movehl_ps)(aR, o[k + 1]);
          * aR = B_R[k+1], A_R[k+1], aR[3], aR[4]
          *
-         * aR = _mm_add_ss(aR, tR0) or
+         * aR = SIMD_MM(add_ss)(aR, tR0) or
          * aR = (A_R[k] + B_R[k+1], A_R[k+1], aR[3], aR[4])
          *
          * (At this point I'm suspecting that the rest of the SIMD registeres in A wont matter)
@@ -306,14 +306,14 @@ class alignas(16) HalfRateFilter
          *
          * So once those stages are assembled we do this
          *
-         * aL = _mm_movelh_ps(aL, bL);
-         * cL = _mm_movelh_ps(cL, dL);
-         * L[k >> 3] = _mm_shuffle_ps(aL, cL, _MM_SHUFFLE(2, 0, 2, 0));
+         * aL = SIMD_MM(movelh_ps)(aL, bL);
+         * cL = SIMD_MM(movelh_ps)(cL, dL);
+         * L[k >> 3] = SIMD_MM(shuffle_ps)(aL, cL, SIMD_MM_SHUFFLE(2, 0, 2, 0));
          *
          * And similarly for R. So what's that doing. So first of all _mm_novelh_ps [note lh
          * not hl] has signatlre
          *
-         * _mm_movelh_ps(a,b) = a[0],a[1],b[0],b[1]
+         * SIMD_MM(movelh_ps)(a,b) = a[0],a[1],b[0],b[1]
          *
          * so this sets
          *
@@ -342,78 +342,78 @@ class alignas(16) HalfRateFilter
             /*	const double output=(filter_a.process(input)+oldout)*0.5;
             oldout=filter_b.process(input);*/
 
-            __m128 tL0 = _mm_shuffle_ps(o[k], o[k], _MM_SHUFFLE(1, 1, 1, 1));
-            __m128 tR0 = _mm_shuffle_ps(o[k], o[k], _MM_SHUFFLE(3, 3, 3, 3));
-            __m128 aL = _mm_add_ss(tL0, o[k + 1]);
-            aR = _mm_movehl_ps(aR, o[k + 1]);
-            aR = _mm_add_ss(aR, tR0);
+            auto tL0 = SIMD_MM(shuffle_ps)(o[k], o[k], SIMD_MM_SHUFFLE(1, 1, 1, 1));
+            auto tR0 = SIMD_MM(shuffle_ps)(o[k], o[k], SIMD_MM_SHUFFLE(3, 3, 3, 3));
+            auto aL = SIMD_MM(add_ss)(tL0, o[k + 1]);
+            aR = SIMD_MM(movehl_ps)(aR, o[k + 1]);
+            aR = SIMD_MM(add_ss)(aR, tR0);
 
-            tL0 = _mm_shuffle_ps(o[k + 2], o[k + 2], _MM_SHUFFLE(1, 1, 1, 1));
-            tR0 = _mm_shuffle_ps(o[k + 2], o[k + 2], _MM_SHUFFLE(3, 3, 3, 3));
-            __m128 bL = _mm_add_ss(tL0, o[k + 3]);
-            bR = _mm_movehl_ps(aR, o[k + 3]);
-            bR = _mm_add_ss(bR, tR0);
+            tL0 = SIMD_MM(shuffle_ps)(o[k + 2], o[k + 2], SIMD_MM_SHUFFLE(1, 1, 1, 1));
+            tR0 = SIMD_MM(shuffle_ps)(o[k + 2], o[k + 2], SIMD_MM_SHUFFLE(3, 3, 3, 3));
+            auto bL = SIMD_MM(add_ss)(tL0, o[k + 3]);
+            bR = SIMD_MM(movehl_ps)(aR, o[k + 3]);
+            bR = SIMD_MM(add_ss)(bR, tR0);
 
-            tL0 = _mm_shuffle_ps(o[k + 4], o[k + 4], _MM_SHUFFLE(1, 1, 1, 1));
-            tR0 = _mm_shuffle_ps(o[k + 4], o[k + 4], _MM_SHUFFLE(3, 3, 3, 3));
-            __m128 cL = _mm_add_ss(tL0, o[k + 5]);
-            cR = _mm_movehl_ps(cR, o[k + 5]);
-            cR = _mm_add_ss(cR, tR0);
+            tL0 = SIMD_MM(shuffle_ps)(o[k + 4], o[k + 4], SIMD_MM_SHUFFLE(1, 1, 1, 1));
+            tR0 = SIMD_MM(shuffle_ps)(o[k + 4], o[k + 4], SIMD_MM_SHUFFLE(3, 3, 3, 3));
+            auto cL = SIMD_MM(add_ss)(tL0, o[k + 5]);
+            cR = SIMD_MM(movehl_ps)(cR, o[k + 5]);
+            cR = SIMD_MM(add_ss)(cR, tR0);
 
-            tL0 = _mm_shuffle_ps(o[k + 6], o[k + 6], _MM_SHUFFLE(1, 1, 1, 1));
-            tR0 = _mm_shuffle_ps(o[k + 6], o[k + 6], _MM_SHUFFLE(3, 3, 3, 3));
-            __m128 dL = _mm_add_ss(tL0, o[k + 7]);
-            dR = _mm_movehl_ps(dR, o[k + 7]);
-            dR = _mm_add_ss(dR, tR0);
+            tL0 = SIMD_MM(shuffle_ps)(o[k + 6], o[k + 6], SIMD_MM_SHUFFLE(1, 1, 1, 1));
+            tR0 = SIMD_MM(shuffle_ps)(o[k + 6], o[k + 6], SIMD_MM_SHUFFLE(3, 3, 3, 3));
+            auto dL = SIMD_MM(add_ss)(tL0, o[k + 7]);
+            dR = SIMD_MM(movehl_ps)(dR, o[k + 7]);
+            dR = SIMD_MM(add_ss)(dR, tR0);
 
-            aL = _mm_movelh_ps(aL, bL);
-            cL = _mm_movelh_ps(cL, dL);
-            aR = _mm_movelh_ps(aR, bR);
-            cR = _mm_movelh_ps(cR, dR);
+            aL = SIMD_MM(movelh_ps)(aL, bL);
+            cL = SIMD_MM(movelh_ps)(cL, dL);
+            aR = SIMD_MM(movelh_ps)(aR, bR);
+            cR = SIMD_MM(movelh_ps)(cR, dR);
 
-            L[k >> 3] = _mm_shuffle_ps(aL, cL, _MM_SHUFFLE(2, 0, 2, 0));
-            R[k >> 3] = _mm_shuffle_ps(aR, cR, _MM_SHUFFLE(2, 0, 2, 0));
+            L[k >> 3] = SIMD_MM(shuffle_ps)(aL, cL, SIMD_MM_SHUFFLE(2, 0, 2, 0));
+            R[k >> 3] = SIMD_MM(shuffle_ps)(aR, cR, SIMD_MM_SHUFFLE(2, 0, 2, 0));
 
             // optional: *=0.5;
-            const __m128 half = _mm_set_ps1(0.5f);
-            L[k >> 3] = _mm_mul_ps(L[k >> 3], half);
-            R[k >> 3] = _mm_mul_ps(R[k >> 3], half);
+            const auto half = SIMD_MM(set_ps1)(0.5f);
+            L[k >> 3] = SIMD_MM(mul_ps)(L[k >> 3], half);
+            R[k >> 3] = SIMD_MM(mul_ps)(R[k >> 3], half);
         }
     }
 
     void process_block_U2(float *floatL_in, float *floatR_in, float *floatL, float *floatR,
                           int nsamples)
     {
-        __m128 *L = (__m128 *)floatL;
-        __m128 *R = (__m128 *)floatR;
-        __m128 *L_in = (__m128 *)floatL_in;
-        __m128 *R_in = (__m128 *)floatR_in;
+        auto *L = (SIMD_M128 *)floatL;
+        auto *R = (SIMD_M128 *)floatR;
+        auto *L_in = (SIMD_M128 *)floatL_in;
+        auto *R_in = (SIMD_M128 *)floatR_in;
 
-        __m128 o[hr_BLOCK_SIZE];
+        SIMD_M128 o[hr_BLOCK_SIZE];
         // fill the buffer with interleaved stereo samples
         for (int k = 0; k < nsamples; k += 8)
         {
             //[o3,o2,o1,o0] = [L0,L0,R0,R0]
-            o[k] = _mm_shuffle_ps(L_in[k >> 3], R_in[k >> 3], _MM_SHUFFLE(0, 0, 0, 0));
-            o[k + 1] = _mm_setzero_ps();
-            o[k + 2] = _mm_shuffle_ps(L_in[k >> 3], R_in[k >> 3], _MM_SHUFFLE(1, 1, 1, 1));
-            o[k + 3] = _mm_setzero_ps();
-            o[k + 4] = _mm_shuffle_ps(L_in[k >> 3], R_in[k >> 3], _MM_SHUFFLE(2, 2, 2, 2));
-            o[k + 5] = _mm_setzero_ps();
-            o[k + 6] = _mm_shuffle_ps(L_in[k >> 3], R_in[k >> 3], _MM_SHUFFLE(3, 3, 3, 3));
-            o[k + 7] = _mm_setzero_ps();
+            o[k] = SIMD_MM(shuffle_ps)(L_in[k >> 3], R_in[k >> 3], SIMD_MM_SHUFFLE(0, 0, 0, 0));
+            o[k + 1] = SIMD_MM(setzero_ps)();
+            o[k + 2] = SIMD_MM(shuffle_ps)(L_in[k >> 3], R_in[k >> 3], SIMD_MM_SHUFFLE(1, 1, 1, 1));
+            o[k + 3] = SIMD_MM(setzero_ps)();
+            o[k + 4] = SIMD_MM(shuffle_ps)(L_in[k >> 3], R_in[k >> 3], SIMD_MM_SHUFFLE(2, 2, 2, 2));
+            o[k + 5] = SIMD_MM(setzero_ps)();
+            o[k + 6] = SIMD_MM(shuffle_ps)(L_in[k >> 3], R_in[k >> 3], SIMD_MM_SHUFFLE(3, 3, 3, 3));
+            o[k + 7] = SIMD_MM(setzero_ps)();
         }
 
         // process filters
         for (auto j = 0U; j < M; j++)
         {
-            __m128 tx0 = vx0[j];
-            __m128 tx1 = vx1[j];
-            __m128 tx2 = vx2[j];
-            __m128 ty0 = vy0[j];
-            __m128 ty1 = vy1[j];
-            __m128 ty2 = vy2[j];
-            __m128 ta = va[j];
+            auto tx0 = vx0[j];
+            auto tx1 = vx1[j];
+            auto tx2 = vx2[j];
+            auto ty0 = vy0[j];
+            auto ty1 = vy1[j];
+            auto ty2 = vy2[j];
+            auto ta = va[j];
 
             for (int k = 0; k < nsamples; k += 2)
             {
@@ -425,7 +425,7 @@ class alignas(16) HalfRateFilter
                 ty2 = ty1;
                 ty1 = ty0;
                 // allpass filter 1
-                ty0 = _mm_add_ps(tx2, _mm_mul_ps(_mm_sub_ps(tx0, ty2), ta));
+                ty0 = SIMD_MM(add_ps)(tx2, SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(tx0, ty2), ta));
                 o[k] = ty0;
 
                 // shuffle inputs
@@ -436,7 +436,7 @@ class alignas(16) HalfRateFilter
                 ty2 = ty1;
                 ty1 = ty0;
                 // allpass filter 1
-                ty0 = _mm_add_ps(tx2, _mm_mul_ps(_mm_sub_ps(tx0, ty2), ta));
+                ty0 = SIMD_MM(add_ps)(tx2, SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(tx0, ty2), ta));
                 o[k + 1] = ty0;
             }
             vx0[j] = tx0;
@@ -447,33 +447,33 @@ class alignas(16) HalfRateFilter
             vy2[j] = ty2;
         }
 
-        /*__m128 aR = _mm_setzero_ps();
-        __m128 bR = _mm_setzero_ps();
-        __m128 cR = _mm_setzero_ps();
-        __m128 dR = _mm_setzero_ps();*/
+        /*auto aR = SIMD_MM(setzero_ps)();
+        auto bR = SIMD_MM(setzero_ps)();
+        auto cR = SIMD_MM(setzero_ps)();
+        auto dR = SIMD_MM(setzero_ps)();*/
 
         float *fL = (float *)L;
         float *fR = (float *)R;
-        __m128 faR = _mm_setzero_ps();
-        __m128 fbR = _mm_setzero_ps();
+        auto faR = SIMD_MM(setzero_ps)();
+        auto fbR = SIMD_MM(setzero_ps)();
 
         for (int k = 0; k < nsamples; k++)
         {
             //	const double output=(filter_a.process(input)+oldout)*0.5;
             //	oldout=filter_b.process(input);
 
-            __m128 vL = _mm_add_ss(o[k], oldout);
-            vL = _mm_mul_ss(vL, half);
-            _mm_store_ss(&fL[k], vL);
+            auto vL = SIMD_MM(add_ss)(o[k], oldout);
+            vL = SIMD_MM(mul_ss)(vL, half);
+            SIMD_MM(store_ss)(&fL[k], vL);
 
-            faR = _mm_movehl_ps(faR, o[k]);
-            fbR = _mm_movehl_ps(fbR, oldout);
+            faR = SIMD_MM(movehl_ps)(faR, o[k]);
+            fbR = SIMD_MM(movehl_ps)(fbR, oldout);
 
-            __m128 vR = _mm_add_ss(faR, fbR);
-            vR = _mm_mul_ss(vR, half);
-            _mm_store_ss(&fR[k], vR);
+            auto vR = SIMD_MM(add_ss)(faR, fbR);
+            vR = SIMD_MM(mul_ss)(vR, half);
+            SIMD_MM(store_ss)(&fR[k], vR);
 
-            oldout = _mm_shuffle_ps(o[k], o[k], _MM_SHUFFLE(3, 3, 1, 1));
+            oldout = SIMD_MM(shuffle_ps)(o[k], o[k], SIMD_MM_SHUFFLE(3, 3, 1, 1));
         }
 
         // If you want to avoid downsampling, do this
@@ -496,7 +496,7 @@ class alignas(16) HalfRateFilter
     {
         for (auto i = 0U; i < M; i++)
         {
-            va[i] = _mm_setzero_ps();
+            va[i] = SIMD_MM(setzero_ps)();
         }
 
         int order = M << 1;
@@ -631,22 +631,22 @@ class alignas(16) HalfRateFilter
     {
         for (auto i = 0U; i < M; i++)
         {
-            // va[i] = _mm_set_ps(cA[i],cB[i],cA[i],cB[i]);
-            va[i] = _mm_set_ps(cB[i], cA[i], cB[i], cA[i]);
+            // va[i] = SIMD_MM(set_ps)(cA[i],cB[i],cA[i],cB[i]);
+            va[i] = SIMD_MM(set_ps)(cB[i], cA[i], cB[i], cA[i]);
         }
     }
     void reset()
     {
         for (auto i = 0U; i < M; i++)
         {
-            vx0[i] = _mm_setzero_ps();
-            vx1[i] = _mm_setzero_ps();
-            vx2[i] = _mm_setzero_ps();
-            vy0[i] = _mm_setzero_ps();
-            vy1[i] = _mm_setzero_ps();
-            vy2[i] = _mm_setzero_ps();
+            vx0[i] = SIMD_MM(setzero_ps)();
+            vx1[i] = SIMD_MM(setzero_ps)();
+            vx2[i] = SIMD_MM(setzero_ps)();
+            vy0[i] = SIMD_MM(setzero_ps)();
+            vy1[i] = SIMD_MM(setzero_ps)();
+            vy2[i] = SIMD_MM(setzero_ps)();
         }
-        oldout = _mm_setzero_ps();
+        oldout = SIMD_MM(setzero_ps)();
     }
 
   private:

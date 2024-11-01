@@ -63,20 +63,20 @@ enum Params
 
 static constexpr int ssew = 4;
 
-const __m128 zero = _mm_set1_ps(0.0f);
-const __m128 nine_two_zero = _mm_set1_ps(0.00920833f);
-const __m128 zero_zero_five = _mm_set1_ps(0.05f);
-const __m128 eight_seven_six = _mm_set1_ps(0.0876f);
-const __m128 one_zero_three = _mm_set1_ps(0.0103592f);
-const __m128 one_eight_five = _mm_set1_ps(0.185f);
-const __m128 zero_four_five = _mm_set1_ps(0.45f);
-const __m128 zero_five = _mm_set1_ps(0.5f);
-const __m128 one = _mm_set1_ps(1.0f);
-const __m128 one_three_five = _mm_set1_ps(1.035f);
-const __m128 two = _mm_set1_ps(2.0f);
-const __m128 three = _mm_set1_ps(3.0f);
-const __m128 gainAdjustment2Pole = _mm_set1_ps(0.74f);
-const __m128 gainAdjustment4Pole = _mm_set1_ps(0.6f);
+const auto zero = SIMD_MM(set1_ps)(0.0f);
+const auto nine_two_zero = SIMD_MM(set1_ps)(0.00920833f);
+const auto zero_zero_five = SIMD_MM(set1_ps)(0.05f);
+const auto eight_seven_six = SIMD_MM(set1_ps)(0.0876f);
+const auto one_zero_three = SIMD_MM(set1_ps)(0.0103592f);
+const auto one_eight_five = SIMD_MM(set1_ps)(0.185f);
+const auto zero_four_five = SIMD_MM(set1_ps)(0.45f);
+const auto zero_five = SIMD_MM(set1_ps)(0.5f);
+const auto one = SIMD_MM(set1_ps)(1.0f);
+const auto one_three_five = SIMD_MM(set1_ps)(1.035f);
+const auto two = SIMD_MM(set1_ps)(2.0f);
+const auto three = SIMD_MM(set1_ps)(3.0f);
+const auto gainAdjustment2Pole = SIMD_MM(set1_ps)(0.74f);
+const auto gainAdjustment4Pole = SIMD_MM(set1_ps)(0.6f);
 
 template <typename TuningProvider>
 inline void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, Poles p, float freq,
@@ -133,141 +133,152 @@ inline void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, Poles p
     cm->FromDirect(lC);
 }
 
-inline __m128 diodePairResistanceApprox(__m128 x)
+inline SIMD_M128 diodePairResistanceApprox(SIMD_M128 x)
 {
     // return (((((0.0103592f * x) + 0.00920833f) * x + 0.185f) * x + 0.05f) * x + 1.0f);
-    return _mm_add_ps(
-        _mm_mul_ps(
-            _mm_add_ps(_mm_mul_ps(_mm_add_ps(_mm_mul_ps(_mm_add_ps(_mm_mul_ps(one_zero_three, x),
-                                                                   nine_two_zero),
-                                                        x),
-                                             one_eight_five),
-                                  x),
-                       zero_zero_five),
+    return SIMD_MM(add_ps)(
+        SIMD_MM(mul_ps)(
+            SIMD_MM(add_ps)(
+                SIMD_MM(mul_ps)(
+                    SIMD_MM(add_ps)(
+                        SIMD_MM(mul_ps)(
+                            SIMD_MM(add_ps)(SIMD_MM(mul_ps)(one_zero_three, x), nine_two_zero), x),
+                        one_eight_five),
+                    x),
+                zero_zero_five),
             x),
         one);
     // Taylor approximation of a slightly mismatched diode pair
 }
 
 // resolve 0-delay feedback
-inline __m128 NewtonRaphson12dB(__m128 sample, QuadFilterUnitState *__restrict f)
+inline SIMD_M128 NewtonRaphson12dB(SIMD_M128 sample, QuadFilterUnitState *__restrict f)
 {
     // calculating feedback non-linear transconducance and compensated for R (-1)
     // boosting non-linearity
-    __m128 tCfb;
-    __m128 selfOscEnabledMask = _mm_cmpeq_ps(f->C[self_osc_push], one);
-    __m128 selfOscOffVal =
-        _mm_sub_ps(diodePairResistanceApprox(_mm_mul_ps(f->R[s1], eight_seven_six)), one);
-    __m128 selfOscOnVal = _mm_sub_ps(
-        diodePairResistanceApprox(_mm_mul_ps(f->R[s1], eight_seven_six)), one_three_five);
-    tCfb = _mm_add_ps(_mm_and_ps(selfOscEnabledMask, selfOscOnVal),
-                      _mm_andnot_ps(selfOscEnabledMask, selfOscOffVal));
+    SIMD_M128 tCfb;
+    auto selfOscEnabledMask = SIMD_MM(cmpeq_ps)(f->C[self_osc_push], one);
+    auto selfOscOffVal =
+        SIMD_MM(sub_ps)(diodePairResistanceApprox(SIMD_MM(mul_ps)(f->R[s1], eight_seven_six)), one);
+    auto selfOscOnVal = SIMD_MM(sub_ps)(
+        diodePairResistanceApprox(SIMD_MM(mul_ps)(f->R[s1], eight_seven_six)), one_three_five);
+    tCfb = SIMD_MM(add_ps)(SIMD_MM(and_ps)(selfOscEnabledMask, selfOscOnVal),
+                           SIMD_MM(andnot_ps)(selfOscEnabledMask, selfOscOffVal));
 
     // resolve linear feedback
     // float y = ((sample - 2*(s1*(R+tCfb)) - g*s1  - s2)/(1+ g*(2*(R+tCfb)+ g)));
-    __m128 y = _mm_div_ps(
-        _mm_sub_ps(
-            _mm_sub_ps(_mm_sub_ps(sample, _mm_mul_ps(two, _mm_mul_ps(f->R[s1],
-                                                                     _mm_add_ps(f->C[R12], tCfb)))),
-                       _mm_mul_ps(f->C[g12], f->R[s1])),
+    auto y = SIMD_MM(div_ps)(
+        SIMD_MM(sub_ps)(
+            SIMD_MM(sub_ps)(
+                SIMD_MM(sub_ps)(
+                    sample, SIMD_MM(mul_ps)(
+                                two, SIMD_MM(mul_ps)(f->R[s1], SIMD_MM(add_ps)(f->C[R12], tCfb)))),
+                SIMD_MM(mul_ps)(f->C[g12], f->R[s1])),
             f->R[s2]),
-        _mm_add_ps(
-            one, _mm_mul_ps(f->C[g12],
-                            _mm_add_ps(_mm_mul_ps(two, _mm_add_ps(f->C[R12], tCfb)), f->C[g12]))));
+        SIMD_MM(add_ps)(
+            one,
+            SIMD_MM(mul_ps)(f->C[g12],
+                            SIMD_MM(add_ps)(SIMD_MM(mul_ps)(two, SIMD_MM(add_ps)(f->C[R12], tCfb)),
+                                            f->C[g12]))));
 
     return y;
 }
 
-inline __m128 process_2_pole(QuadFilterUnitState *__restrict f, __m128 sample)
+inline SIMD_M128 process_2_pole(QuadFilterUnitState *__restrict f, SIMD_M128 sample)
 {
     for (int i = 0; i < n_obxd12_coeff; i++)
     {
-        f->C[i] = _mm_add_ps(f->C[i], f->dC[i]);
+        f->C[i] = SIMD_MM(add_ps)(f->C[i], f->dC[i]);
     }
 
     // float v = ((sample- R * s1*2 - g2*s1 - s2)/(1+ R*g1*2 + g1*g2));
-    __m128 v = NewtonRaphson12dB(sample, f);
+    auto v = NewtonRaphson12dB(sample, f);
     // float y1 = v * g + s1;
-    __m128 y1 = _mm_add_ps(_mm_mul_ps(v, f->C[g12]), f->R[s1]);
+    auto y1 = SIMD_MM(add_ps)(SIMD_MM(mul_ps)(v, f->C[g12]), f->R[s1]);
     // s1 = v * g + y1;
-    f->R[s1] = _mm_add_ps(_mm_mul_ps(v, f->C[g12]), y1);
+    f->R[s1] = SIMD_MM(add_ps)(SIMD_MM(mul_ps)(v, f->C[g12]), y1);
     // float y2 = y1 * g + s2;
-    __m128 y2 = _mm_add_ps(_mm_mul_ps(y1, f->C[g12]), f->R[s2]);
+    auto y2 = SIMD_MM(add_ps)(SIMD_MM(mul_ps)(y1, f->C[g12]), f->R[s2]);
     // s2 = y1 * g + y2;
-    f->R[s2] = _mm_add_ps(_mm_mul_ps(y1, f->C[g12]), y2);
+    f->R[s2] = SIMD_MM(add_ps)(SIMD_MM(mul_ps)(y1, f->C[g12]), y2);
 
-    __m128 mc;
-    __m128 mask_bp = _mm_cmpeq_ps(f->C[bandpass], zero);
-    __m128 bp_false = _mm_add_ps(_mm_mul_ps(_mm_sub_ps(one, f->C[multimode]), y2),
-                                 _mm_mul_ps(f->C[multimode], v));
-    __m128 mask = _mm_cmplt_ps(f->C[multimode], zero_five);
-    __m128 val1 = _mm_add_ps(_mm_mul_ps(_mm_sub_ps(zero_five, f->C[multimode]), y2),
-                             _mm_mul_ps(f->C[multimode], y1));
-    __m128 val2 = _mm_add_ps(_mm_mul_ps(_mm_sub_ps(one, f->C[multimode]), y1),
-                             _mm_mul_ps(_mm_sub_ps(f->C[multimode], zero_five), v));
-    __m128 bp_true = _mm_add_ps(_mm_and_ps(mask, val1), _mm_andnot_ps(mask, val2));
-    mc = _mm_add_ps(_mm_and_ps(mask_bp, bp_false), _mm_andnot_ps(mask_bp, bp_true));
-    return _mm_mul_ps(mc, gainAdjustment2Pole);
+    SIMD_M128 mc;
+    auto mask_bp = SIMD_MM(cmpeq_ps)(f->C[bandpass], zero);
+    auto bp_false = SIMD_MM(add_ps)(SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(one, f->C[multimode]), y2),
+                                    SIMD_MM(mul_ps)(f->C[multimode], v));
+    auto mask = SIMD_MM(cmplt_ps)(f->C[multimode], zero_five);
+    auto val1 = SIMD_MM(add_ps)(SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(zero_five, f->C[multimode]), y2),
+                                SIMD_MM(mul_ps)(f->C[multimode], y1));
+    auto val2 = SIMD_MM(add_ps)(SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(one, f->C[multimode]), y1),
+                                SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(f->C[multimode], zero_five), v));
+    auto bp_true = SIMD_MM(add_ps)(SIMD_MM(and_ps)(mask, val1), SIMD_MM(andnot_ps)(mask, val2));
+    mc = SIMD_MM(add_ps)(SIMD_MM(and_ps)(mask_bp, bp_false), SIMD_MM(andnot_ps)(mask_bp, bp_true));
+    return SIMD_MM(mul_ps)(mc, gainAdjustment2Pole);
 }
 
-inline __m128 NewtonRaphsonR24dB(__m128 sample, __m128 lpc, QuadFilterUnitState *__restrict f)
+inline SIMD_M128 NewtonRaphsonR24dB(SIMD_M128 sample, SIMD_M128 lpc,
+                                    QuadFilterUnitState *__restrict f)
 {
     // float ml = 1 / (1+g24);
-    __m128 ml = _mm_div_ps(one, _mm_add_ps(one, f->C[g24]));
+    auto ml = SIMD_MM(div_ps)(one, SIMD_MM(add_ps)(one, f->C[g24]));
     // float S = (lpc * (lpc * (lpc * f->R[s1] + f->R[s2]) + f->R[s3]) + f->R[s4]) * ml;
-    __m128 S = _mm_mul_ps(
-        _mm_add_ps(_mm_mul_ps(lpc, _mm_add_ps(_mm_mul_ps(lpc, _mm_add_ps(_mm_mul_ps(lpc, f->R[s1]),
-                                                                         f->R[s2])),
-                                              f->R[s3])),
-                   f->R[s4]),
+    auto S = SIMD_MM(mul_ps)(
+        SIMD_MM(add_ps)(
+            SIMD_MM(mul_ps)(
+                lpc,
+                SIMD_MM(add_ps)(
+                    SIMD_MM(mul_ps)(lpc, SIMD_MM(add_ps)(SIMD_MM(mul_ps)(lpc, f->R[s1]), f->R[s2])),
+                    f->R[s3])),
+            f->R[s4]),
         ml);
     // float G = lpc * lpc * lpc * lpc;
-    __m128 G = _mm_mul_ps(_mm_mul_ps(_mm_mul_ps(lpc, lpc), lpc), lpc);
+    auto G = SIMD_MM(mul_ps)(SIMD_MM(mul_ps)(SIMD_MM(mul_ps)(lpc, lpc), lpc), lpc);
     // float y = (sample - f->C[R24] * S) / (1 + f->C[R24] * G);
-    __m128 y = _mm_div_ps(_mm_sub_ps(sample, _mm_mul_ps(f->C[R24], S)),
-                          _mm_add_ps(one, _mm_mul_ps(f->C[R24], G)));
+    auto y = SIMD_MM(div_ps)(SIMD_MM(sub_ps)(sample, SIMD_MM(mul_ps)(f->C[R24], S)),
+                             SIMD_MM(add_ps)(one, SIMD_MM(mul_ps)(f->C[R24], G)));
 
     return y;
 }
 
-inline static __m128 tptpc(__m128 &state, __m128 inp, __m128 cutoff)
+inline static SIMD_M128 tptpc(SIMD_M128 &state, SIMD_M128 inp, SIMD_M128 cutoff)
 {
-    __m128 v = _mm_div_ps(_mm_mul_ps(_mm_sub_ps(inp, state), cutoff), _mm_add_ps(one, cutoff));
-    __m128 res = _mm_add_ps(v, state);
-    state = _mm_add_ps(res, v);
+    auto v = SIMD_MM(div_ps)(SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(inp, state), cutoff),
+                             SIMD_MM(add_ps)(one, cutoff));
+    auto res = SIMD_MM(add_ps)(v, state);
+    state = SIMD_MM(add_ps)(res, v);
     return res;
 }
 
-inline __m128 process_4_pole(QuadFilterUnitState *__restrict f, __m128 sample)
+inline SIMD_M128 process_4_pole(QuadFilterUnitState *__restrict f, SIMD_M128 sample)
 {
     for (int i = 0; i < n_obxd24_coeff; i++)
     {
-        f->C[i] = _mm_add_ps(f->C[i], f->dC[i]);
+        f->C[i] = SIMD_MM(add_ps)(f->C[i], f->dC[i]);
     }
 
     // float lpc = f->C[g] / (1 + f->C[g]);
-    __m128 lpc = _mm_div_ps(f->C[g24], _mm_add_ps(one, f->C[g24]));
+    auto lpc = SIMD_MM(div_ps)(f->C[g24], SIMD_MM(add_ps)(one, f->C[g24]));
 
     // float y0 = NewtonRaphsonR24dB(sample,f->C[g],lpc);
-    __m128 y0 = NewtonRaphsonR24dB(sample, lpc, f);
+    auto y0 = NewtonRaphsonR24dB(sample, lpc, f);
 
     // first lowpass in cascade
     // double v = (y0 - f->R[s1]) * lpc;
-    __m128 v = _mm_mul_ps(_mm_sub_ps(y0, f->R[s1]), lpc);
+    auto v = SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(y0, f->R[s1]), lpc);
 
     // double res = v + f->R[s1];
-    __m128 res = _mm_add_ps(v, f->R[s1]);
+    auto res = SIMD_MM(add_ps)(v, f->R[s1]);
 
     // f->R[s1] = res + v;
-    f->R[s1] = _mm_add_ps(res, v);
+    f->R[s1] = SIMD_MM(add_ps)(res, v);
 
     // damping
     // f->R[s1] =atan(s1*rcor24)*rcor24inv;
-    __m128 s1_rcor24 = _mm_mul_ps(f->R[s1], f->C[rcor24]);
+    auto s1_rcor24 = SIMD_MM(mul_ps)(f->R[s1], f->C[rcor24]);
 
     // this array must be aligned to a 16-byte boundary for SSE store/load
     float s1_rcor24_arr alignas(16)[ssew];
-    _mm_store_ps(s1_rcor24_arr, s1_rcor24);
+    SIMD_MM(store_ps)(s1_rcor24_arr, s1_rcor24);
 
     for (int i = 0; i < ssew; i++)
     {
@@ -277,34 +288,36 @@ inline __m128 process_4_pole(QuadFilterUnitState *__restrict f, __m128 sample)
             s1_rcor24_arr[i] = 0.f;
     }
 
-    s1_rcor24 = _mm_load_ps(s1_rcor24_arr);
-    f->R[s1] = _mm_mul_ps(s1_rcor24, f->C[rcor24inv]);
+    s1_rcor24 = SIMD_MM(load_ps)(s1_rcor24_arr);
+    f->R[s1] = SIMD_MM(mul_ps)(s1_rcor24, f->C[rcor24inv]);
 
-    __m128 y1 = res;
-    __m128 y2 = tptpc(f->R[s2], y1, f->C[g24]);
-    __m128 y3 = tptpc(f->R[s3], y2, f->C[g24]);
-    __m128 y4 = tptpc(f->R[s4], y3, f->C[g24]);
+    auto y1 = res;
+    auto y2 = tptpc(f->R[s2], y1, f->C[g24]);
+    auto y3 = tptpc(f->R[s3], y2, f->C[g24]);
+    auto y4 = tptpc(f->R[s4], y3, f->C[g24]);
 
-    __m128 mc;
+    SIMD_M128 mc;
 
-    __m128 zero_val = _mm_add_ps(_mm_mul_ps(_mm_sub_ps(one, f->C[pole_mix_scaled]), y4),
-                                 _mm_add_ps(f->C[pole_mix_scaled], y3));
-    __m128 zero_mask = _mm_cmpeq_ps(f->C[pole_mix_inv_int], zero);
-    __m128 one_mask = _mm_cmpeq_ps(f->C[pole_mix_inv_int], one);
-    __m128 one_val = _mm_add_ps(_mm_mul_ps(_mm_sub_ps(one, f->C[pole_mix_scaled]), y3),
-                                _mm_mul_ps(f->C[pole_mix_scaled], y2));
-    __m128 two_mask = _mm_cmpeq_ps(f->C[pole_mix_inv_int], two);
-    __m128 two_val = _mm_add_ps(_mm_mul_ps(_mm_sub_ps(one, f->C[pole_mix_scaled]), y2),
-                                _mm_mul_ps(f->C[pole_mix_scaled], y1));
-    __m128 three_mask = _mm_cmpeq_ps(f->C[pole_mix_inv_int], three);
-    __m128 three_val = y1;
-    mc = _mm_add_ps(_mm_and_ps(zero_mask, zero_val), _mm_and_ps(one_mask, one_val));
-    mc = _mm_add_ps(mc,
-                    _mm_add_ps(_mm_and_ps(two_mask, two_val), _mm_and_ps(three_mask, three_val)));
+    auto zero_val =
+        SIMD_MM(add_ps)(SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(one, f->C[pole_mix_scaled]), y4),
+                        SIMD_MM(add_ps)(f->C[pole_mix_scaled], y3));
+    auto zero_mask = SIMD_MM(cmpeq_ps)(f->C[pole_mix_inv_int], zero);
+    auto one_mask = SIMD_MM(cmpeq_ps)(f->C[pole_mix_inv_int], one);
+    auto one_val = SIMD_MM(add_ps)(SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(one, f->C[pole_mix_scaled]), y3),
+                                   SIMD_MM(mul_ps)(f->C[pole_mix_scaled], y2));
+    auto two_mask = SIMD_MM(cmpeq_ps)(f->C[pole_mix_inv_int], two);
+    auto two_val = SIMD_MM(add_ps)(SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(one, f->C[pole_mix_scaled]), y2),
+                                   SIMD_MM(mul_ps)(f->C[pole_mix_scaled], y1));
+    auto three_mask = SIMD_MM(cmpeq_ps)(f->C[pole_mix_inv_int], three);
+    auto three_val = y1;
+    mc = SIMD_MM(add_ps)(SIMD_MM(and_ps)(zero_mask, zero_val), SIMD_MM(and_ps)(one_mask, one_val));
+    mc = SIMD_MM(add_ps)(mc, SIMD_MM(add_ps)(SIMD_MM(and_ps)(two_mask, two_val),
+                                             SIMD_MM(and_ps)(three_mask, three_val)));
 
     // half volume compensation
-    auto out = _mm_mul_ps(mc, _mm_add_ps(one, _mm_mul_ps(f->C[R24], zero_four_five)));
-    return _mm_mul_ps(out, gainAdjustment4Pole);
+    auto out =
+        SIMD_MM(mul_ps)(mc, SIMD_MM(add_ps)(one, SIMD_MM(mul_ps)(f->C[R24], zero_four_five)));
+    return SIMD_MM(mul_ps)(out, gainAdjustment4Pole);
 }
 } // namespace sst::filters::OBXDFilter
 

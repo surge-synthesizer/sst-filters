@@ -37,10 +37,10 @@ static float clampedFrequency(float pitch, float sampleRate, TuningProvider *pro
     return freq;
 }
 
-#define F(a) _mm_set_ps1(a)
-#define M(a, b) _mm_mul_ps(a, b)
-#define A(a, b) _mm_add_ps(a, b)
-#define S(a, b) _mm_sub_ps(a, b)
+#define F(a) SIMD_MM(set_ps1)(a)
+#define M(a, b) SIMD_MM(mul_ps)(a, b)
+#define A(a, b) SIMD_MM(add_ps)(a, b)
+#define S(a, b) SIMD_MM(sub_ps)(a, b)
 
 enum Saturator
 {
@@ -52,48 +52,53 @@ enum Saturator
 
 // this is a duplicate of the code in QuadFilterWaveshapers.cpp except without the multiplication by
 // 'drive' and without the unused QuadFilterWaveshaperState pointer.
-static inline __m128 ojd_waveshaper_ps(const __m128 x) noexcept
+static inline SIMD_M128 ojd_waveshaper_ps(const SIMD_M128 x) noexcept
 {
-    const auto pm17 = _mm_set1_ps(-1.7f);
-    const auto p11 = _mm_set1_ps(1.1f);
-    const auto pm03 = _mm_set1_ps(-0.3f);
-    const auto p09 = _mm_set1_ps(0.9f);
+    const auto pm17 = SIMD_MM(set1_ps)(-1.7f);
+    const auto p11 = SIMD_MM(set1_ps)(1.1f);
+    const auto pm03 = SIMD_MM(set1_ps)(-0.3f);
+    const auto p09 = SIMD_MM(set1_ps)(0.9f);
 
-    const auto denLow = _mm_set1_ps(1.f / (4 * (1 - 0.3f)));
-    const auto denHigh = _mm_set1_ps(1.f / (4 * (1 - 0.9f)));
+    const auto denLow = SIMD_MM(set1_ps)(1.f / (4 * (1 - 0.3f)));
+    const auto denHigh = SIMD_MM(set1_ps)(1.f / (4 * (1 - 0.9f)));
 
-    auto maskNeg = _mm_cmple_ps(x, pm17);                         // in <= -1.7f
-    auto maskPos = _mm_cmpge_ps(x, p11);                          // in > 1.1f
-    auto maskLow = _mm_andnot_ps(maskNeg, _mm_cmplt_ps(x, pm03)); // in > -1.7 && in < =0.3
-    auto maskHigh = _mm_andnot_ps(maskPos, _mm_cmpgt_ps(x, p09)); // in > 0.9 && in < 1.1
-    auto maskMid = _mm_and_ps(_mm_cmpge_ps(x, pm03), _mm_cmple_ps(x, p09)); // the middle
+    auto maskNeg = SIMD_MM(cmple_ps)(x, pm17); // in <= -1.7f
+    auto maskPos = SIMD_MM(cmpge_ps)(x, p11);  // in > 1.1f
+    auto maskLow =
+        SIMD_MM(andnot_ps)(maskNeg, SIMD_MM(cmplt_ps)(x, pm03)); // in > -1.7 && in < =0.3
+    auto maskHigh = SIMD_MM(andnot_ps)(maskPos, SIMD_MM(cmpgt_ps)(x, p09)); // in > 0.9 && in < 1.1
+    auto maskMid =
+        SIMD_MM(and_ps)(SIMD_MM(cmpge_ps)(x, pm03), SIMD_MM(cmple_ps)(x, p09)); // the middle
 
-    const auto vNeg = _mm_set1_ps(-1.0);
-    const auto vPos = _mm_set1_ps(1.0);
+    const auto vNeg = SIMD_MM(set1_ps)(-1.0);
+    const auto vPos = SIMD_MM(set1_ps)(1.0);
     auto vMid = x;
 
-    auto xlow = _mm_sub_ps(x, pm03);
-    auto vLow = _mm_add_ps(xlow, _mm_mul_ps(denLow, _mm_mul_ps(xlow, xlow)));
-    vLow = _mm_add_ps(vLow, pm03);
+    auto xlow = SIMD_MM(sub_ps)(x, pm03);
+    auto vLow = SIMD_MM(add_ps)(xlow, SIMD_MM(mul_ps)(denLow, SIMD_MM(mul_ps)(xlow, xlow)));
+    vLow = SIMD_MM(add_ps)(vLow, pm03);
 
-    auto xhi = _mm_sub_ps(x, p09);
-    auto vHi = _mm_sub_ps(xhi, _mm_mul_ps(denHigh, _mm_mul_ps(xhi, xhi)));
-    vHi = _mm_add_ps(vHi, p09);
+    auto xhi = SIMD_MM(sub_ps)(x, p09);
+    auto vHi = SIMD_MM(sub_ps)(xhi, SIMD_MM(mul_ps)(denHigh, SIMD_MM(mul_ps)(xhi, xhi)));
+    vHi = SIMD_MM(add_ps)(vHi, p09);
 
-    return _mm_add_ps(_mm_add_ps(_mm_add_ps(_mm_and_ps(maskNeg, vNeg), _mm_and_ps(maskLow, vLow)),
-                                 _mm_add_ps(_mm_and_ps(maskHigh, vHi), _mm_and_ps(maskPos, vPos))),
-                      _mm_and_ps(maskMid, vMid));
+    return SIMD_MM(add_ps)(
+        SIMD_MM(add_ps)(
+            SIMD_MM(add_ps)(SIMD_MM(and_ps)(maskNeg, vNeg), SIMD_MM(and_ps)(maskLow, vLow)),
+            SIMD_MM(add_ps)(SIMD_MM(and_ps)(maskHigh, vHi), SIMD_MM(and_ps)(maskPos, vPos))),
+        SIMD_MM(and_ps)(maskMid, vMid));
 }
 
-static inline __m128 doNLFilter(const __m128 input, const __m128 a1, const __m128 a2,
-                                const __m128 b0, const __m128 b1, const __m128 b2,
-                                const __m128 makeup, const int sat, __m128 &z1, __m128 &z2) noexcept
+static inline SIMD_M128 doNLFilter(const SIMD_M128 input, const SIMD_M128 a1, const SIMD_M128 a2,
+                                   const SIMD_M128 b0, const SIMD_M128 b1, const SIMD_M128 b2,
+                                   const SIMD_M128 makeup, const int sat, SIMD_M128 &z1,
+                                   SIMD_M128 &z2) noexcept
 {
     // out = z1 + b0 * input
-    const __m128 out = A(z1, M(b0, input));
+    const auto out = A(z1, M(b0, input));
 
     // nonlinear feedback = saturator(out)
-    __m128 nf;
+    SIMD_M128 nf;
     switch (sat)
     {
     case SAT_SOFT:
@@ -228,7 +233,7 @@ void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, float freq, fl
 }
 
 template <FilterSubType subtype>
-inline __m128 process(QuadFilterUnitState *__restrict f, __m128 input)
+inline SIMD_M128 process(QuadFilterUnitState *__restrict f, SIMD_M128 input)
 {
     // lower 2 bits of subtype is the stage count
     const int stages = subtype & 3;

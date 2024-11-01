@@ -1,3 +1,4 @@
+message(STATUS "Add sst-filters-tests")
 add_executable(sst-filters-tests)
 target_include_directories(sst-filters-tests PRIVATE . ../libs)
 target_link_libraries(sst-filters-tests PRIVATE ${PROJECT_NAME} simde)
