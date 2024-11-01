@@ -16,12 +16,12 @@ jobs:
           - os: ubuntu-latest
             name: linux
             runTest: true
-            testExe: build/sst-basic-blocks-test
+            testExe: build/tests/sst-filters-tests
 
           - os: macos-latest
             name: mac-x86
             runTest: true
-            testExe: build/sst-basic-blocks-test
+            testExe: build/tests/sst-filters-tests
             cmakeArgs: -DCMAKE_OSX_ARCHITECTURES=x86_64
 
           - os: macos-latest
@@ -35,7 +35,7 @@ jobs:
           - os: windows-latest
             name: win-x86
             runTest: true
-            testExe: build/Release/sst-basic-blocks-test.exe
+            testExe:  build/tests/Release/sst-filters-tests.exe
 
           - os: windows-latest
             name: win-arm64
