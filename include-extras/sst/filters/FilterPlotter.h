@@ -102,7 +102,7 @@ class FilterPlotter
     {
         // reset filter state
         std::fill(filterState.R, &filterState.R[sst::filters::n_filter_registers],
-                  _mm_setzero_ps());
+                  SIMD_MM(setzero_ps)());
 
         for (int i = 0; i < 4; ++i)
         {
@@ -113,10 +113,10 @@ class FilterPlotter
 
         for (int i = 0; i < numSamples; ++i)
         {
-            auto yVec = filterUnitPtr(&filterState, _mm_set_ps1(inBuffer[i]));
+            auto yVec = filterUnitPtr(&filterState, SIMD_MM(set_ps1)(inBuffer[i]));
 
             float yArr alignas(16)[4];
-            _mm_store_ps(yArr, yVec);
+            SIMD_MM(store_ps)(yArr, yVec);
             outBuffer[i] = yArr[0];
         }
     };
