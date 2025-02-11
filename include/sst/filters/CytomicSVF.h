@@ -94,7 +94,7 @@ struct CytomicSVF
         res = std::clamp(res, 0.f, 0.98f);
         bellShelfAmp = std::max(bellShelfAmp, 0.001f);
 
-        g = SIMD_MM(set1_ps)(sst::basic_blocks::dsp::fasttan(M_PI * conorm));
+        g = SIMD_MM(set1_ps)(sst::basic_blocks::dsp::fasttanh(M_PI * conorm));
         k = SIMD_MM(set1_ps)(2.0 - 2 * res);
         if (mode == BELL)
         {
