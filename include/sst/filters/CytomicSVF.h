@@ -58,15 +58,23 @@
 
 namespace sst::filters
 {
+
+#define ADD(a,b) SIMD_MM(add_ps)(a,b)
+#define SUB(a,b) SIMD_MM(sub_ps)(a,b)
+#define DIV(a,b) SIMD_MM(div_ps)(a,b)
+#define MUL(a,b) SIMD_MM(mul_ps)(a,b)
+#define SETALL(a) SIMD_MM(set1_ps)(a)
+#define ZERO(a) SIMD_MM(setzero_ps)(a)
+
 struct CytomicSVF
 {
-    SIMD_M128 ic1eq{SIMD_MM(setzero_ps)()}, ic2eq{SIMD_MM(setzero_ps)()};
+    SIMD_M128 ic1eq{ZERO()}, ic2eq{ZERO()};
     SIMD_M128 g, k, gk, a1, a2, a3, m0, m1, m2;
 
-    SIMD_M128 oneSSE{SIMD_MM(set1_ps)(1.0)};
-    SIMD_M128 negoneSSE{SIMD_MM(set1_ps)(-1.0)};
-    SIMD_M128 twoSSE{SIMD_MM(set1_ps)(2.0)};
-    SIMD_M128 negtwoSSE{SIMD_MM(set1_ps)(-2.0)};
+    SIMD_M128 oneSSE{SETALL(1.0)};
+    SIMD_M128 negoneSSE{SETALL(-1.0)};
+    SIMD_M128 twoSSE{SETALL(2.0)};
+    SIMD_M128 negtwoSSE{SETALL(-2.0)};
     enum Mode
     {
         LP,
@@ -95,13 +103,13 @@ struct CytomicSVF
         res = std::clamp(res, 0.f, 0.98f);
         bellShelfAmp = std::max(bellShelfAmp, 0.001f);
 
-        g = SIMD_MM(set1_ps)(sst::basic_blocks::dsp::fasttan(M_PI * conorm));
-        k = SIMD_MM(set1_ps)(2.0 - 2 * res);
+        g = SETALL(sst::basic_blocks::dsp::fasttan(M_PI * conorm));
+        k = SETALL(2.0 - 2 * res);
         if (mode == BELL)
         {
-            k = SIMD_MM(div_ps)(k, SIMD_MM(set1_ps)(bellShelfAmp));
+            k = DIV(k, SETALL(bellShelfAmp));
         }
-        setCoeffPostGK(mode, SIMD_MM(set1_ps)(bellShelfAmp));
+        setCoeffPostGK(mode, SETALL(bellShelfAmp));
     }
 
     void setCoeff(Mode mode, float freqL, float freqR, float resL, float resR, float srInv,
@@ -116,81 +124,81 @@ struct CytomicSVF
         auto bellShelfAmp =
             SIMD_MM(set_ps)(0, 0, std::max(bellShelfAmpL, 0.001f), std::max(bellShelfAmpR, 0.001f));
 
-        k = SIMD_MM(sub_ps)(twoSSE, SIMD_MM(mul_ps)(twoSSE, res));
+        k = SUB(twoSSE, MUL(twoSSE, res));
         if (mode == BELL)
         {
-            k = SIMD_MM(div_ps)(k, bellShelfAmp);
+            k = DIV(k, bellShelfAmp);
         }
         setCoeffPostGK(mode, bellShelfAmp);
     }
 
     void setCoeffPostGK(Mode mode, SIMD_M128 bellShelfSSE)
     {
-        gk = SIMD_MM(add_ps)(g, k);
-        a1 = SIMD_MM(div_ps)(oneSSE, SIMD_MM(add_ps)(oneSSE, SIMD_MM(mul_ps)(g, gk)));
-        a2 = SIMD_MM(mul_ps)(g, a1);
-        a3 = SIMD_MM(mul_ps)(g, a2);
+        gk = ADD(g, k);
+        a1 = DIV(oneSSE, ADD(oneSSE, MUL(g, gk)));
+        a2 = MUL(g, a1);
+        a3 = MUL(g, a2);
 
         switch (mode)
         {
         case LP:
-            m0 = SIMD_MM(setzero_ps)();
-            m1 = SIMD_MM(setzero_ps)();
+            m0 = ZERO();
+            m1 = ZERO();
             m2 = oneSSE;
             break;
         case BP:
-            m0 = SIMD_MM(setzero_ps)();
+            m0 = ZERO();
             m1 = oneSSE;
-            m2 = SIMD_MM(setzero_ps)();
+            m2 = ZERO();
             break;
         case HP:
             m0 = oneSSE;
-            m1 = SIMD_MM(sub_ps)(SIMD_MM(setzero_ps)(), k);
+            m1 = SUB(ZERO(), k);
             m2 = negoneSSE;
             break;
         case NOTCH:
             m0 = oneSSE;
-            m1 = SIMD_MM(sub_ps)(SIMD_MM(setzero_ps)(), k);
-            m2 = SIMD_MM(setzero_ps)();
+            m1 = SUB(ZERO(), k);
+            m2 = ZERO();
             break;
         case PEAK:
             m0 = oneSSE;
-            m1 = SIMD_MM(sub_ps)(SIMD_MM(setzero_ps)(), k);
+            m1 = SUB(ZERO(), k);
             m2 = negtwoSSE;
             break;
         case ALL:
             m0 = oneSSE;
-            m1 = SIMD_MM(mul_ps)(negtwoSSE, k);
-            m2 = SIMD_MM(setzero_ps)();
+            m1 = MUL(negtwoSSE, k);
+            m2 = ZERO();
             break;
         case BELL:
         {
             auto A = bellShelfSSE;
             m0 = oneSSE;
-            m1 = SIMD_MM(mul_ps)(k, SIMD_MM(sub_ps)(SIMD_MM(mul_ps)(A, A), oneSSE));
-            m2 = SIMD_MM(setzero_ps)();
+            m1 = MUL(k, SUB(MUL(A, A), oneSSE));
+            m2 = ZERO();
         }
         break;
         case LOW_SHELF:
         {
             auto A = bellShelfSSE;
             m0 = oneSSE;
-            m1 = SIMD_MM(mul_ps)(k, SIMD_MM(sub_ps)(A, oneSSE));
-            m2 = SIMD_MM(sub_ps)(SIMD_MM(mul_ps)(A, A), oneSSE);
+            m1 = MUL(k, SUB(A, oneSSE));
+            m2 = SUB(MUL(A, A), oneSSE);
         }
         break;
         case HIGH_SHELF:
         {
             auto A = bellShelfSSE;
-            m0 = SIMD_MM(mul_ps)(A, A);
-            m1 = SIMD_MM(mul_ps)(SIMD_MM(mul_ps)(k, SIMD_MM(sub_ps)(oneSSE, A)), A);
-            m2 = SIMD_MM(sub_ps)(oneSSE, SIMD_MM(mul_ps)(A, A));
+            m0 = MUL(A, A);
+            m1 = MUL(MUL(k, SUB(oneSSE, A)), A);
+            m2 = SUB(oneSSE, MUL(A, A));
         }
         break;
         default:
-            m0 = SIMD_MM(setzero_ps)();
-            m1 = SIMD_MM(setzero_ps)();
-            m2 = SIMD_MM(setzero_ps)();
+            m0 = ZERO();
+            m1 = ZERO();
+            m2 = ZERO();
             break;
         }
     }
@@ -224,25 +232,24 @@ struct CytomicSVF
     static SIMD_M128 stepSSE(CytomicSVF &that, SIMD_M128 vin)
     {
         // v3 = v0 - ic2eq
-        auto v3 = SIMD_MM(sub_ps)(vin, that.ic2eq);
+        auto v3 = SUB(vin, that.ic2eq);
 
         // v1 = a1 * ic1eq + a2 * v3
         auto v1 =
-            SIMD_MM(add_ps)(SIMD_MM(mul_ps)(that.a1, that.ic1eq), SIMD_MM(mul_ps)(that.a2, v3));
+            ADD(MUL(that.a1, that.ic1eq), MUL(that.a2, v3));
 
         // v2 = ic2eq + a2 * ic1eq + a3 * v3
-        auto v2 = SIMD_MM(add_ps)(that.ic2eq, SIMD_MM(add_ps)(SIMD_MM(mul_ps)(that.a2, that.ic1eq),
-                                                              SIMD_MM(mul_ps)(that.a3, v3)));
+        auto v2 = ADD(that.ic2eq, ADD(MUL(that.a2, that.ic1eq),
+                                                              MUL(that.a3, v3)));
 
         // ic1eq = 2 * v1 - ic1eq
-        that.ic1eq = SIMD_MM(sub_ps)(SIMD_MM(mul_ps)(that.twoSSE, v1), that.ic1eq);
+        that.ic1eq = SUB(MUL(that.twoSSE, v1), that.ic1eq);
 
         // ic2eq = 2 * v2 - ic2eq
-        that.ic2eq = SIMD_MM(sub_ps)(SIMD_MM(mul_ps)(that.twoSSE, v2), that.ic2eq);
+        that.ic2eq = SUB(MUL(that.twoSSE, v2), that.ic2eq);
 
-        return SIMD_MM(add_ps)(
-            SIMD_MM(mul_ps)(that.m0, vin),
-            SIMD_MM(add_ps)(SIMD_MM(mul_ps)(that.m1, v1), SIMD_MM(mul_ps)(that.m2, v2)));
+        // (m0 * input) + ((m1 * v1) + (m2 * v2))
+        return ADD(MUL(that.m0, vin), ADD(MUL(that.m1, v1), MUL(that.m2, v2)));
     }
 
     /*
@@ -281,25 +288,25 @@ struct CytomicSVF
 
         // then for each one calculate the change across the block
         static constexpr float obsf = 1.f / blockSize;
-        auto obs = SIMD_MM(set1_ps)(obsf);
+        auto obs = SETALL(obsf);
 
         // and set the changeup, and reset a1 to the prior value so we move in the block
-        da1 = SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(a1, a1_prior), obs);
+        da1 = MUL(SUB(a1, a1_prior), obs);
         a1 = a1_prior;
 
-        da2 = SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(a2, a2_prior), obs);
+        da2 = MUL(SUB(a2, a2_prior), obs);
         a2 = a2_prior;
 
-        da3 = SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(a3, a3_prior), obs);
+        da3 = MUL(SUB(a3, a3_prior), obs);
         a3 = a3_prior;
         
-        dm0 = SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(m0, m0_prior), obs);
+        dm0 = MUL(SUB(m0, m0_prior), obs);
         m0 = m0_prior;
 
-        dm1 = SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(m1, m1_prior), obs);
+        dm1 = MUL(SUB(m1, m1_prior), obs);
         m1 = m1_prior;
 
-        dm2 = SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(m2, m2_prior), obs);
+        dm2 = MUL(SUB(m2, m2_prior), obs);
         m2 = m2_prior;
     }
 
@@ -330,59 +337,59 @@ struct CytomicSVF
         }
         
         static constexpr float obsf = 1.f / blockSize;
-        auto obs = SIMD_MM(set1_ps)(obsf);
+        auto obs = SETALL(obsf);
 
         
-        da1 = SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(a1, a1_prior), obs);
+        da1 = MUL(SUB(a1, a1_prior), obs);
         a1 = a1_prior;
 
-        da2 = SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(a2, a2_prior), obs);
+        da2 = MUL(SUB(a2, a2_prior), obs);
         a2 = a2_prior;
 
-        da3 = SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(a3, a3_prior), obs);
+        da3 = MUL(SUB(a3, a3_prior), obs);
         a3 = a3_prior;
         
-        dm0 = SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(m0, m0_prior), obs);
+        dm0 = MUL(SUB(m0, m0_prior), obs);
         m0 = m0_prior;
 
-        dm1 = SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(m1, m1_prior), obs);
+        dm1 = MUL(SUB(m1, m1_prior), obs);
         m1 = m1_prior;
 
-        dm2 = SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(m2, m2_prior), obs);
+        dm2 = MUL(SUB(m2, m2_prior), obs);
         m2 = m2_prior;
     }
 
     template <int blockSize> void retainCoeffForBlock()
     {
-        da1 = SIMD_MM(setzero_ps)();
-        da2 = SIMD_MM(setzero_ps)();
-        da3 = SIMD_MM(setzero_ps)();
-        dm0 = SIMD_MM(setzero_ps)();
-        dm1 = SIMD_MM(setzero_ps)();
-        dm2 = SIMD_MM(setzero_ps)();
+        da1 = ZERO();
+        da2 = ZERO();
+        da3 = ZERO();
+        dm0 = ZERO();
+        dm1 = ZERO();
+        dm2 = ZERO();
     }
 
     void processBlockStep(float &L, float &R)
     {
         step(*this, L, R);
-        a1 = SIMD_MM(add_ps)(a1, da1);
-        a2 = SIMD_MM(add_ps)(a2, da2);
-        a3 = SIMD_MM(add_ps)(a3, da3);
-        m1 = SIMD_MM(add_ps)(m1, dm1);
-        m2 = SIMD_MM(add_ps)(m2, dm2);
-        m0 = SIMD_MM(add_ps)(m0, dm0);
+        a1 = ADD(a1, da1);
+        a2 = ADD(a2, da2);
+        a3 = ADD(a3, da3);
+        m1 = ADD(m1, dm1);
+        m2 = ADD(m2, dm2);
+        m0 = ADD(m0, dm0);
     }
 
     void processBlockStep(float &L)
     {
         float tmp{0.f};
         step(*this, L, tmp);
-        a1 = SIMD_MM(add_ps)(a1, da1);
-        a2 = SIMD_MM(add_ps)(a2, da2);
-        a3 = SIMD_MM(add_ps)(a3, da3);
-        m1 = SIMD_MM(add_ps)(m1, dm1);
-        m2 = SIMD_MM(add_ps)(m2, dm2);
-        m0 = SIMD_MM(add_ps)(m0, dm0);
+        a1 = ADD(a1, da1);
+        a2 = ADD(a2, da2);
+        a3 = ADD(a3, da3);
+        m1 = ADD(m1, dm1);
+        m2 = ADD(m2, dm2);
+        m0 = ADD(m0, dm0);
     }
 
     template <int blockSize>
@@ -407,18 +414,40 @@ struct CytomicSVF
 
     void init()
     {
-        ic1eq = SIMD_MM(setzero_ps)();
-        ic2eq = SIMD_MM(setzero_ps)();
+        ic1eq = ZERO();
+        ic2eq = ZERO();
     }
 };
 
 
 struct FastTiltNoiseFilter
 {
-    SIMD_M128 firstQueue{SIMD_MM(setzero_ps)()}, secondQueue{SIMD_MM(setzero_ps)()}, thirdQueue{SIMD_MM(setzero_ps)()};
+    /*
+     Ok, so we want to feed in white noise and get it back nicely filtered to an
+     N dB/oct slope for our noise colors.
+     
+     11 shelves in series does that really really accurately, but is a little slower than we'd like.
+     
+     The trick we're gonna do is actually run the filters in parallel instead of series anyway,
+     passing the previous input sample on to the next filter stage with each step() call,
+     and outputting the result of the 11th one each time.
+     
+     That means we're 11 samples latent, but that's fine. The input is just a stream of random values
+     which we will generate inside this class (from an external RNG),
+     so there's no phase/time relationships that we need to maintain.
+     Thus we can pre-compute 11 samples on startup to get immediate output.
+     
+     We pay 11 extra samples worth of processing at the onset. But that seems a low price to pay for running
+     the filters in parallel thereafter.
+     
+     We need 11 of each coefficient to run 11 filters.
+     So for each coeff we have 3 m128's to fill up with the appropriate data.
+     */
     
-    SIMD_M128 first1eq{SIMD_MM(setzero_ps)()}, second1eq{SIMD_MM(setzero_ps)()}, third1eq{SIMD_MM(setzero_ps)()};
-    SIMD_M128 first2eq{SIMD_MM(setzero_ps)()}, second2eq{SIMD_MM(setzero_ps)()}, third2eq{SIMD_MM(setzero_ps)()};
+    SIMD_M128 firstQueue{ZERO()}, secondQueue{ZERO()}, thirdQueue{ZERO()};
+    
+    SIMD_M128 first1eq{ZERO()}, second1eq{ZERO()}, third1eq{ZERO()};
+    SIMD_M128 first2eq{ZERO()}, second2eq{ZERO()}, third2eq{ZERO()};
     
     SIMD_M128 firstG, secondG, thirdG;
     SIMD_M128 kSSE;
@@ -432,77 +461,61 @@ struct FastTiltNoiseFilter
     SIMD_M128 firstM1, secondM1, thirdM1;
     SIMD_M128 firstM2, secondM2, thirdM2;
     
-    SIMD_M128 oneSSE{SIMD_MM(set1_ps)(1.0)};
-    SIMD_M128 negoneSSE{SIMD_MM(set1_ps)(-1.0)};
-    SIMD_M128 twoSSE{SIMD_MM(set1_ps)(2.0)};
-    SIMD_M128 negtwoSSE{SIMD_MM(set1_ps)(-2.0)};
+    SIMD_M128 oneSSE{SETALL(1.0)};
+    SIMD_M128 negoneSSE{SETALL(-1.0)};
+    SIMD_M128 twoSSE{SETALL(2.0)};
+    SIMD_M128 negtwoSSE{SETALL(-2.0)};
     
     int run{0};
     
-    float srInv{};
-    
-    FastTiltNoiseFilter(float sri) : srInv(sri)
+    FastTiltNoiseFilter(float srInv)
     {
-        namespace sdsp = sst::basic_blocks::dsp;
-        auto sriXpi = M_PI * srInv;
+        // Since frequencies and resonances don't change in this case, a bunch of coefficients
+        // can be fixed once sample rate is known and not touched after that.
+       
+        float freqs[11] = {20, 40, 80, 160, 320, 640, 1280, 2560, 5120, 10240, 20480};
+        float G[11] = {};
         
-        /*
-         Since frequencies and resonances don't change in this case, a bunch of coefficients
-         can be fixed once sample rate is known and not touched after that.
-         
-         k is initialized above, it's:
-         k = 2 - resonance * 2
-         which turns out to 1.86 for our intended res of .07
-         
-         We need eleven of each of those to run 11 filters.
-         So make 3 m128's which we fill up with the appropriate data.
-         The last element of the third G won't get used really.
-         */
+        // g = tan(freq * srInv * pi)
+        for (int i = 0; i < 11; ++i)
+        {
+            G[i] = sst::basic_blocks::dsp::fasttan(M_PI * freqs[i] * srInv);
+            
+        }
+
+        firstG = SIMD_MM(set_ps)(G[3], G[2], G[1], G[0]);
+        secondG = SIMD_MM(set_ps)(G[7], G[6], G[5], G[4]);
+        thirdG = SIMD_MM(set_ps)(0.f, G[10], G[9], G[8]);
         
-        // g = tan(freq*srInv*pi)
-        firstG = SIMD_MM(set_ps)(sdsp::fasttan(20 * sriXpi),
-                                            sdsp::fasttan(40 * sriXpi),
-                                            sdsp::fasttan(80 * sriXpi),
-                                            sdsp::fasttan(160 * sriXpi)
-                                            );
-        secondG = SIMD_MM(set_ps)(sdsp::fasttan(320 * sriXpi),
-                                             sdsp::fasttan(640 * sriXpi),
-                                             sdsp::fasttan(1280 * sriXpi),
-                                             sdsp::fasttan(2560 * sriXpi)
-                                             );
-        thirdG = SIMD_MM(set_ps)(sdsp::fasttan(5120 * sriXpi),
-                                            sdsp::fasttan(10240 * sriXpi),
-                                            sdsp::fasttan(20480 * sriXpi),
-                                            0.4999f);
-        
-        kSSE = SIMD_MM(set1_ps)(1.86);
+        // k = 2 - resonance * 2
+        // which turns out to 1.86 for our intended res of .07
+        kSSE = SETALL(1.86);
         
         // gk = g + k
-        firstGK = SIMD_MM(add_ps)(firstG, kSSE);
-        secondGK = SIMD_MM(add_ps)(secondG, kSSE);
-        thirdGK = SIMD_MM(add_ps)(thirdG, kSSE);
+        firstGK = ADD(firstG, kSSE);
+        secondGK = ADD(secondG, kSSE);
+        thirdGK = ADD(thirdG, kSSE);
         
         // a1 = 1 / (1 + g * gk)
-        firstA1 = SIMD_MM(div_ps)(oneSSE, SIMD_MM(add_ps)(oneSSE, SIMD_MM(mul_ps)(firstG, firstGK)));
-        secondA1 = SIMD_MM(div_ps)(oneSSE, SIMD_MM(add_ps)(oneSSE, SIMD_MM(mul_ps)(secondG, secondGK)));
-        thirdA1 = SIMD_MM(div_ps)(oneSSE, SIMD_MM(add_ps)(oneSSE, SIMD_MM(mul_ps)(thirdG, thirdGK)));
+        firstA1 = DIV(oneSSE, ADD(oneSSE, MUL(firstG, firstGK)));
+        secondA1 = DIV(oneSSE, ADD(oneSSE, MUL(secondG, secondGK)));
+        thirdA1 = DIV(oneSSE, ADD(oneSSE, MUL(thirdG, thirdGK)));
         
         // a2 = g * a1
-        firstA2 = SIMD_MM(mul_ps)(firstG, firstA1);
-        secondA2 = SIMD_MM(mul_ps)(secondG, secondA1);
-        thirdA2 = SIMD_MM(mul_ps)(thirdG, thirdA1);
+        firstA2 = MUL(firstG, firstA1);
+        secondA2 = MUL(secondG, secondA1);
+        thirdA2 = MUL(thirdG, thirdA1);
         
         // a3 = g * a2
-        firstA3 = SIMD_MM(mul_ps)(firstG, firstA2);
-        secondA3 = SIMD_MM(mul_ps)(secondG, secondA2);
-        thirdA3 = SIMD_MM(mul_ps)(thirdG, thirdA2);
+        firstA3 = MUL(firstG, firstA2);
+        secondA3 = MUL(secondG, secondA2);
+        thirdA3 = MUL(thirdG, thirdA2);
     }
     
-    void init(sst::basic_blocks::dsp::RNG &extRng, float initialGain = 1)
+    void init(sst::basic_blocks::dsp::RNG &extRng, float posGain, float negGain)
     {
-        // see further comments in setCoeff()...
-        setCoeff(initialGain);
-        // and step()...
+        setCoeff(posGain, negGain);
+        
         for (int i = 0; i < 11; ++i)
         {
             float val = extRng.unifPM1();
@@ -510,11 +523,12 @@ struct FastTiltNoiseFilter
         }
     }
     
-    void setCoeff(float gain)
+    void setCoeff(float posGain, float negGain)
     {
         /*
          The only coefficients that change in this class are the gain-related ones.
          A = gain.
+         
          Then for a low shelf we need:
          m0 = 1
          m1 = k * (A - 1)
@@ -526,46 +540,34 @@ struct FastTiltNoiseFilter
          m2 = 1 - A^2
         
          Five of the filters are low shelves and have their gain inverted, the rest are high shelves.
-         So start by setting the first and third m128, where every element is either low or high shelf.
+         So start by setting the first and third m128, where every element is either a low or high shelf.
          Then the middle m128 gets a blend to set its first element to the low shelf/neg gain.
          */
         
-        auto firstA = SIMD_MM(set1_ps)(-gain);
-        auto thirdA = SIMD_MM(set1_ps)(gain);
-        auto secondA = SIMD_MM(blend_ps)(thirdA, firstA, 0);
+        const SIMD_M128 mask = SIMD_MM(castsi128_ps)(SIMD_MM(set_epi32)(~0,0,0,0));
+        
+        auto firstA = SETALL(negGain);
+        auto thirdA = SETALL(posGain);
+        auto secondA = SIMD_MM(blendv_ps)(thirdA, firstA, mask);
         
         firstM0 = oneSSE;
-        thirdM0 = SIMD_MM(sub_ps)(oneSSE, SIMD_MM(mul_ps)(thirdA, thirdA));
-        secondM0 = SIMD_MM(blend_ps)(thirdM0, firstM0, 0);
+        thirdM0 = MUL(thirdA, thirdA);
+        secondM0 = SIMD_MM(blendv_ps)(thirdM0, firstM0, mask);
         
-        firstM1 = SIMD_MM(mul_ps)(kSSE, SIMD_MM(sub_ps)(firstA, oneSSE));
-        thirdM1 = SIMD_MM(mul_ps)(SIMD_MM(mul_ps)(kSSE, SIMD_MM(sub_ps)(oneSSE, thirdA)), thirdA);
-        secondM1 = SIMD_MM(blend_ps)(thirdM1, firstM0, 0);
+        firstM1 = MUL(kSSE, SUB(firstA, oneSSE));
+        thirdM1 = MUL(MUL(kSSE, SUB(oneSSE, thirdA)), thirdA);
+        secondM1 = SIMD_MM(blendv_ps)(thirdM1, firstM1, mask);
         
-        firstM2 = SIMD_MM(sub_ps)(oneSSE, SIMD_MM(mul_ps)(firstA, firstA));
-        thirdM2 = SIMD_MM(sub_ps)(oneSSE, SIMD_MM(mul_ps)(firstA, firstA));
-        secondM2 = SIMD_MM(blend_ps)(thirdM2, firstM2, 0);
+        firstM2 = SUB(MUL(firstA, firstA), oneSSE);
+        thirdM2 = SUB(oneSSE, MUL(firstA, firstA));
+        secondM2 = SIMD_MM(blendv_ps)(thirdM2, firstM2, mask);
     }
     
     static void step(FastTiltNoiseFilter &that, float &vin)
     {
-        /* Each sample we feed in a new random value, and we want one back which
-         should have gone through 11 shelves in series.
-         
-         What we're gonna do here is actually run the filters in parallel anyway, passing an input sample
-         to the next filter stage with each step() call.
-         
-         That means we're 11 samples latent, but that's fine. The input is just noise, so we
-         can pre-compute 11 samples on startup and get immediate output anyway!
-         
-         11 extra samples worth of processing in the constructor is a low price to pay for running
-         all 11 filters in parallel thereafter.
-         */
+        // The shuffle algo works. Filter algo does not.
         
-        if (that.run < 12)
-        {
-            std::cout << "input = " << vin << std::endl;
-        }
+        
         
         float tQ1 alignas(16)[4];
         float tQ2 alignas(16)[4];
@@ -574,74 +576,250 @@ struct FastTiltNoiseFilter
         SIMD_MM(store_ps)(tQ2, that.secondQueue);
         SIMD_MM(store_ps)(tQ3, that.thirdQueue);
         
+        // Shuffle the queues forwards, adding in the current input
+        that.firstQueue = SIMD_MM(set_ps)(tQ1[2], tQ1[1], tQ1[0], vin);
+        that.secondQueue = SIMD_MM(set_ps)(tQ2[2], tQ2[1], tQ2[0], tQ1[3]);
+        that.thirdQueue = SIMD_MM(set_ps)(tQ3[2], tQ3[1], tQ3[0], tQ2[3]);
+        
         if (that.run < 12)
         {
-            std::cout << "registers are =";
+            // DEBUG STATEMENT
+            
+            float dQ1 alignas(16)[4];
+            float dQ2 alignas(16)[4];
+            float dQ3 alignas(16)[4];
+            SIMD_MM(store_ps)(dQ1, that.firstQueue);
+            SIMD_MM(store_ps)(dQ2, that.secondQueue);
+            SIMD_MM(store_ps)(dQ3, that.thirdQueue);
+            
+            std::cout << "Queue beforewards =";
             for (int i = 0; i < 4; ++i)
             {
-                std::cout << " " << tQ1[i] << ", ";
+                std::cout << " " << dQ1[i] << ", ";
             }
             for (int i = 0; i < 4; ++i)
             {
-                std::cout << " " << tQ2[i] << ", ";
+                std::cout << " " << dQ2[i] << ", ";
             }
             for (int i = 0; i < 4; ++i)
             {
-                std::cout << " " << tQ3[i] << ", ";
+                std::cout << " " << dQ3[i] << ", ";
             }
             std::cout << std::endl;
         }
         
-        // Shuffle the queues forwards, adding in the current input
-        that.firstQueue = SIMD_MM(setr_ps)(vin, tQ1[0], tQ1[1], tQ1[2]);
-        that.secondQueue = SIMD_MM(setr_ps)(tQ1[3], tQ2[0], tQ2[1], tQ2[2]);
-        that.thirdQueue = SIMD_MM(setr_ps)(tQ2[3], tQ3[0], tQ3[1], tQ3[2]);
-        
         // time to run the filter algo
         
         // v3 = input (aka v0) - ic2eq
-        auto firstV3 = SIMD_MM(sub_ps)(that.firstQueue, that.first1eq);
-        auto secondV3 = SIMD_MM(sub_ps)(that.secondQueue, that.second1eq);
-        auto thirdV3 = SIMD_MM(sub_ps)(that.thirdQueue, that.third1eq);
+        auto firstV3 = SUB(that.firstQueue, that.first2eq);
+        auto secondV3 = SUB(that.secondQueue, that.second2eq);
+        auto thirdV3 = SUB(that.thirdQueue, that.third2eq);
+        
+        if (that.run < 12)
+        {
+            std::cout << "input = " << vin << std::endl;
+            
+            // DEBUG STATEMENT
+            
+            float dQ1 alignas(16)[4];
+            float dQ2 alignas(16)[4];
+            float dQ3 alignas(16)[4];
+            SIMD_MM(store_ps)(dQ1, firstV3);
+            SIMD_MM(store_ps)(dQ2, secondV3);
+            SIMD_MM(store_ps)(dQ3, thirdV3);
+            
+            std::cout << "V3 =";
+            for (int i = 0; i < 4; ++i)
+            {
+                std::cout << " " << dQ1[i] << ", ";
+            }
+            for (int i = 0; i < 4; ++i)
+            {
+                std::cout << " " << dQ2[i] << ", ";
+            }
+            for (int i = 0; i < 4; ++i)
+            {
+                std::cout << " " << dQ3[i] << ", ";
+            }
+            std::cout << std::endl;
+        }
         
         // v1 = a1 * ic1eq + a2 * v3
-        auto firstV1 = SIMD_MM(add_ps)(SIMD_MM(mul_ps)(that.firstA1, that.first1eq), SIMD_MM(mul_ps)(that.firstA2, firstV3));
-        auto secondV1 = SIMD_MM(add_ps)(SIMD_MM(mul_ps)(that.secondA1, that.second1eq), SIMD_MM(mul_ps)(that.secondA2, secondV3));
-        auto thirdV1 = SIMD_MM(add_ps)(SIMD_MM(mul_ps)(that.thirdA1, that.third1eq), SIMD_MM(mul_ps)(that.thirdA2, thirdV3));
+        auto firstV1 = ADD(MUL(that.firstA1, that.first1eq), MUL(that.firstA2, firstV3));
+        auto secondV1 = ADD(MUL(that.secondA1, that.second1eq), MUL(that.secondA2, secondV3));
+        auto thirdV1 = ADD(MUL(that.thirdA1, that.third1eq), MUL(that.thirdA2, thirdV3));
+        
+        if (that.run < 12)
+        {
+            // DEBUG STATEMENT
+            
+            float dQ1 alignas(16)[4];
+            float dQ2 alignas(16)[4];
+            float dQ3 alignas(16)[4];
+            SIMD_MM(store_ps)(dQ1, firstV1);
+            SIMD_MM(store_ps)(dQ2, secondV1);
+            SIMD_MM(store_ps)(dQ3, thirdV1);
+            
+            std::cout << "V1 =";
+            for (int i = 0; i < 4; ++i)
+            {
+                std::cout << " " << dQ1[i] << ", ";
+            }
+            for (int i = 0; i < 4; ++i)
+            {
+                std::cout << " " << dQ2[i] << ", ";
+            }
+            for (int i = 0; i < 4; ++i)
+            {
+                std::cout << " " << dQ3[i] << ", ";
+            }
+            std::cout << std::endl;
+        }
         
         // v2 = ic2eq + a2 * ic1eq + a3 * v3
-        auto firstV2 = SIMD_MM(add_ps)(that.first2eq, SIMD_MM(add_ps)(SIMD_MM(mul_ps)(that.firstA2, that.first1eq), SIMD_MM(mul_ps)(that.firstA3, firstV3)));
-        auto secondV2 = SIMD_MM(add_ps)(that.second2eq, SIMD_MM(add_ps)(SIMD_MM(mul_ps)(that.secondA2, that.second1eq), SIMD_MM(mul_ps)(that.secondA3, secondV3)));
-        auto thirdV2 = SIMD_MM(add_ps)(that.third2eq, SIMD_MM(add_ps)(SIMD_MM(mul_ps)(that.thirdA2, that.third1eq), SIMD_MM(mul_ps)(that.thirdA3, thirdV3)));
+        auto firstV2 = ADD(that.first2eq, ADD(MUL(that.firstA2, that.first1eq), MUL(that.firstA3, firstV3)));
+        auto secondV2 = ADD(that.second2eq, ADD(MUL(that.secondA2, that.second1eq), MUL(that.secondA3, secondV3)));
+        auto thirdV2 = ADD(that.third2eq, ADD(MUL(that.thirdA2, that.third1eq), MUL(that.thirdA3, thirdV3)));
         
+        if (that.run < 12)
+        {
+            // DEBUG STATEMENT
+            
+            float dQ1 alignas(16)[4];
+            float dQ2 alignas(16)[4];
+            float dQ3 alignas(16)[4];
+            SIMD_MM(store_ps)(dQ1, firstV2);
+            SIMD_MM(store_ps)(dQ2, secondV2);
+            SIMD_MM(store_ps)(dQ3, thirdV2);
+            
+            std::cout << "V2 =";
+            for (int i = 0; i < 4; ++i)
+            {
+                std::cout << " " << dQ1[i] << ", ";
+            }
+            for (int i = 0; i < 4; ++i)
+            {
+                std::cout << " " << dQ2[i] << ", ";
+            }
+            for (int i = 0; i < 4; ++i)
+            {
+                std::cout << " " << dQ3[i] << ", ";
+            }
+            std::cout << std::endl;
+        }
+
         // ic1eq = 2 * v1 - ic1eq
-        that.first1eq = SIMD_MM(sub_ps)(SIMD_MM(mul_ps)(that.twoSSE, firstV1), that.first1eq);
-        that.second1eq = SIMD_MM(sub_ps)(SIMD_MM(mul_ps)(that.twoSSE, secondV1), that.second1eq);
-        that.third1eq = SIMD_MM(sub_ps)(SIMD_MM(mul_ps)(that.twoSSE, thirdV1), that.third1eq);
+        that.first1eq = SUB(MUL(that.twoSSE, firstV1), that.first1eq);
+        that.second1eq = SUB(MUL(that.twoSSE, secondV1), that.second1eq);
+        that.third1eq = SUB(MUL(that.twoSSE, thirdV1), that.third1eq);
+        
+        if (that.run < 12)
+        {
+            // DEBUG STATEMENT
+            
+            float dQ1 alignas(16)[4];
+            float dQ2 alignas(16)[4];
+            float dQ3 alignas(16)[4];
+            SIMD_MM(store_ps)(dQ1, that.first1eq);
+            SIMD_MM(store_ps)(dQ2, that.second1eq);
+            SIMD_MM(store_ps)(dQ3, that.third1eq);
+            
+            std::cout << "1EQ =";
+            for (int i = 0; i < 4; ++i)
+            {
+                std::cout << " " << dQ1[i] << ", ";
+            }
+            for (int i = 0; i < 4; ++i)
+            {
+                std::cout << " " << dQ2[i] << ", ";
+            }
+            for (int i = 0; i < 4; ++i)
+            {
+                std::cout << " " << dQ3[i] << ", ";
+            }
+            std::cout << std::endl;
+        }
         
         // ic2eq = 2 * v2 - ic2eq
-        that.first2eq = SIMD_MM(sub_ps)(SIMD_MM(mul_ps)(that.twoSSE, firstV2), that.first2eq);
-        that.second2eq = SIMD_MM(sub_ps)(SIMD_MM(mul_ps)(that.twoSSE, secondV2), that.second2eq);
-        that.third2eq = SIMD_MM(sub_ps)(SIMD_MM(mul_ps)(that.twoSSE, thirdV2), that.third2eq);
+        that.first2eq = SUB(MUL(that.twoSSE, firstV2), that.first2eq);
+        that.second2eq = SUB(MUL(that.twoSSE, secondV2), that.second2eq);
+        that.third2eq = SUB(MUL(that.twoSSE, thirdV2), that.third2eq);
+        
+        if (that.run < 12)
+        {
+            // DEBUG STATEMENT
+            
+            float dQ1 alignas(16)[4];
+            float dQ2 alignas(16)[4];
+            float dQ3 alignas(16)[4];
+            SIMD_MM(store_ps)(dQ1, that.first2eq);
+            SIMD_MM(store_ps)(dQ2, that.second2eq);
+            SIMD_MM(store_ps)(dQ3, that.third2eq);
+            
+            std::cout << "2EQ =";
+            for (int i = 0; i < 4; ++i)
+            {
+                std::cout << " " << dQ1[i] << ", ";
+            }
+            for (int i = 0; i < 4; ++i)
+            {
+                std::cout << " " << dQ2[i] << ", ";
+            }
+            for (int i = 0; i < 4; ++i)
+            {
+                std::cout << " " << dQ3[i] << ", ";
+            }
+            std::cout << std::endl;
+        }
         
         // results are:
         // (m0 * input) + ((m1 * v1) + (m2 * v2))
-        that.firstQueue = SIMD_MM(add_ps)(SIMD_MM(mul_ps)(that.firstM0, that.firstQueue), SIMD_MM(add_ps)(SIMD_MM(mul_ps)(that.firstM1, firstV1), SIMD_MM(mul_ps)(that.firstM2, firstV2)));
-        that.secondQueue = SIMD_MM(add_ps)(SIMD_MM(mul_ps)(that.secondM0, that.secondQueue), SIMD_MM(add_ps)(SIMD_MM(mul_ps)(that.secondM1, secondV1), SIMD_MM(mul_ps)(that.secondM2, secondV2)));
-        that.thirdQueue = SIMD_MM(add_ps)(SIMD_MM(mul_ps)(that.thirdM0, that.thirdQueue), SIMD_MM(add_ps)(SIMD_MM(mul_ps)(that.thirdM1, thirdV1), SIMD_MM(mul_ps)(that.thirdM2, thirdV2)));
+        that.firstQueue = ADD(MUL(that.firstM0, that.firstQueue), ADD(MUL(that.firstM1, firstV1), MUL(that.firstM2, firstV2)));
+        that.secondQueue = ADD(MUL(that.secondM0, that.secondQueue), ADD(MUL(that.secondM1, secondV1), MUL(that.secondM2, secondV2)));
+        that.thirdQueue = ADD(MUL(that.thirdM0, that.thirdQueue), ADD(MUL(that.thirdM1, thirdV1), MUL(that.thirdM2, thirdV2)));
+        
+        if (that.run < 12)
+        {
+            // DEBUG STATEMENT
+            
+            float dQ1 alignas(16)[4];
+            float dQ2 alignas(16)[4];
+            float dQ3 alignas(16)[4];
+            SIMD_MM(store_ps)(dQ1, that.firstQueue);
+            SIMD_MM(store_ps)(dQ2, that.secondQueue);
+            SIMD_MM(store_ps)(dQ3, that.thirdQueue);
+            
+            std::cout << "Queue afterwards =";
+            for (int i = 0; i < 4; ++i)
+            {
+                std::cout << " " << dQ1[i] << ", ";
+            }
+            for (int i = 0; i < 4; ++i)
+            {
+                std::cout << " " << dQ2[i] << ", ";
+            }
+            for (int i = 0; i < 4; ++i)
+            {
+                std::cout << " " << dQ3[i] << ", ";
+            }
+            std::cout << std::endl;
+        }
         
         // Return the eleventh value
         
         float res alignas(16)[4];
         SIMD_MM(store_ps)(res, that.thirdQueue);
         vin = res[2];
+        
         if (that.run < 12)
         {
             std::cout << "output = " << vin << std::endl;
+            std::cout << std::endl;
             that.run += 1;
         }
+         
     }
-    
+    /*
     // Block processing with smoothing:
     
     SIMD_M128 firstA1_prior, secondA1_prior, thirdA1_prior;
@@ -693,28 +871,28 @@ struct FastTiltNoiseFilter
 
         // then for each one calculate the change across the block
         static constexpr float obsf = 1.f / blockSize;
-        auto obs = SIMD_MM(set1_ps)(obsf);
+        auto obs = SETALL(obsf);
 
         // and set the changeup, and reset a1 to the prior value so we move in the block
-        firstDA1 = SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(firstA1, firstA1_prior), obs);
-        secondDA1 = SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(secondA1, secondA1_prior), obs);
-        thirdDA1 = SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(thirdA1, thirdA1_prior), obs);
+        firstDA1 = MUL(SUB(firstA1, firstA1_prior), obs);
+        secondDA1 = MUL(SUB(secondA1, secondA1_prior), obs);
+        thirdDA1 = MUL(SUB(thirdA1, thirdA1_prior), obs);
         
         firstA1 = firstA1_prior;
         secondA1 = secondA1_prior;
         thirdA1 = thirdA1_prior;
         
-        firstDA2 = SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(firstA2, firstA2_prior), obs);
-        secondDA2 = SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(secondA2, secondA2_prior), obs);
-        thirdDA2 = SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(thirdA2, thirdA2_prior), obs);
+        firstDA2 = MUL(SUB(firstA2, firstA2_prior), obs);
+        secondDA2 = MUL(SUB(secondA2, secondA2_prior), obs);
+        thirdDA2 = MUL(SUB(thirdA2, thirdA2_prior), obs);
         
         firstA2 = firstA2_prior;
         secondA2 = secondA2_prior;
         thirdA2 = thirdA2_prior;
 
-        firstDA3 = SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(firstA3, firstA3_prior), obs);
-        secondDA3 = SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(secondA3, secondA3_prior), obs);
-        thirdDA3 = SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(thirdA3, thirdA3_prior), obs);
+        firstDA3 = MUL(SUB(firstA3, firstA3_prior), obs);
+        secondDA3 = MUL(SUB(secondA3, secondA3_prior), obs);
+        thirdDA3 = MUL(SUB(thirdA3, thirdA3_prior), obs);
         
         firstA3 = firstA3_prior;
         secondA3 = secondA3_prior;
@@ -725,17 +903,17 @@ struct FastTiltNoiseFilter
     {
         step(*this, input);
         
-        firstA1 = SIMD_MM(add_ps)(firstA1, firstDA1);
-        secondA1 = SIMD_MM(add_ps)(secondA1, secondDA1);
-        thirdA1 = SIMD_MM(add_ps)(thirdA1, thirdDA1);
+        firstA1 = ADD(firstA1, firstDA1);
+        secondA1 = ADD(secondA1, secondDA1);
+        thirdA1 = ADD(thirdA1, thirdDA1);
         
-        firstA2 = SIMD_MM(add_ps)(firstA2, firstDA2);
-        secondA2 = SIMD_MM(add_ps)(secondA2, secondDA2);
-        thirdA2 = SIMD_MM(add_ps)(thirdA2, thirdDA2);
+        firstA2 = ADD(firstA2, firstDA2);
+        secondA2 = ADD(secondA2, secondDA2);
+        thirdA2 = ADD(thirdA2, thirdDA2);
         
-        firstA3 = SIMD_MM(add_ps)(firstA3, firstDA3);
-        secondA3 = SIMD_MM(add_ps)(secondA3, secondDA3);
-        thirdA3 = SIMD_MM(add_ps)(thirdA3, thirdDA3);
+        firstA3 = ADD(firstA3, firstDA3);
+        secondA3 = ADD(secondA3, secondDA3);
+        thirdA3 = ADD(thirdA3, thirdDA3);
     }
     
     template <int blockSize>
@@ -747,7 +925,15 @@ struct FastTiltNoiseFilter
             processBlockStep(output[i]);
         }
     }
+     */
 };
+
+#undef ADD
+#undef SUB
+#undef DIV
+#undef MUL
+#undef SETALL
+#undef ZERO
 
 } // namespace sst::filters
 
