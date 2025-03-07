@@ -117,7 +117,7 @@ struct CytomicSVF
     {
         auto coL = M_PI * std::clamp(freqL * srInv, 0.f, 0.499f); // stable until nyquist
         auto coR = M_PI * std::clamp(freqR * srInv, 0.f, 0.499f); // stable until nyquist
-        g = sst::basic_blocks::dsp::fasttanhSSE(SIMD_MM(set_ps)(0, 0, coR, coL));
+        g = sst::basic_blocks::dsp::fasttanSSE(SIMD_MM(set_ps)(0, 0, coR, coL));
         auto res =
             SIMD_MM(set_ps)(0, 0, std::clamp(resR, 0.f, 0.98f), std::clamp(resL, 0.f, 0.98f));
 
