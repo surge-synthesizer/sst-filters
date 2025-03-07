@@ -201,6 +201,12 @@ struct CytomicSVF
             m2 = ZERO();
             break;
         }
+        
+        float debug alignas(16)[4];
+        SIMD_MM(store_ps)(debug, m2);
+        float dbg = debug[3];
+        
+        std::cout << "old m2 = " << dbg << std::endl; // DOooo it
     }
 
     void fetchCoeffs(const CytomicSVF &that)
@@ -422,11 +428,34 @@ struct CytomicSVF
 
 struct FastTiltNoiseFilter
 {
+    struct decibelConverter
+    {
+        static constexpr size_t nPoints{512};
+        float table_dB[nPoints];
+
+        void init()
+        {
+            for (auto i = 0U; i < nPoints; i++)
+                table_dB[i] = powf(10.f, 0.05f * ((float)i - 384.f));
+        }
+
+        float dbToLinear(float db) const
+        {
+            db += 384;
+            int e = (int)db;
+            float a = db - (float)e;
+            return (1.f - a) * table_dB[e & (nPoints - 1)] + a * table_dB[(e + 1) & (nPoints - 1)];
+        }
+    };
+    decibelConverter dbConv;
+    
     /*
      Ok, so we want to feed in white noise and get it back nicely filtered to an
      N dB/oct slope for our noise colors.
      
-     11 shelves in series does that really really accurately, but is a little slower than we'd like.
+     11 shelves in series, an octave apart with just the right res, does that really really accurately.
+     But doing that with the class above is a little slower than we'd like,
+     especially under modulation where you have to redo the coefficients each block.
      
      The trick we're gonna do is actually run the filters in parallel instead of series anyway,
      passing the previous input sample on to the next filter stage with each step() call,
@@ -453,6 +482,8 @@ struct FastTiltNoiseFilter
     SIMD_M128 kSSE;
     SIMD_M128 firstGK, secondGK, thirdGK;
     
+    const SIMD_M128 mask = SIMD_MM(castsi128_ps)(SIMD_MM(set_epi32)(0,0,~0,~0));
+    
     SIMD_M128 firstA1, secondA1, thirdA1;
     SIMD_M128 firstA2, secondA2, thirdA2;
     SIMD_M128 firstA3, secondA3, thirdA3;
@@ -468,11 +499,57 @@ struct FastTiltNoiseFilter
     
     int run{0};
     
-    FastTiltNoiseFilter(float srInv)
+    FastTiltNoiseFilter(float srInv) : dbConv()
     {
+        dbConv.init();
+        
         // Since frequencies and resonances don't change in this case, a bunch of coefficients
         // can be fixed once sample rate is known and not touched after that.
        
+        /*
+         G =
+         
+        0.000654499
+        0.001309
+        0.002618
+        0.00523604
+        0.0104724
+        0.020947
+        0.0419124
+        0.0839723
+        0.169137
+        0.348237
+        0.79259
+         
+         GK =
+         1.86065,
+         1.86131,
+         1.86262,
+         1.86524,
+         1.87047,
+         1.88095,
+         1.90191,
+         1.94397,
+         2.02914,
+         2.20824,
+         2.65259,
+         
+         A1 =
+          0.998784
+          0.99757
+          0.995147
+          0.990328
+          0.980788
+          0.962093
+          0.926171
+          0.859668
+          0.744489
+          0.565294
+          0.322329
+         
+         A2
+         */
+        
         float freqs[11] = {20, 40, 80, 160, 320, 640, 1280, 2560, 5120, 10240, 20480};
         float G[11] = {};
         
@@ -480,7 +557,6 @@ struct FastTiltNoiseFilter
         for (int i = 0; i < 11; ++i)
         {
             G[i] = sst::basic_blocks::dsp::fasttan(M_PI * freqs[i] * srInv);
-            
         }
 
         firstG = SIMD_MM(set_ps)(G[3], G[2], G[1], G[0]);
@@ -512,9 +588,9 @@ struct FastTiltNoiseFilter
         thirdA3 = MUL(thirdG, thirdA2);
     }
     
-    void init(sst::basic_blocks::dsp::RNG &extRng, float posGain, float negGain)
+    void init(sst::basic_blocks::dsp::RNG &extRng, float gain)
     {
-        setCoeff(posGain, negGain);
+        setCoeff(gain);
         
         for (int i = 0; i < 11; ++i)
         {
@@ -523,7 +599,7 @@ struct FastTiltNoiseFilter
         }
     }
     
-    void setCoeff(float posGain, float negGain)
+    void setCoeff(float gain)
     {
         /*
          The only coefficients that change in this class are the gain-related ones.
@@ -539,12 +615,14 @@ struct FastTiltNoiseFilter
          m1 = (k * (1 - A)) * A
          m2 = 1 - A^2
         
-         Five of the filters are low shelves and have their gain inverted, the rest are high shelves.
+        
+         Six of the filters are low shelves and have their gain inverted, the rest are high shelves.
          So start by setting the first and third m128, where every element is either a low or high shelf.
-         Then the middle m128 gets a blend to set its first element to the low shelf/neg gain.
+         Then the middle m128 gets a blend of the other two to set its first element to the low shelf/neg gain.
          */
         
-        const SIMD_M128 mask = SIMD_MM(castsi128_ps)(SIMD_MM(set_epi32)(~0,0,0,0));
+        float negGain = dbConv.dbToLinear(-gain);
+        float posGain = dbConv.dbToLinear(gain);
         
         auto firstA = SETALL(negGain);
         auto thirdA = SETALL(posGain);
@@ -557,17 +635,40 @@ struct FastTiltNoiseFilter
         firstM1 = MUL(kSSE, SUB(firstA, oneSSE));
         thirdM1 = MUL(MUL(kSSE, SUB(oneSSE, thirdA)), thirdA);
         secondM1 = SIMD_MM(blendv_ps)(thirdM1, firstM1, mask);
-        
+
         firstM2 = SUB(MUL(firstA, firstA), oneSSE);
-        thirdM2 = SUB(oneSSE, MUL(firstA, firstA));
+        thirdM2 = SUB(oneSSE, MUL(thirdA, thirdA));
         secondM2 = SIMD_MM(blendv_ps)(thirdM2, firstM2, mask);
+        
+//        {
+//            // DEBUG STATEMENT
+//
+//            float dQ1 alignas(16)[4];
+//            float dQ2 alignas(16)[4];
+//            float dQ3 alignas(16)[4];
+//            SIMD_MM(store_ps)(dQ1, firstM2);
+//            SIMD_MM(store_ps)(dQ2, secondM2);
+//            SIMD_MM(store_ps)(dQ3, thirdM2);
+//
+//            std::cout << "Optimized M2 =";
+//            for (int i = 0; i < 4; ++i)
+//            {
+//                std::cout << " " << dQ1[i] << std::endl;
+//            }
+//            for (int i = 0; i < 4; ++i)
+//            {
+//                std::cout << " " << dQ2[i] << std::endl;
+//            }
+//            for (int i = 0; i < 3; ++i)
+//            {
+//                std::cout << " " << dQ3[i] << std::endl;
+//            }
+//        }
     }
     
     static void step(FastTiltNoiseFilter &that, float &vin)
     {
         // The shuffle algo works. Filter algo does not.
-        
-        
         
         float tQ1 alignas(16)[4];
         float tQ2 alignas(16)[4];
@@ -576,14 +677,16 @@ struct FastTiltNoiseFilter
         SIMD_MM(store_ps)(tQ2, that.secondQueue);
         SIMD_MM(store_ps)(tQ3, that.thirdQueue);
         
-        // Shuffle the queues forwards, adding in the current input
+        // Shuffle the queues forwards (which is actually backwards), adding in the current input
         that.firstQueue = SIMD_MM(set_ps)(tQ1[2], tQ1[1], tQ1[0], vin);
         that.secondQueue = SIMD_MM(set_ps)(tQ2[2], tQ2[1], tQ2[0], tQ1[3]);
         that.thirdQueue = SIMD_MM(set_ps)(tQ3[2], tQ3[1], tQ3[0], tQ2[3]);
-        
+        /*
         if (that.run < 12)
         {
             // DEBUG STATEMENT
+            
+            std::cout << "input = " << vin << std::endl;
             
             float dQ1 alignas(16)[4];
             float dQ2 alignas(16)[4];
@@ -607,6 +710,7 @@ struct FastTiltNoiseFilter
             }
             std::cout << std::endl;
         }
+         */
         
         // time to run the filter algo
         
@@ -615,169 +719,32 @@ struct FastTiltNoiseFilter
         auto secondV3 = SUB(that.secondQueue, that.second2eq);
         auto thirdV3 = SUB(that.thirdQueue, that.third2eq);
         
-        if (that.run < 12)
-        {
-            std::cout << "input = " << vin << std::endl;
-            
-            // DEBUG STATEMENT
-            
-            float dQ1 alignas(16)[4];
-            float dQ2 alignas(16)[4];
-            float dQ3 alignas(16)[4];
-            SIMD_MM(store_ps)(dQ1, firstV3);
-            SIMD_MM(store_ps)(dQ2, secondV3);
-            SIMD_MM(store_ps)(dQ3, thirdV3);
-            
-            std::cout << "V3 =";
-            for (int i = 0; i < 4; ++i)
-            {
-                std::cout << " " << dQ1[i] << ", ";
-            }
-            for (int i = 0; i < 4; ++i)
-            {
-                std::cout << " " << dQ2[i] << ", ";
-            }
-            for (int i = 0; i < 4; ++i)
-            {
-                std::cout << " " << dQ3[i] << ", ";
-            }
-            std::cout << std::endl;
-        }
-        
         // v1 = a1 * ic1eq + a2 * v3
         auto firstV1 = ADD(MUL(that.firstA1, that.first1eq), MUL(that.firstA2, firstV3));
         auto secondV1 = ADD(MUL(that.secondA1, that.second1eq), MUL(that.secondA2, secondV3));
         auto thirdV1 = ADD(MUL(that.thirdA1, that.third1eq), MUL(that.thirdA2, thirdV3));
         
-        if (that.run < 12)
-        {
-            // DEBUG STATEMENT
-            
-            float dQ1 alignas(16)[4];
-            float dQ2 alignas(16)[4];
-            float dQ3 alignas(16)[4];
-            SIMD_MM(store_ps)(dQ1, firstV1);
-            SIMD_MM(store_ps)(dQ2, secondV1);
-            SIMD_MM(store_ps)(dQ3, thirdV1);
-            
-            std::cout << "V1 =";
-            for (int i = 0; i < 4; ++i)
-            {
-                std::cout << " " << dQ1[i] << ", ";
-            }
-            for (int i = 0; i < 4; ++i)
-            {
-                std::cout << " " << dQ2[i] << ", ";
-            }
-            for (int i = 0; i < 4; ++i)
-            {
-                std::cout << " " << dQ3[i] << ", ";
-            }
-            std::cout << std::endl;
-        }
-        
         // v2 = ic2eq + a2 * ic1eq + a3 * v3
         auto firstV2 = ADD(that.first2eq, ADD(MUL(that.firstA2, that.first1eq), MUL(that.firstA3, firstV3)));
         auto secondV2 = ADD(that.second2eq, ADD(MUL(that.secondA2, that.second1eq), MUL(that.secondA3, secondV3)));
         auto thirdV2 = ADD(that.third2eq, ADD(MUL(that.thirdA2, that.third1eq), MUL(that.thirdA3, thirdV3)));
-        
-        if (that.run < 12)
-        {
-            // DEBUG STATEMENT
-            
-            float dQ1 alignas(16)[4];
-            float dQ2 alignas(16)[4];
-            float dQ3 alignas(16)[4];
-            SIMD_MM(store_ps)(dQ1, firstV2);
-            SIMD_MM(store_ps)(dQ2, secondV2);
-            SIMD_MM(store_ps)(dQ3, thirdV2);
-            
-            std::cout << "V2 =";
-            for (int i = 0; i < 4; ++i)
-            {
-                std::cout << " " << dQ1[i] << ", ";
-            }
-            for (int i = 0; i < 4; ++i)
-            {
-                std::cout << " " << dQ2[i] << ", ";
-            }
-            for (int i = 0; i < 4; ++i)
-            {
-                std::cout << " " << dQ3[i] << ", ";
-            }
-            std::cout << std::endl;
-        }
 
         // ic1eq = 2 * v1 - ic1eq
         that.first1eq = SUB(MUL(that.twoSSE, firstV1), that.first1eq);
         that.second1eq = SUB(MUL(that.twoSSE, secondV1), that.second1eq);
         that.third1eq = SUB(MUL(that.twoSSE, thirdV1), that.third1eq);
         
-        if (that.run < 12)
-        {
-            // DEBUG STATEMENT
-            
-            float dQ1 alignas(16)[4];
-            float dQ2 alignas(16)[4];
-            float dQ3 alignas(16)[4];
-            SIMD_MM(store_ps)(dQ1, that.first1eq);
-            SIMD_MM(store_ps)(dQ2, that.second1eq);
-            SIMD_MM(store_ps)(dQ3, that.third1eq);
-            
-            std::cout << "1EQ =";
-            for (int i = 0; i < 4; ++i)
-            {
-                std::cout << " " << dQ1[i] << ", ";
-            }
-            for (int i = 0; i < 4; ++i)
-            {
-                std::cout << " " << dQ2[i] << ", ";
-            }
-            for (int i = 0; i < 4; ++i)
-            {
-                std::cout << " " << dQ3[i] << ", ";
-            }
-            std::cout << std::endl;
-        }
-        
         // ic2eq = 2 * v2 - ic2eq
         that.first2eq = SUB(MUL(that.twoSSE, firstV2), that.first2eq);
         that.second2eq = SUB(MUL(that.twoSSE, secondV2), that.second2eq);
         that.third2eq = SUB(MUL(that.twoSSE, thirdV2), that.third2eq);
-        
-        if (that.run < 12)
-        {
-            // DEBUG STATEMENT
-            
-            float dQ1 alignas(16)[4];
-            float dQ2 alignas(16)[4];
-            float dQ3 alignas(16)[4];
-            SIMD_MM(store_ps)(dQ1, that.first2eq);
-            SIMD_MM(store_ps)(dQ2, that.second2eq);
-            SIMD_MM(store_ps)(dQ3, that.third2eq);
-            
-            std::cout << "2EQ =";
-            for (int i = 0; i < 4; ++i)
-            {
-                std::cout << " " << dQ1[i] << ", ";
-            }
-            for (int i = 0; i < 4; ++i)
-            {
-                std::cout << " " << dQ2[i] << ", ";
-            }
-            for (int i = 0; i < 4; ++i)
-            {
-                std::cout << " " << dQ3[i] << ", ";
-            }
-            std::cout << std::endl;
-        }
         
         // results are:
         // (m0 * input) + ((m1 * v1) + (m2 * v2))
         that.firstQueue = ADD(MUL(that.firstM0, that.firstQueue), ADD(MUL(that.firstM1, firstV1), MUL(that.firstM2, firstV2)));
         that.secondQueue = ADD(MUL(that.secondM0, that.secondQueue), ADD(MUL(that.secondM1, secondV1), MUL(that.secondM2, secondV2)));
         that.thirdQueue = ADD(MUL(that.thirdM0, that.thirdQueue), ADD(MUL(that.thirdM1, thirdV1), MUL(that.thirdM2, thirdV2)));
-        
+        /*
         if (that.run < 12)
         {
             // DEBUG STATEMENT
@@ -804,6 +771,7 @@ struct FastTiltNoiseFilter
             }
             std::cout << std::endl;
         }
+         */
         
         // Return the eleventh value
         
@@ -811,13 +779,12 @@ struct FastTiltNoiseFilter
         SIMD_MM(store_ps)(res, that.thirdQueue);
         vin = res[2];
         
-        if (that.run < 12)
-        {
-            std::cout << "output = " << vin << std::endl;
-            std::cout << std::endl;
-            that.run += 1;
-        }
-         
+//        if (that.run < 12)
+//        {
+//            std::cout << "output = " << vin << std::endl;
+//            std::cout << std::endl;
+//            that.run += 1;
+//        }
     }
     /*
     // Block processing with smoothing:
