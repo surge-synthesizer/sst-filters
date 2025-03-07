@@ -39,7 +39,6 @@
 #endif
 
 #include "sst/basic-blocks/dsp/FastMath.h"
-#include "sst/basic-blocks/dsp/RNG.h"
 
 /*
  * An implementation of "Solving the continuous SVF equations using
