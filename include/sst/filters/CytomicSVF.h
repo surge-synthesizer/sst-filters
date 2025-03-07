@@ -105,6 +105,7 @@ struct CytomicSVF
 
         g = SETALL(sst::basic_blocks::dsp::fasttan(M_PI * conorm));
         k = SETALL(2.0 - 2 * res);
+
         if (mode == BELL)
         {
             k = DIV(k, SETALL(bellShelfAmp));
