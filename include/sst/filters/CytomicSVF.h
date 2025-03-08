@@ -63,11 +63,10 @@ namespace sst::filters
 #define DIV(a, b) SIMD_MM(div_ps)(a, b)
 #define MUL(a, b) SIMD_MM(mul_ps)(a, b)
 #define SETALL(a) SIMD_MM(set1_ps)(a)
-#define ZERO(a) SIMD_MM(setzero_ps)(a)
 
 struct CytomicSVF
 {
-    SIMD_M128 ic1eq{ZERO()}, ic2eq{ZERO()};
+    SIMD_M128 ic1eq{SIMD_MM(setzero_ps)()}, ic2eq{SIMD_MM(setzero_ps)()};
     SIMD_M128 g, k, gk, a1, a2, a3, m0, m1, m2;
 
     SIMD_M128 oneSSE{SETALL(1.0)};
@@ -142,41 +141,41 @@ struct CytomicSVF
         switch (mode)
         {
         case LP:
-            m0 = ZERO();
-            m1 = ZERO();
+            m0 = SIMD_MM(setzero_ps)();
+            m1 = SIMD_MM(setzero_ps)();
             m2 = oneSSE;
             break;
         case BP:
-            m0 = ZERO();
+            m0 = SIMD_MM(setzero_ps)();
             m1 = oneSSE;
-            m2 = ZERO();
+            m2 = SIMD_MM(setzero_ps)();
             break;
         case HP:
             m0 = oneSSE;
-            m1 = SUB(ZERO(), k);
+            m1 = SUB(SIMD_MM(setzero_ps)(), k);
             m2 = negoneSSE;
             break;
         case NOTCH:
             m0 = oneSSE;
-            m1 = SUB(ZERO(), k);
-            m2 = ZERO();
+            m1 = SUB(SIMD_MM(setzero_ps)(), k);
+            m2 = SIMD_MM(setzero_ps)();
             break;
         case PEAK:
             m0 = oneSSE;
-            m1 = SUB(ZERO(), k);
+            m1 = SUB(SIMD_MM(setzero_ps)(), k);
             m2 = negtwoSSE;
             break;
         case ALL:
             m0 = oneSSE;
             m1 = MUL(negtwoSSE, k);
-            m2 = ZERO();
+            m2 = SIMD_MM(setzero_ps)();
             break;
         case BELL:
         {
             auto A = bellShelfSSE;
             m0 = oneSSE;
             m1 = MUL(k, SUB(MUL(A, A), oneSSE));
-            m2 = ZERO();
+            m2 = SIMD_MM(setzero_ps)();
         }
         break;
         case LOW_SHELF:
@@ -196,9 +195,9 @@ struct CytomicSVF
         }
         break;
         default:
-            m0 = ZERO();
-            m1 = ZERO();
-            m2 = ZERO();
+            m0 = SIMD_MM(setzero_ps)();
+            m1 = SIMD_MM(setzero_ps)();
+            m2 = SIMD_MM(setzero_ps)();
             break;
         }
     }
@@ -358,12 +357,12 @@ struct CytomicSVF
 
     template <int blockSize> void retainCoeffForBlock()
     {
-        da1 = ZERO();
-        da2 = ZERO();
-        da3 = ZERO();
-        dm0 = ZERO();
-        dm1 = ZERO();
-        dm2 = ZERO();
+        da1 = SIMD_MM(setzero_ps)();
+        da2 = SIMD_MM(setzero_ps)();
+        da3 = SIMD_MM(setzero_ps)();
+        dm0 = SIMD_MM(setzero_ps)();
+        dm1 = SIMD_MM(setzero_ps)();
+        dm2 = SIMD_MM(setzero_ps)();
     }
 
     void processBlockStep(float &L, float &R)
@@ -411,9 +410,15 @@ struct CytomicSVF
 
     void init()
     {
-        ic1eq = ZERO();
-        ic2eq = ZERO();
+        ic1eq = SIMD_MM(setzero_ps)();
+        ic2eq = SIMD_MM(setzero_ps)();
     }
+
+#undef ADD
+#undef SUB
+#undef DIV
+#undef MUL
+#undef SETALL
 };
 
 } // namespace sst::filters
