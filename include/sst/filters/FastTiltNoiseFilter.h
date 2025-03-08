@@ -76,7 +76,8 @@ template <typename hostClass> struct FastTiltNoiseFilter
     // initialize with a class containing dbToLinear() and getSampleRateInv() functions
     hostClass &host;
 
-    SIMD_M128 firstQueue{SIMD_MM(setzero_ps)()}, secondQueue{SIMD_MM(setzero_ps)()}, thirdQueue{SIMD_MM(setzero_ps)()};
+    SIMD_M128 firstQueue{SIMD_MM(setzero_ps)()}, secondQueue{SIMD_MM(setzero_ps)()},
+        thirdQueue{SIMD_MM(setzero_ps)()};
 
     // 1.86 is the k value for our intended res of .07
     const SIMD_M128 kSSE = SIMD_MM(set1_ps)(1.86);
@@ -94,8 +95,10 @@ template <typename hostClass> struct FastTiltNoiseFilter
     SIMD_M128 firstM1, secondM1, thirdM1;
     SIMD_M128 firstM2, secondM2, thirdM2;
 
-    SIMD_M128 first1eq{SIMD_MM(setzero_ps)()}, second1eq{SIMD_MM(setzero_ps)()}, third1eq{SIMD_MM(setzero_ps)()};
-    SIMD_M128 first2eq{SIMD_MM(setzero_ps)()}, second2eq{SIMD_MM(setzero_ps)()}, third2eq{SIMD_MM(setzero_ps)()};
+    SIMD_M128 first1eq{SIMD_MM(setzero_ps)()}, second1eq{SIMD_MM(setzero_ps)()},
+        third1eq{SIMD_MM(setzero_ps)()};
+    SIMD_M128 first2eq{SIMD_MM(setzero_ps)()}, second2eq{SIMD_MM(setzero_ps)()},
+        third2eq{SIMD_MM(setzero_ps)()};
 
     SIMD_M128 oneSSE{SETALL(1.0)};
     SIMD_M128 negoneSSE{SETALL(-1.0)};

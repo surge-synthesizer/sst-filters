@@ -413,7 +413,7 @@ struct CytomicSVF
         ic1eq = SIMD_MM(setzero_ps)();
         ic2eq = SIMD_MM(setzero_ps)();
     }
-    
+
 #undef ADD
 #undef SUB
 #undef DIV
