@@ -42,7 +42,7 @@
 
 /*
  * An implementation of "Solving the continuous SVF equations using
- * trapezoidal integration and equivalent currents" by Andy Simpler
+ * trapezoidal integration and equivalent currents" by Andy Simper
  * @ cytomic
  *
  * https://cytomic.com/files/dsp/SvfLinearTrapOptimised2.pdf
@@ -57,15 +57,23 @@
 
 namespace sst::filters
 {
+
+#define ADD(a, b) SIMD_MM(add_ps)(a, b)
+#define SUB(a, b) SIMD_MM(sub_ps)(a, b)
+#define DIV(a, b) SIMD_MM(div_ps)(a, b)
+#define MUL(a, b) SIMD_MM(mul_ps)(a, b)
+#define SETALL(a) SIMD_MM(set1_ps)(a)
+#define ZERO(a) SIMD_MM(setzero_ps)(a)
+
 struct CytomicSVF
 {
-    SIMD_M128 ic1eq{SIMD_MM(setzero_ps)()}, ic2eq{SIMD_MM(setzero_ps)()};
+    SIMD_M128 ic1eq{ZERO()}, ic2eq{ZERO()};
     SIMD_M128 g, k, gk, a1, a2, a3, m0, m1, m2;
 
-    SIMD_M128 oneSSE{SIMD_MM(set1_ps)(1.0)};
-    SIMD_M128 negoneSSE{SIMD_MM(set1_ps)(-1.0)};
-    SIMD_M128 twoSSE{SIMD_MM(set1_ps)(2.0)};
-    SIMD_M128 negtwoSSE{SIMD_MM(set1_ps)(-2.0)};
+    SIMD_M128 oneSSE{SETALL(1.0)};
+    SIMD_M128 negoneSSE{SETALL(-1.0)};
+    SIMD_M128 twoSSE{SETALL(2.0)};
+    SIMD_M128 negtwoSSE{SETALL(-2.0)};
     enum Mode
     {
         LP,
@@ -94,13 +102,14 @@ struct CytomicSVF
         res = std::clamp(res, 0.f, 0.98f);
         bellShelfAmp = std::max(bellShelfAmp, 0.001f);
 
-        g = SIMD_MM(set1_ps)(sst::basic_blocks::dsp::fasttanh(M_PI * conorm));
-        k = SIMD_MM(set1_ps)(2.0 - 2 * res);
+        g = SETALL(sst::basic_blocks::dsp::fasttan(M_PI * conorm));
+        k = SETALL(2.0 - 2 * res);
+
         if (mode == BELL)
         {
-            k = SIMD_MM(div_ps)(k, SIMD_MM(set1_ps)(bellShelfAmp));
+            k = DIV(k, SETALL(bellShelfAmp));
         }
-        setCoeffPostGK(mode, SIMD_MM(set1_ps)(bellShelfAmp));
+        setCoeffPostGK(mode, SETALL(bellShelfAmp));
     }
 
     void setCoeff(Mode mode, float freqL, float freqR, float resL, float resR, float srInv,
@@ -108,93 +117,93 @@ struct CytomicSVF
     {
         auto coL = M_PI * std::clamp(freqL * srInv, 0.f, 0.499f); // stable until nyquist
         auto coR = M_PI * std::clamp(freqR * srInv, 0.f, 0.499f); // stable until nyquist
-        g = sst::basic_blocks::dsp::fasttanhSSE(SIMD_MM(set_ps)(0, 0, coR, coL));
+        g = sst::basic_blocks::dsp::fasttanSSE(SIMD_MM(set_ps)(0, 0, coR, coL));
         auto res =
             SIMD_MM(set_ps)(0, 0, std::clamp(resR, 0.f, 0.98f), std::clamp(resL, 0.f, 0.98f));
 
         auto bellShelfAmp =
             SIMD_MM(set_ps)(0, 0, std::max(bellShelfAmpL, 0.001f), std::max(bellShelfAmpR, 0.001f));
 
-        k = SIMD_MM(sub_ps)(twoSSE, SIMD_MM(mul_ps)(twoSSE, res));
+        k = SUB(twoSSE, MUL(twoSSE, res));
         if (mode == BELL)
         {
-            k = SIMD_MM(div_ps)(k, bellShelfAmp);
+            k = DIV(k, bellShelfAmp);
         }
         setCoeffPostGK(mode, bellShelfAmp);
     }
 
     void setCoeffPostGK(Mode mode, SIMD_M128 bellShelfSSE)
     {
-        gk = SIMD_MM(add_ps)(g, k);
-        a1 = SIMD_MM(div_ps)(oneSSE, SIMD_MM(add_ps)(oneSSE, SIMD_MM(mul_ps)(g, gk)));
-        a2 = SIMD_MM(mul_ps)(g, a1);
-        a3 = SIMD_MM(mul_ps)(g, a2);
+        gk = ADD(g, k);
+        a1 = DIV(oneSSE, ADD(oneSSE, MUL(g, gk)));
+        a2 = MUL(g, a1);
+        a3 = MUL(g, a2);
 
         switch (mode)
         {
         case LP:
-            m0 = SIMD_MM(setzero_ps)();
-            m1 = SIMD_MM(setzero_ps)();
+            m0 = ZERO();
+            m1 = ZERO();
             m2 = oneSSE;
             break;
         case BP:
-            m0 = SIMD_MM(setzero_ps)();
+            m0 = ZERO();
             m1 = oneSSE;
-            m2 = SIMD_MM(setzero_ps)();
+            m2 = ZERO();
             break;
         case HP:
             m0 = oneSSE;
-            m1 = SIMD_MM(sub_ps)(SIMD_MM(setzero_ps)(), k);
+            m1 = SUB(ZERO(), k);
             m2 = negoneSSE;
             break;
         case NOTCH:
             m0 = oneSSE;
-            m1 = SIMD_MM(sub_ps)(SIMD_MM(setzero_ps)(), k);
-            m2 = SIMD_MM(setzero_ps)();
+            m1 = SUB(ZERO(), k);
+            m2 = ZERO();
             break;
         case PEAK:
             m0 = oneSSE;
-            m1 = SIMD_MM(sub_ps)(SIMD_MM(setzero_ps)(), k);
+            m1 = SUB(ZERO(), k);
             m2 = negtwoSSE;
             break;
         case ALL:
             m0 = oneSSE;
-            m1 = SIMD_MM(mul_ps)(negtwoSSE, k);
-            m2 = SIMD_MM(setzero_ps)();
+            m1 = MUL(negtwoSSE, k);
+            m2 = ZERO();
             break;
         case BELL:
         {
             auto A = bellShelfSSE;
             m0 = oneSSE;
-            m1 = SIMD_MM(mul_ps)(k, SIMD_MM(sub_ps)(SIMD_MM(mul_ps)(A, A), oneSSE));
-            m2 = SIMD_MM(setzero_ps)();
+            m1 = MUL(k, SUB(MUL(A, A), oneSSE));
+            m2 = ZERO();
         }
         break;
         case LOW_SHELF:
         {
             auto A = bellShelfSSE;
             m0 = oneSSE;
-            m1 = SIMD_MM(mul_ps)(k, SIMD_MM(sub_ps)(A, oneSSE));
-            m2 = SIMD_MM(sub_ps)(SIMD_MM(mul_ps)(A, A), oneSSE);
+            m1 = MUL(k, SUB(A, oneSSE));
+            m2 = SUB(MUL(A, A), oneSSE);
         }
         break;
         case HIGH_SHELF:
         {
             auto A = bellShelfSSE;
-            m0 = SIMD_MM(mul_ps)(A, A);
-            m1 = SIMD_MM(mul_ps)(SIMD_MM(mul_ps)(k, SIMD_MM(sub_ps)(oneSSE, A)), A);
-            m2 = SIMD_MM(sub_ps)(oneSSE, SIMD_MM(mul_ps)(A, A));
+            m0 = MUL(A, A);
+            m1 = MUL(MUL(k, SUB(oneSSE, A)), A);
+            m2 = SUB(oneSSE, MUL(A, A));
         }
         break;
         default:
-            m0 = SIMD_MM(setzero_ps)();
-            m1 = SIMD_MM(setzero_ps)();
-            m2 = SIMD_MM(setzero_ps)();
+            m0 = ZERO();
+            m1 = ZERO();
+            m2 = ZERO();
             break;
         }
     }
 
-    void fetchCoeffs(const CytomicSVF &that) // TODO: Block smoothed version
+    void fetchCoeffs(const CytomicSVF &that)
     {
         g = that.g;
         k = that.k;
@@ -202,6 +211,9 @@ struct CytomicSVF
         a1 = that.a1;
         a2 = that.a2;
         a3 = that.a3;
+        da1 = that.da1;
+        da2 = that.da2;
+        da3 = that.da3;
         m0 = that.m0;
         m1 = that.m1;
         m2 = that.m2;
@@ -220,43 +232,44 @@ struct CytomicSVF
     static SIMD_M128 stepSSE(CytomicSVF &that, SIMD_M128 vin)
     {
         // v3 = v0 - ic2eq
-        auto v3 = SIMD_MM(sub_ps)(vin, that.ic2eq);
+        auto v3 = SUB(vin, that.ic2eq);
 
         // v1 = a1 * ic1eq + a2 * v3
-        auto v1 =
-            SIMD_MM(add_ps)(SIMD_MM(mul_ps)(that.a1, that.ic1eq), SIMD_MM(mul_ps)(that.a2, v3));
+        auto v1 = ADD(MUL(that.a1, that.ic1eq), MUL(that.a2, v3));
 
         // v2 = ic2eq + a2 * ic1eq + a3 * v3
-        auto v2 = SIMD_MM(add_ps)(that.ic2eq, SIMD_MM(add_ps)(SIMD_MM(mul_ps)(that.a2, that.ic1eq),
-                                                              SIMD_MM(mul_ps)(that.a3, v3)));
+        auto v2 = ADD(that.ic2eq, ADD(MUL(that.a2, that.ic1eq), MUL(that.a3, v3)));
 
         // ic1eq = 2 * v1 - ic1eq
-        that.ic1eq = SIMD_MM(sub_ps)(SIMD_MM(mul_ps)(that.twoSSE, v1), that.ic1eq);
+        that.ic1eq = SUB(MUL(that.twoSSE, v1), that.ic1eq);
 
         // ic2eq = 2 * v2 - ic2eq
-        that.ic2eq = SIMD_MM(sub_ps)(SIMD_MM(mul_ps)(that.twoSSE, v2), that.ic2eq);
+        that.ic2eq = SUB(MUL(that.twoSSE, v2), that.ic2eq);
 
-        return SIMD_MM(add_ps)(
-            SIMD_MM(mul_ps)(that.m0, vin),
-            SIMD_MM(add_ps)(SIMD_MM(mul_ps)(that.m1, v1), SIMD_MM(mul_ps)(that.m2, v2)));
+        // (m0 * input) + ((m1 * v1) + (m2 * v2))
+        return ADD(MUL(that.m0, vin), ADD(MUL(that.m1, v1), MUL(that.m2, v2)));
     }
 
     /*
      * Process across a block with smoothing
      */
-    SIMD_M128 a1_prior, a2_prior, a3_prior;
     SIMD_M128 da1, da2, da3;
+    SIMD_M128 dm0, dm1, dm2;
     bool firstBlock{true};
 
     template <int blockSize>
     void setCoeffForBlock(Mode mode, float freq, float res, float srInv, float bellShelfAmp = 1.f)
     {
         // Preserve the prior values
-        a1_prior = a1;
-        a2_prior = a2;
-        a3_prior = a3;
+        SIMD_M128 a1_prior = a1;
+        SIMD_M128 a2_prior = a2;
+        SIMD_M128 a3_prior = a3;
 
-        // calculate the new a1s
+        SIMD_M128 m0_prior = m0;
+        SIMD_M128 m1_prior = m1;
+        SIMD_M128 m2_prior = m2;
+
+        // calculate the new values
         setCoeff(mode, freq, res, srInv, bellShelfAmp);
 
         // If its the first time around snap them
@@ -265,22 +278,34 @@ struct CytomicSVF
             a1_prior = a1;
             a2_prior = a2;
             a3_prior = a3;
+            m0_prior = m0;
+            m1_prior = m1;
+            m2_prior = m2;
             firstBlock = false;
         }
 
         // then for each one calculate the change across the block
         static constexpr float obsf = 1.f / blockSize;
-        auto obs = SIMD_MM(set1_ps)(obsf);
+        auto obs = SETALL(obsf);
 
-        // and set the changeup, and reset a1 to the prior value so we move in the block
-        da1 = SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(a1, a1_prior), obs);
+        // and set the changeup, and reset as to the prior value so we move in the block
+        da1 = MUL(SUB(a1, a1_prior), obs);
         a1 = a1_prior;
 
-        da2 = SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(a2, a2_prior), obs);
+        da2 = MUL(SUB(a2, a2_prior), obs);
         a2 = a2_prior;
 
-        da3 = SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(a3, a3_prior), obs);
+        da3 = MUL(SUB(a3, a3_prior), obs);
         a3 = a3_prior;
+
+        dm0 = MUL(SUB(m0, m0_prior), obs);
+        m0 = m0_prior;
+
+        dm1 = MUL(SUB(m1, m1_prior), obs);
+        m1 = m1_prior;
+
+        dm2 = MUL(SUB(m2, m2_prior), obs);
+        m2 = m2_prior;
     }
 
     // it's a bit annoying this is a copy but I am sure a clever future me will do better
@@ -288,60 +313,80 @@ struct CytomicSVF
     void setCoeffForBlock(Mode mode, float freqL, float freqR, float resL, float resR, float srInv,
                           float bellShelfAmpL, float bellShelfAmpR)
     {
-        // Preserve the prior values
-        a1_prior = a1;
-        a2_prior = a2;
-        a3_prior = a3;
+        SIMD_M128 a1_prior = a1;
+        SIMD_M128 a2_prior = a2;
+        SIMD_M128 a3_prior = a3;
 
-        // calculate the new a1s
+        SIMD_M128 m0_prior = m0;
+        SIMD_M128 m1_prior = m1;
+        SIMD_M128 m2_prior = m2;
+
         setCoeff(mode, freqL, freqR, resL, resR, srInv, bellShelfAmpL, bellShelfAmpR);
 
-        // If its the first time around snap them
         if (firstBlock)
         {
             a1_prior = a1;
             a2_prior = a2;
             a3_prior = a3;
+            m0_prior = m0;
+            m1_prior = m1;
+            m2_prior = m2;
             firstBlock = false;
         }
 
-        // then for each one calculate the change across the block
         static constexpr float obsf = 1.f / blockSize;
-        auto obs = SIMD_MM(set1_ps)(obsf);
+        auto obs = SETALL(obsf);
 
-        // and set the changeup, and reset a1 to the prior value so we move in the block
-        da1 = SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(a1, a1_prior), obs);
+        da1 = MUL(SUB(a1, a1_prior), obs);
         a1 = a1_prior;
 
-        da2 = SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(a2, a2_prior), obs);
+        da2 = MUL(SUB(a2, a2_prior), obs);
         a2 = a2_prior;
 
-        da3 = SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(a3, a3_prior), obs);
+        da3 = MUL(SUB(a3, a3_prior), obs);
         a3 = a3_prior;
+
+        dm0 = MUL(SUB(m0, m0_prior), obs);
+        m0 = m0_prior;
+
+        dm1 = MUL(SUB(m1, m1_prior), obs);
+        m1 = m1_prior;
+
+        dm2 = MUL(SUB(m2, m2_prior), obs);
+        m2 = m2_prior;
     }
 
     template <int blockSize> void retainCoeffForBlock()
     {
-        da1 = SIMD_MM(setzero_ps)();
-        da2 = SIMD_MM(setzero_ps)();
-        da3 = SIMD_MM(setzero_ps)();
+        da1 = ZERO();
+        da2 = ZERO();
+        da3 = ZERO();
+        dm0 = ZERO();
+        dm1 = ZERO();
+        dm2 = ZERO();
     }
 
     void processBlockStep(float &L, float &R)
     {
         step(*this, L, R);
-        a1 = SIMD_MM(add_ps)(a1, da1);
-        a2 = SIMD_MM(add_ps)(a2, da2);
-        a3 = SIMD_MM(add_ps)(a3, da3);
+        a1 = ADD(a1, da1);
+        a2 = ADD(a2, da2);
+        a3 = ADD(a3, da3);
+        m1 = ADD(m1, dm1);
+        m2 = ADD(m2, dm2);
+        m0 = ADD(m0, dm0);
     }
 
     void processBlockStep(float &L)
     {
         float tmp{0.f};
         step(*this, L, tmp);
-        a1 = SIMD_MM(add_ps)(a1, da1);
-        a2 = SIMD_MM(add_ps)(a2, da2);
-        a3 = SIMD_MM(add_ps)(a3, da3);
+        a1 = ADD(a1, da1);
+        a2 = ADD(a2, da2);
+        a3 = ADD(a3, da3);
+        m1 = ADD(m1, dm1);
+        m2 = ADD(m2, dm2);
+        m0 = ADD(m0, dm0);
     }
 
     template <int blockSize>
@@ -366,10 +411,11 @@ struct CytomicSVF
 
     void init()
     {
-        ic1eq = SIMD_MM(setzero_ps)();
-        ic2eq = SIMD_MM(setzero_ps)();
+        ic1eq = ZERO();
+        ic2eq = ZERO();
     }
 };
+
 } // namespace sst::filters
 
 #endif // SHORTCIRCUITXT_CYTOMICSVF_H
