@@ -20,6 +20,7 @@
 #include <cmath>
 #include <utility>
 #include <vector>
+#include <fstream>
 
 std::vector<std::pair<float, float>> rmsCurve(int mode, double cutoffFreq, double bellAmp = 0.f)
 {
@@ -88,5 +89,36 @@ TEST_CASE("Cytomic SVF")
             }
             lastRMS = out;
         }
+    }
+}
+
+TEST_CASE("Cytomic SVF Response Curves")
+{
+    REQUIRE(true);
+    static constexpr int nOut{6}, nPts{1024};
+    float freq[nPts], out[nOut][nPts];
+
+    /* Frequency Sweep */
+    auto mode = sst::filters::CytomicSVF::Mode::HIGH_SHELF;
+    float fr = 220;
+    for (int idx = 0; idx < nOut; ++idx)
+    {
+        sst::filters::CytomicSVFGainProfile(mode, fr, 0.2, 0.3, freq, out[idx], nPts);
+        fr = fr * 2;
+    }
+
+    std::ofstream outFile("/tmp/cy.csv");
+    if (outFile.is_open())
+    {
+        for (auto i = 0U; i < nPts; ++i)
+        {
+            outFile << freq[i];
+            for (auto j = 0U; j < nOut; ++j)
+            {
+                outFile << ", " << out[j][i];
+            }
+            outFile << "\n";
+        }
+        outFile.close();
     }
 }
