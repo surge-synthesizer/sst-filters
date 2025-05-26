@@ -426,92 +426,106 @@ struct CytomicSVF
 #undef SETALL
 };
 
-void CytomicSVFGainProfile(CytomicSVF::Mode mode, float f, float res, float bellShelfAmp,
-                           float *freqOut, float *gainOut, size_t N)
+inline float CytomicSVFGainAt(CytomicSVF::Mode mode, float cutoff, float res, float bellShelfAmp,
+                       float atFrequency)
 {
     double srInv = 1.0 / 48000;
-    CytomicSVF svf;
-    auto loFreq = 10.f;
-    auto hiFreq = 15000;
-    auto dFreq = (hiFreq - loFreq);
 
-    auto c = f * srInv;
-    float g = tan(2.0 * M_PI * c);
+    auto c = cutoff * srInv;
+    // This still seems wrong. Re-read that paper
+    float g = tan(M_PI * c);
     float k = -2 * res;
     if (mode == CytomicSVF::BELL)
     {
         g = tan(M_PI * c);
         k = 2 - 2 * res;
     }
+    if (mode == CytomicSVF::HIGH_SHELF)
+    {
+        g = tan(M_PI * c);
+    }
+
+    auto freq = atFrequency;
+    auto s = 2.0 * M_PI * freq * srInv;
+
+    float resp = 1.f;
+    float den = g * g + g * k * s + s * s;
+    switch (mode)
+    {
+    case CytomicSVF::LP:
+        resp = g * g / den;
+        // resp = g * g * onepz2 / (monepz2 + g * g * onepz2 + g * k * monepz2);
+        break;
+    case CytomicSVF::BP:
+        resp = g * s / den;
+        break;
+    case CytomicSVF::HP:
+        resp = s * s / den;
+        break;
+    case CytomicSVF::PEAK:
+        resp = (g * g + s * s) / den;
+        break;
+    case CytomicSVF::NOTCH:
+        resp = std::abs((g + s) * (g - s) / den);
+        break;
+    case CytomicSVF::ALL:
+        resp = (1.0 - 2 * g * k * s) / den;
+        break;
+    case CytomicSVF::BELL:
+    {
+        auto A = bellShelfAmp;
+        auto m0 = 1.f;
+        auto m1 = (-1 + A * A) * k / A;
+        resp = (A * g * g * m0 + (g * k * m0 + A * g * m1) * s + A * m0 * s * s) /
+               (A * g * g + g * k * s + A * s * s);
+        break;
+    }
+    case CytomicSVF::LOW_SHELF:
+    {
+        auto A = bellShelfAmp;
+        auto sqrtA = std::sqrt(A);
+        auto m0 = 1.0;
+        auto m1 = (-1 + A) * k;
+        auto m2 = -1 + A * A;
+        auto num = A * A * g * g + sqrtA * g * (k + (-1 + A) * k) * s + A * s * s;
+        auto den = g * g + sqrtA * g * k * s + A * s * s;
+
+        resp = num / den;
+        break;
+    }
+    case CytomicSVF::HIGH_SHELF:
+    {
+        auto A = bellShelfAmp;
+        auto sqrtA = std::sqrt(A);
+        auto m0 = A * A;
+        auto m1 = (-1 + A) * A * k;
+        auto m2 = 1 - A * A;
+        auto num = A * g * g * m0 + A * g * g * m2 + (sqrtA * g * k * m0 + sqrtA * g * m1) * s +
+                   m0 * s * s;
+        auto den = A * g * g + sqrtA * g * k * s + s * s;
+
+        resp = num / den;
+        break;
+    }
+    }
+
+    return resp;
+}
+
+inline void CytomicSVFGainProfile(CytomicSVF::Mode mode, float cutoff, float res, float bellShelfAmp,
+                           float *freqOut, float *gainOut, size_t N)
+{
+    auto loFreq = 10.f;
+    auto hiFreq = 15000;
+    auto dFreq = (hiFreq - loFreq);
 
     for (int i = 0; i < N; ++i)
     {
         auto n2 = std::pow(2.0, i * 1.0 / (N - 1));
         auto freq = loFreq + (n2 - 1) * dFreq;
-        auto s = 2.0 * M_PI * freq * srInv;
 
-        float resp = 1.f;
-        float den = g * g + g * k * s + s * s;
-        switch (mode)
-        {
-        case CytomicSVF::LP:
-            resp = g * g / den;
-            // resp = g * g * onepz2 / (monepz2 + g * g * onepz2 + g * k * monepz2);
-            break;
-        case CytomicSVF::BP:
-            resp = g * s / den;
-            break;
-        case CytomicSVF::HP:
-            resp = s * s / den;
-            break;
-        case CytomicSVF::PEAK:
-            resp = (g * g + s * s) / den;
-            break;
-        case CytomicSVF::NOTCH:
-            resp = std::abs((g + s) * (g - s) / den);
-            break;
-        case CytomicSVF::ALL:
-            resp = (1.0 - 2 * g * k * s) / den;
-            break;
-        case CytomicSVF::BELL:
-        {
-            auto A = bellShelfAmp;
-            auto m0 = 1.f;
-            auto m1 = (-1 + A * A) * k / A;
-            resp = (A * g * g * m0 + (g * k * m0 + A * g * m1) * s + A * m0 * s * s) /
-                   (A * g * g + g * k * s + A * s * s);
-            break;
-        }
-        case CytomicSVF::LOW_SHELF:
-        {
-            auto A = bellShelfAmp;
-            auto sqrtA = std::sqrt(A);
-            auto m0 = 1.0;
-            auto m1 = (-1 + A) * k;
-            auto m2 = -1 + A * A;
-            auto num = A * A * g * g + sqrtA * g * (k + (-1 + A) * k) * s + A * s * s;
-            auto den = g * g + sqrtA * g * k * s + A * s * s;
-
-            resp = num / den;
-            break;
-        }
-        case CytomicSVF::HIGH_SHELF:
-        {
-            auto A = bellShelfAmp;
-            auto sqrtA = std::sqrt(A);
-            auto m0 = A * A;
-            auto m1 = (-1 + A) * A * k;
-            auto m2 = 1 - A * A;
-            auto num = A * g * g * m0 + A * g * g * m2 + (sqrtA * g * k * m0 + sqrtA * g * m1) * s +
-                       m0 * s * s;
-            auto den = A * g * g + sqrtA * g * k * s + s * s;
-
-            resp = num / den;
-            break;
-        }
-        }
         freqOut[i] = freq;
-        gainOut[i] = resp;
+        gainOut[i] = CytomicSVFGainAt(mode, cutoff, res, bellShelfAmp, freq);
     }
 }
 } // namespace sst::filters
