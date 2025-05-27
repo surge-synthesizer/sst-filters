@@ -95,15 +95,17 @@ TEST_CASE("Cytomic SVF")
 TEST_CASE("Cytomic SVF Response Curves")
 {
     REQUIRE(true);
+#define MAKE_GNUPLOT 1
+#if MAKE_GNUPLOT
     static constexpr int nOut{3}, nPts{1024};
     float freq[nPts], out[nOut][nPts], outBrute[nOut][nPts];
 
     /* Frequency Sweep */
     // high shelf and bell are wrong at res=0
-    auto mode = sst::filters::CytomicSVF::Mode::PEAK;
+    auto mode = sst::filters::CytomicSVF::Mode::HIGH_SHELF;
     float fr = 220;
-    auto res = 0.8;
-    auto amp = 0.2;
+    auto res = 0.4;
+    auto amp = 0.8;
     for (int idx = 0; idx < nOut; ++idx)
     {
         sst::filters::CytomicSVFGainProfile(mode, fr, res, amp, freq, out[idx], nPts);
@@ -156,4 +158,5 @@ TEST_CASE("Cytomic SVF Response Curves")
         }
         outFile.close();
     }
+#endif
 }

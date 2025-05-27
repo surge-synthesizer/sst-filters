@@ -495,10 +495,52 @@ inline float CytomicSVFGainAt(CytomicSVF::Mode mode, float cutoff, float res, fl
         resC = num / den;
     }
     break;
+    case CytomicSVF::BELL:
+    {
+        double A = bellShelfAmp;
+        auto m0 = 1.0;
+        auto m1 = (-1 + A * A) * k / A;
+        auto num = g * k * m0 * (-1. + z * z) +
+                   A * (g * (1. + z) * (m1 * (-1. + z)) + m0 * (zm1_sqrd + g * g * zp1_sqrd));
+        auto den = g * k * m1p_zsqrd + A * (zm1_sqrd + g * g * zp1_sqrd);
+        resC = num / den;
+    }
+    break;
+    case CytomicSVF::LOW_SHELF:
+    {
+        double A = bellShelfAmp;
+
+        auto m0 = 1.0;
+        auto m1 = (-1 + A) * k;
+        auto m2 = -1 + A * A;
+        auto num = A * m0 * zm1_sqrd + g * g * (m0 + m2) * zp1_sqrd +
+                   std::sqrt(A) * g * (k * m0 + m1) * m1p_zsqrd;
+        auto den = A * zm1_sqrd + g * g * zp1_sqrd + std::sqrt(A) * g * k * m1p_zsqrd;
+        resC = num / den;
+    }
+    break;
+    case CytomicSVF::HIGH_SHELF:
+    {
+        double A = bellShelfAmp;
+        auto sqrtA = std::sqrt(A);
+
+        auto m0 = A * A;
+        auto m1 = -(-1 + A) * A * k;
+        auto m2 = 1 - A * A;
+
+        auto np1 = sqrtA * g * (1. + z);
+        auto np2 = m1 * (-1. + z) + sqrtA * g * m2 * (1. + z);
+        auto np3 = zm1_sqrd + A * g * g * zp1_sqrd + sqrtA * g * k * m1p_zsqrd;
+        auto num = np1 * np2 + m0 * np3;
+        auto den = zm1_sqrd + A * g * g * zp1_sqrd + sqrtA * g * k * m1p_zsqrd;
+
+        resC = num / den;
+    }
+    break;
     }
 
     return std::abs(resC);
-    ;
+
 #if 0
     auto c = cutoff * srInv;
     // This still seems wrong. Re-read that paper
