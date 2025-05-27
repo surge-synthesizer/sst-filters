@@ -22,8 +22,8 @@
  * sharing the work.
  */
 
-#ifndef INCLUDE_SST_FILTERS_FASTTILT_H
-#define INCLUDE_SST_FILTERS_FASTTILT_H
+#ifndef INCLUDE_SST_FILTERS_FASTTILTNOISEFILTER_H
+#define INCLUDE_SST_FILTERS_FASTTILTNOISEFILTER_H
 
 #include <algorithm>
 #include <cmath>
