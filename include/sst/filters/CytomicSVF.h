@@ -426,21 +426,87 @@ struct CytomicSVF
 #undef SETALL
 };
 
+/**
+ * CytomicSVFGainAt returns the linear amplitude gain for a given mode cutoff res amp at a given
+ * frequency. It is based on the complex analytic formulas in the above referenced PDF at page 12
+ * (for the non-shelf-bell ones) and beyond (for bell shelf)
+ *
+ * @param mode
+ * @param cutoff
+ * @param res
+ * @param bellShelfAmp
+ * @param atFrequency
+ * @return
+ */
 inline float CytomicSVFGainAt(CytomicSVF::Mode mode, float cutoff, float res, float bellShelfAmp,
-                       float atFrequency)
+                              float atFrequency)
 {
     double srInv = 1.0 / 48000;
 
     auto c = cutoff * srInv;
     // This still seems wrong. Re-read that paper
-    float g = tan(M_PI * c);
+    double g = tan(M_PI * c);
+    std::complex<double> ic(0, 1);
+    auto z = exp(2.0 * M_PI * ic * (double)atFrequency * srInv);
+    auto k = 2 - 2 * res;
+
+    // read as "z plus 1 squared", "z minus one quared" and "minus one plus z squared"
+    auto zp1_sqrd = (1. + z) * (1. + z);
+    auto zm1_sqrd = (-1. + z) * (-1. + z);
+    auto m1p_zsqrd = (-1. + z * z);
+    std::complex<double> resC;
+
+    switch (mode)
+    {
+    case CytomicSVF::LP:
+    {
+        auto num = g * g * zp1_sqrd;
+        auto den = zm1_sqrd + g * g * zp1_sqrd + g * k * m1p_zsqrd;
+        resC = num / den;
+    }
+    break;
+    case CytomicSVF::BP:
+    {
+        auto num = g * m1p_zsqrd;
+        auto den = zm1_sqrd + g * g * zp1_sqrd + g * k * m1p_zsqrd;
+        resC = num / den;
+    }
+    break;
+    case CytomicSVF::HP:
+    {
+        auto num = zm1_sqrd;
+        auto den = zm1_sqrd + g * g * zp1_sqrd + g * k * m1p_zsqrd;
+        resC = num / den;
+    }
+    break;
+    case CytomicSVF::NOTCH:
+    {
+        auto num = zm1_sqrd + g * g * zp1_sqrd;
+        auto den = zm1_sqrd + g * g * zp1_sqrd + g * k * m1p_zsqrd;
+        resC = num / den;
+    }
+    break;
+    case CytomicSVF::PEAK:
+    {
+        auto n1 = (1.0 + g + (g - 1.0) * z);
+        auto n2 = (-1.0 + g + z + g * z);
+        auto num = n1 * n2;
+        auto den = zm1_sqrd + g * g * zp1_sqrd + g * k * m1p_zsqrd;
+        resC = num / den;
+    }
+    break;
+    }
+
+    return std::abs(resC);
+    ;
+#if 0
+    auto c = cutoff * srInv;
+    // This still seems wrong. Re-read that paper
+    float g = tan(2.0 * M_PI * c);
     float k = -2 * res;
     if (mode == CytomicSVF::BELL)
-    {
-        g = tan(M_PI * c);
         k = 2 - 2 * res;
-    }
-    if (mode == CytomicSVF::HIGH_SHELF)
+    if (mode == CytomicSVF::LOW_SHELF)
     {
         g = tan(M_PI * c);
     }
@@ -510,10 +576,24 @@ inline float CytomicSVFGainAt(CytomicSVF::Mode mode, float cutoff, float res, fl
     }
 
     return resp;
+#endif
 }
 
-inline void CytomicSVFGainProfile(CytomicSVF::Mode mode, float cutoff, float res, float bellShelfAmp,
-                           float *freqOut, float *gainOut, size_t N)
+/**
+ * This is a convenience function to give you an entire curve worth over a reasonable frequency
+ * bound with the frequencies log spaced. You know, just feed this to a juce::Path and paint type
+ * thing, probably with a log on the gain result.
+ *
+ * @param mode
+ * @param cutoff
+ * @param res
+ * @param bellShelfAmp
+ * @param freqOut
+ * @param gainOut
+ * @param N
+ */
+inline void CytomicSVFGainProfile(CytomicSVF::Mode mode, float cutoff, float res,
+                                  float bellShelfAmp, float *freqOut, float *gainOut, size_t N)
 {
     auto loFreq = 10.f;
     auto hiFreq = 15000;

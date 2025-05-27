@@ -95,15 +95,50 @@ TEST_CASE("Cytomic SVF")
 TEST_CASE("Cytomic SVF Response Curves")
 {
     REQUIRE(true);
-    static constexpr int nOut{6}, nPts{1024};
-    float freq[nPts], out[nOut][nPts];
+    static constexpr int nOut{3}, nPts{1024};
+    float freq[nPts], out[nOut][nPts], outBrute[nOut][nPts];
 
     /* Frequency Sweep */
-    auto mode = sst::filters::CytomicSVF::Mode::HIGH_SHELF;
+    // high shelf and bell are wrong at res=0
+    auto mode = sst::filters::CytomicSVF::Mode::PEAK;
     float fr = 220;
+    auto res = 0.8;
+    auto amp = 0.2;
     for (int idx = 0; idx < nOut; ++idx)
     {
-        sst::filters::CytomicSVFGainProfile(mode, fr, 0.2, 0.3, freq, out[idx], nPts);
+        sst::filters::CytomicSVFGainProfile(mode, fr, res, amp, freq, out[idx], nPts);
+
+        // brute force it
+
+        for (int i = 0; i < nPts; ++i)
+        {
+            auto sr = 48000;
+            auto sri = 1.0 / sr;
+            sst::filters::CytomicSVF svf;
+            svf.setCoeff(mode, fr, res, sri, amp);
+            auto s = 2.0 * M_PI * freq[i] * sri;
+            auto t = 0.;
+            for (int j = 0; j < 100; ++j)
+            {
+                float v = sin(t);
+                auto r = v;
+                t += s;
+                sst::filters::CytomicSVF::step(svf, v, r);
+            }
+
+            double irms{0}, orms{0};
+            for (int j = 0; j < 1000; ++j)
+            {
+                float v = sin(t);
+                auto r = v;
+                t += s;
+                irms += v * v;
+                sst::filters::CytomicSVF::step(svf, v, r);
+                orms += v * v;
+            }
+            outBrute[idx][i] = std::sqrt(orms / irms);
+        }
+
         fr = fr * 2;
     }
 
@@ -115,7 +150,7 @@ TEST_CASE("Cytomic SVF Response Curves")
             outFile << freq[i];
             for (auto j = 0U; j < nOut; ++j)
             {
-                outFile << ", " << out[j][i];
+                outFile << ", " << out[j][i] << ", " << outBrute[j][i];
             }
             outFile << "\n";
         }
