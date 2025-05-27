@@ -495,6 +495,11 @@ inline float CytomicSVFGainAt(CytomicSVF::Mode mode, float cutoff, float res, fl
         resC = num / den;
     }
     break;
+    case CytomicSVF::ALL:
+    {
+        resC = {1.0, 0.0};
+    }
+    break;
     case CytomicSVF::BELL:
     {
         double A = bellShelfAmp;
