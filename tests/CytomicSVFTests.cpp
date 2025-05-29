@@ -95,68 +95,92 @@ TEST_CASE("Cytomic SVF")
 TEST_CASE("Cytomic SVF Response Curves")
 {
     REQUIRE(true);
-#define MAKE_GNUPLOT 1
+#define MAKE_GNUPLOT 0
+
+    for (int modei = (int)sst::filters::CytomicSVF::Mode::LP;
+         modei <= (int)sst::filters::CytomicSVF::Mode::HIGH_SHELF; ++modei)
+    {
+        auto mode = (sst::filters::CytomicSVF::Mode)modei;
+        for (auto res = 0.0; res <= 1.0; res += 0.25)
+        {
+            DYNAMIC_SECTION("Mode: " << mode << ", Res: " << res)
+            {
+                res = std::clamp(res, 0., 0.999999);
+
+                static constexpr int nOut{6}, nPts{128};
+                float freq[nPts], out[nOut][nPts], outBrute[nOut][nPts];
+
+                /* Frequency Sweep */
+                float fr = 220;
+                auto res = 0.4;
+                auto amp = 0.8;
+                for (int idx = 0; idx < nOut; ++idx)
+                {
+                    float diff{0.f};
+                    sst::filters::CytomicSVFGainProfile(mode, fr, res, amp, freq, out[idx], nPts);
+
+                    // brute force it
+
+                    for (int i = 0; i < nPts; ++i)
+                    {
+                        auto sr = 48000;
+                        auto sri = 1.0 / sr;
+                        sst::filters::CytomicSVF svf;
+                        svf.setCoeff(mode, fr, res, sri, amp);
+                        auto s = 2.0 * M_PI * freq[i] * sri;
+                        auto t = 0.;
+                        for (int j = 0; j < 100; ++j)
+                        {
+                            float v = sin(t);
+                            auto r = v;
+                            t += s;
+                            sst::filters::CytomicSVF::step(svf, v, r);
+                        }
+
+                        double irms{0}, orms{0};
+                        for (int j = 0; j < 1000; ++j)
+                        {
+                            float v = sin(t);
+                            auto r = v;
+                            t += s;
+                            irms += v * v;
+                            sst::filters::CytomicSVF::step(svf, v, r);
+                            orms += v * v;
+                        }
+                        outBrute[idx][i] = std::sqrt(orms / irms);
+                        diff += std::abs(out[idx][i] - outBrute[idx][i]);
+                    }
+
+                    if (mode == sst::filters::CytomicSVF::LOW_SHELF ||
+                        mode == sst::filters::CytomicSVF::HIGH_SHELF)
+                    {
+                        // Thr shelf is a bit frequency nudged
+                        REQUIRE(diff / nPts < 0.02);
+                    }
+                    else
+                    {
+                        REQUIRE(diff / nPts < 0.0025);
+                    }
+
+                    fr = fr * 2;
+                }
 #if MAKE_GNUPLOT
-    static constexpr int nOut{3}, nPts{1024};
-    float freq[nPts], out[nOut][nPts], outBrute[nOut][nPts];
-
-    /* Frequency Sweep */
-    // high shelf and bell are wrong at res=0
-    auto mode = sst::filters::CytomicSVF::Mode::HIGH_SHELF;
-    float fr = 220;
-    auto res = 0.4;
-    auto amp = 0.8;
-    for (int idx = 0; idx < nOut; ++idx)
-    {
-        sst::filters::CytomicSVFGainProfile(mode, fr, res, amp, freq, out[idx], nPts);
-
-        // brute force it
-
-        for (int i = 0; i < nPts; ++i)
-        {
-            auto sr = 48000;
-            auto sri = 1.0 / sr;
-            sst::filters::CytomicSVF svf;
-            svf.setCoeff(mode, fr, res, sri, amp);
-            auto s = 2.0 * M_PI * freq[i] * sri;
-            auto t = 0.;
-            for (int j = 0; j < 100; ++j)
-            {
-                float v = sin(t);
-                auto r = v;
-                t += s;
-                sst::filters::CytomicSVF::step(svf, v, r);
-            }
-
-            double irms{0}, orms{0};
-            for (int j = 0; j < 1000; ++j)
-            {
-                float v = sin(t);
-                auto r = v;
-                t += s;
-                irms += v * v;
-                sst::filters::CytomicSVF::step(svf, v, r);
-                orms += v * v;
-            }
-            outBrute[idx][i] = std::sqrt(orms / irms);
-        }
-
-        fr = fr * 2;
-    }
-
-    std::ofstream outFile("/tmp/cy.csv");
-    if (outFile.is_open())
-    {
-        for (auto i = 0U; i < nPts; ++i)
-        {
-            outFile << freq[i];
-            for (auto j = 0U; j < nOut; ++j)
-            {
-                outFile << ", " << out[j][i] << ", " << outBrute[j][i];
-            }
-            outFile << "\n";
-        }
-        outFile.close();
-    }
+                std::ofstream outFile("/tmp/cy.csv");
+                if (outFile.is_open())
+                {
+                    for (auto i = 0U; i < nPts; ++i)
+                    {
+                        outFile << freq[i];
+                        for (auto j = 0U; j < nOut; ++j)
+                        {
+                            outFile << ", " << out[j][i] << ", " << outBrute[j][i];
+                        }
+                        outFile << "\n";
+                    }
+                    outFile.close();
+                }
 #endif
+            }
+        }
+    }
 }
