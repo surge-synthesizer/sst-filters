@@ -44,6 +44,7 @@ sub findfiles
         $hg = $f;
         $hg =~ s:/:_:g;
         $hg =~ s:\.:_:g;
+        $hg =~ s:\+:_plus:g;
         $hg =~ s:-:_:g;
         $hg =~ s:include-extras:sstfilters_extras:;
         $hg =~ s:src:sstfilters_src:;

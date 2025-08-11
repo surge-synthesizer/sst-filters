@@ -2,7 +2,7 @@
  * sst-filters - A header-only collection of SIMD filter
  * implementations by the Surge Synth Team
  *
- * Copyright 2019-2024, various authors, as described in the GitHub
+ * Copyright 2019-2025, various authors, as described in the GitHub
  * transaction log.
  *
  * sst-filters is released under the Gnu General Public Licens
@@ -15,6 +15,7 @@
 #ifndef INCLUDE_SST_FILTERS_FILTERCOEFFICIENTMAKER_H
 #define INCLUDE_SST_FILTERS_FILTERCOEFFICIENTMAKER_H
 
+#include <type_traits>
 #include "sst/utilities/globals.h"
 #include "FilterConfiguration.h"
 #include "TuningProvider.h"
@@ -35,6 +36,9 @@ constexpr int n_cm_coeffs = 8;
  */
 template <typename TuningProvider = detail::BasicTuningProvider> class FilterCoefficientMaker
 {
+    static_assert(std::is_default_constructible_v<TuningProvider>,
+                  "Tuning Provider must have a () ctor");
+
   public:
     /** Default constructor */
     FilterCoefficientMaker();
@@ -56,7 +60,8 @@ template <typename TuningProvider = detail::BasicTuningProvider> class FilterCoe
      * Note that frequency is expected in units of MIDI note number, with A440 = 0.
      */
     void MakeCoeffs(float Freq, float Reso, FilterType Type, FilterSubType SubType,
-                    TuningProvider *provider, bool tuningAdjusted);
+                    TuningProvider *provider, bool tuningAdjusted, float extra = 0.f,
+                    float extra2 = 0.f, float extra3 = 0.f);
 
     /**
      * Update the coefficients in a filter state.
@@ -96,13 +101,15 @@ template <typename TuningProvider = detail::BasicTuningProvider> class FilterCoe
     void Coeff_HP24(float Freq, float Reso, int SubType);
     void Coeff_BP24(float Freq, float Reso, int SubType);
     void Coeff_LP4L(float Freq, float Reso, int SubType);
-    void Coeff_COMB(float Freq, float Reso, int SubType);
+    void Coeff_COMB(float Freq, float Reso, int SubType, float cmix = 0.f);
     void Coeff_SNH(float Freq, float Reso, int SubType);
     void Coeff_SVF(float Freq, float Reso, bool);
 
     bool FirstRun = true;
 
     TuningProvider *provider = nullptr;
+
+    static TuningProvider baseTuningProviderInstance;
 
     float sampleRate = 48000.0f;
     float sampleRateInv = 1.0f / sampleRate;

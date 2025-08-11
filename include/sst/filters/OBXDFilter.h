@@ -2,7 +2,7 @@
  * sst-filters - A header-only collection of SIMD filter
  * implementations by the Surge Synth Team
  *
- * Copyright 2019-2024, various authors, as described in the GitHub
+ * Copyright 2019-2025, various authors, as described in the GitHub
  * transaction log.
  *
  * sst-filters is released under the Gnu General Public Licens
@@ -80,7 +80,8 @@ const auto gainAdjustment4Pole = SIMD_MM(set1_ps)(0.6f);
 
 template <typename TuningProvider>
 inline void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, Poles p, float freq,
-                             float reso, int sub, float sampleRateInv, TuningProvider *provider)
+                             float reso, int sub, float sampleRateInv, TuningProvider *provider,
+                             bool continuousMorph = false, float morphPole = 0.f)
 {
     float lC[n_cm_coeffs]{};
     float rcrate = sqrt(44000.0f * sampleRateInv);
@@ -125,8 +126,17 @@ inline void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, Poles p
         lC[rcor24inv] = 1.0f / lC[rcor24];
         lC[g24] = tanf(cutoff);
         lC[R24] = 3.5f * reso;
-        lC[pole_mix] = 1.f - ((float)sub / 3.f);
-        lC[pole_mix_inv_int] = (float)(int)(3.f - (float)sub);
+        if (continuousMorph)
+        {
+            auto fsub = morphPole;
+            lC[pole_mix] = 1.f - (float)(fsub / 3.f);
+            lC[pole_mix_inv_int] = (float)(int)(3.f - (float)fsub);
+        }
+        else
+        {
+            lC[pole_mix] = 1.f - ((float)sub / 3.f);
+            lC[pole_mix_inv_int] = (float)(int)(3.f - (float)sub);
+        }
         lC[pole_mix_scaled] = (lC[pole_mix] * 3) - lC[pole_mix_inv_int];
     }
 
@@ -249,6 +259,7 @@ inline static SIMD_M128 tptpc(SIMD_M128 &state, SIMD_M128 inp, SIMD_M128 cutoff)
     return res;
 }
 
+template <bool broken24db>
 inline SIMD_M128 process_4_pole(QuadFilterUnitState *__restrict f, SIMD_M128 sample)
 {
     for (int i = 0; i < n_obxd24_coeff; i++)
@@ -298,16 +309,28 @@ inline SIMD_M128 process_4_pole(QuadFilterUnitState *__restrict f, SIMD_M128 sam
 
     SIMD_M128 mc;
 
-    auto zero_val =
-        SIMD_MM(add_ps)(SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(one, f->C[pole_mix_scaled]), y4),
-                        SIMD_MM(add_ps)(f->C[pole_mix_scaled], y3));
     auto zero_mask = SIMD_MM(cmpeq_ps)(f->C[pole_mix_inv_int], zero);
+    SIMD_M128 zero_val;
+    if constexpr (broken24db)
+    {
+        // This second mul was mis-coded as an add.
+        zero_val = SIMD_MM(add_ps)(SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(one, f->C[pole_mix_scaled]), y4),
+                                   SIMD_MM(add_ps)(f->C[pole_mix_scaled], y3));
+    }
+    else
+    {
+        zero_val = SIMD_MM(add_ps)(SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(one, f->C[pole_mix_scaled]), y4),
+                                   SIMD_MM(mul_ps)(f->C[pole_mix_scaled], y3));
+    }
+
     auto one_mask = SIMD_MM(cmpeq_ps)(f->C[pole_mix_inv_int], one);
     auto one_val = SIMD_MM(add_ps)(SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(one, f->C[pole_mix_scaled]), y3),
                                    SIMD_MM(mul_ps)(f->C[pole_mix_scaled], y2));
+
     auto two_mask = SIMD_MM(cmpeq_ps)(f->C[pole_mix_inv_int], two);
     auto two_val = SIMD_MM(add_ps)(SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(one, f->C[pole_mix_scaled]), y2),
                                    SIMD_MM(mul_ps)(f->C[pole_mix_scaled], y1));
+
     auto three_mask = SIMD_MM(cmpeq_ps)(f->C[pole_mix_inv_int], three);
     auto three_val = y1;
     mc = SIMD_MM(add_ps)(SIMD_MM(and_ps)(zero_mask, zero_val), SIMD_MM(and_ps)(one_mask, one_val));

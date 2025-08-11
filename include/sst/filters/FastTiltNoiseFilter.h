@@ -2,7 +2,7 @@
  * sst-filters - A header-only collection of SIMD filter
  * implementations by the Surge Synth Team
  *
- * Copyright 2019-2024, various authors, as described in the GitHub
+ * Copyright 2019-2025, various authors, as described in the GitHub
  * transaction log.
  *
  * sst-filters is released under the Gnu General Public Licens

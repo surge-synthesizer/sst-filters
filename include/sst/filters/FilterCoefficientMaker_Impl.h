@@ -2,7 +2,7 @@
  * sst-filters - A header-only collection of SIMD filter
  * implementations by the Surge Synth Team
  *
- * Copyright 2019-2024, various authors, as described in the GitHub
+ * Copyright 2019-2025, various authors, as described in the GitHub
  * transaction log.
  *
  * sst-filters is released under the Gnu General Public Licens
@@ -84,11 +84,18 @@ void FilterCoefficientMaker<TuningProvider>::updateCoefficients(StateType &state
 }
 
 template <typename TuningProvider>
+TuningProvider FilterCoefficientMaker<TuningProvider>::baseTuningProviderInstance;
+
+template <typename TuningProvider>
 void FilterCoefficientMaker<TuningProvider>::MakeCoeffs(float Freq, float Reso, FilterType Type,
                                                         FilterSubType SubType,
                                                         TuningProvider *providerI,
-                                                        bool tuningAdjusted)
+                                                        bool tuningAdjusted, float extra,
+                                                        float extra2, float extra3)
 {
+    if (!providerI)
+        providerI = &baseTuningProviderInstance;
+
     provider = providerI;
     if (provider)
     {
@@ -129,10 +136,36 @@ void FilterCoefficientMaker<TuningProvider>::MakeCoeffs(float Freq, float Reso, 
         if (SubType == st_Standard)
             Coeff_SVF(Freq, Reso, false);
         else
-            Coeff_BP12(Freq, Reso, SubType);
+        {
+            /*
+             * This used to be missing a break and would fall through
+             * to BP24 which used the BP24 types
+             */
+            if (SubType == st_bp12_LegacyDriven)
+            {
+                Coeff_BP12(Freq, Reso, st_Driven);
+                Coeff_BP24(Freq, Reso, st_Driven);
+            }
+            else if (SubType == st_bp12_LegacyClean)
+            {
+                Coeff_BP12(Freq, Reso, st_Clean);
+                Coeff_BP24(Freq, Reso, st_Clean);
+            }
+            else
+            {
+                Coeff_BP12(Freq, Reso, SubType);
+            }
+        }
+        break;
     case fut_bp24:
         if (SubType == st_Standard)
-            Coeff_SVF(Freq, Reso, false); // WHY FALSE? It was this way before #3006 tho
+        {
+            // this false has been there forever, but in the coeff
+            // its just a small resonance push and the evaluator is the
+            // 24db so i"m going to leave it as either an eternal typo
+            // or a smart choice in some regime i dont see
+            Coeff_SVF(Freq, Reso, false);
+        }
         else
             Coeff_BP24(Freq, Reso, SubType);
         break;
@@ -159,10 +192,10 @@ void FilterCoefficientMaker<TuningProvider>::MakeCoeffs(float Freq, float Reso, 
         Coeff_LP4L(Freq, Reso, SubType);
         break;
     case fut_comb_pos:
-        Coeff_COMB(Freq, Reso, SubType);
+        Coeff_COMB(Freq, Reso, SubType, extra); // +ve feedback is the next 2 subtypes;
         break;
     case fut_comb_neg:
-        Coeff_COMB(Freq, Reso, SubType + 2); // -ve feedback is the next 2 subtypes
+        Coeff_COMB(Freq, Reso, SubType + 2, extra); // -ve feedback is the next 2 subtypes
         break;
     case fut_SNH:
         Coeff_SNH(Freq, Reso, SubType);
@@ -208,9 +241,14 @@ void FilterCoefficientMaker<TuningProvider>::MakeCoeffs(float Freq, float Reso, 
                                      sampleRateInv, providerI);
         break;
     case fut_obxd_4pole:
-        OBXDFilter::makeCoefficients(this, OBXDFilter::FOUR_POLE, Freq, Reso, SubType,
-                                     sampleRateInv, providerI);
-        break;
+    {
+        auto useM = SubType == st_obxd4pole_morph;
+        auto broken3 = SubType == st_obxd4pole_broken24db;
+        auto st = useM ? 0 : (broken3 ? 3 : SubType);
+        OBXDFilter::makeCoefficients(this, OBXDFilter::FOUR_POLE, Freq, Reso, st, sampleRateInv,
+                                     providerI, useM, extra);
+    }
+    break;
     case fut_k35_lp:
         K35Filter::makeCoefficients(this, Freq, Reso, true, fut_k35_saturations[SubType],
                                     sampleRate, sampleRateInv, providerI);
@@ -338,7 +376,6 @@ template <typename TuningProvider>
 void FilterCoefficientMaker<TuningProvider>::Coeff_SVF(float Freq, float Reso, bool FourPole)
 {
     using std::min;
-
     double f = 440.f * provider->note_to_pitch_ignoring_tuning(Freq);
     double F1 = 2.0 * sin(M_PI * min(0.11, f * (0.5 * sampleRateInv))); // 2x oversampling
 
@@ -610,7 +647,8 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_LP4L(float freq, float reso, 
 }
 
 template <typename TuningProvider>
-void FilterCoefficientMaker<TuningProvider>::Coeff_COMB(float freq, float reso, int isubtype)
+void FilterCoefficientMaker<TuningProvider>::Coeff_COMB(float freq, float reso, int isubtype,
+                                                        float cmix)
 {
     int subtype = isubtype & QFUSubtypeMasks::UNMASK_SUBTYPE;
     bool extended = isubtype & QFUSubtypeMasks::EXTENDED_COMB;
@@ -635,14 +673,34 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_COMB(float freq, float reso, 
     }
     else
     {
-        reso = ((subtype & 2) ? -1.0f : 1.0f) * std::clamp(reso, 0.f, 1.f);
+        if (subtype == st_comb_continuous_pos || subtype == st_comb_continuous_neg)
+        {
+            reso = std::clamp(reso, 0.f, 1.f);
+            reso = (subtype == st_comb_continuous_pos ? 1.f : -1.f) * reso;
+        }
+        else if (subtype == st_comb_continuous_posneg)
+        {
+            reso = (cmix < 0 ? -1 : 1) * std::clamp(reso, 0.f, 1.f);
+        }
+        else
+        {
+            reso = ((subtype & 2) ? -1.0f : 1.0f) * std::clamp(reso, 0.f, 1.f);
+        }
     }
 
     float c[n_cm_coeffs];
     memset(c, 0, sizeof(float) * n_cm_coeffs);
     c[0] = dtime;
     c[1] = reso;
-    c[2] = (subtype & 1) ? 0.0f : 0.5f; // combmix
+    if (subtype == st_comb_continuous_pos || subtype == st_comb_continuous_neg ||
+        subtype == st_comb_continuous_posneg)
+    {
+        c[2] = std::clamp(1.f - std::fabs(cmix), 0.f, 1.f);
+    }
+    else
+    {
+        c[2] = (subtype & 1) ? 0.0f : 0.5f; // combmix
+    }
     c[3] = 1.f - c[2];
     FromDirect(c);
 }
