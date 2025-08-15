@@ -14,6 +14,11 @@ endif()
 message(STATUS "Fetching stb_image_write")
 file(DOWNLOAD https://raw.githubusercontent.com/libigl/libigl-stb/refs/heads/master/stb_image_write.h ${CMAKE_CURRENT_BINARY_DIR}/stb/stb_image_write.h)
 target_include_directories(${FPEXE} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/stb)
-
-
 target_link_libraries(${FPEXE} PRIVATE sst-filters sst-basic-blocks simde)
+
+if (APPLE)
+    target_compile_definitions(${FPEXE} PRIVATE MAC_FILE)
+elseif (WIN32)
+    target_compile_definitions(${FPEXE} PRIVATE WIN_FILE)
+endif()
+# others are the fallthrough. this is just for files

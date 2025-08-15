@@ -15,6 +15,7 @@
 
 #include <iostream>
 #include <functional>
+#include <filesystem>
 
 // I just use STB here to make quick and dirty plots. sst-filters doesn't need it.
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -201,6 +202,18 @@ int main(int, char **)
     std::getline(std::cin, inl);
     idx2 = std::stoi(inl);
 
+    auto fpath = std::filesystem::temp_directory_path() / "plot.png";
+    auto fname = fpath.u8string();
+
+    std::cout << "\n\nOutput File. Press enter for " << fname << std::endl;
+    std::cout << "\nfilt> ";
+    std::getline(std::cin, inl);
+    if (!inl.empty())
+    {
+        fname = inl;
+    }
+    std::cout << "\nWriting to " << fname << "\n";
+
     auto cos = idx2 == 1 ? 0 : -20;
     auto coe = idx2 == 1 ? 0 : 20;
     auto cop = idx2 == 1 ? 1 : 10;
@@ -222,7 +235,7 @@ int main(int, char **)
                         std::cout << "SETUP ERROR" << std::endl;
                 },
                 [c, res](auto &filter, int voice) { filter.makeCoefficients(voice, c, res); });
-            std::cout << "   co=" << c << " res=" << res << std::endl;
+            std::cout << "   cutoff = " << c << "\n   res   = " << res << std::endl;
 
             auto [r, g, b] = colors[ci];
             ci = (ci + 1) % colors.size();
@@ -230,7 +243,15 @@ int main(int, char **)
         }
     }
 
-    plot.save("/tmp/plot.png");
-    system("open /tmp/plot.png");
+    plot.save(fname.c_str());
+#if MAC_FILE
+    fname = "open " + fname;
+#endif
+
+#if MAC_FILE || WIN_FILE
+    system(fname.c_str());
+#else
+    std::cout << "File generated to " << fname << std::endl;
+#endif
 #endif
 }
