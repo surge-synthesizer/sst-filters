@@ -19,6 +19,7 @@
 #include <algorithm>
 #include <cmath>
 #include <memory>
+#include <sst/basic-blocks/tables/TwoToTheXProvider.h>
 
 namespace sst::filters::detail
 {
@@ -28,13 +29,6 @@ struct BasicTuningProvider
 
     static constexpr double MIDI_0_FREQ = 8.17579891564371; // or 440.0 * pow( 2.0, - (69.0/12.0 ) )
 
-    enum TuningMode
-    {
-        RETUNE_ALL = 0,
-    };
-
-    TuningMode tuningApplicationMode = RETUNE_ALL;
-
     static void note_to_omega_ignoring_tuning(float x, float &sinu, float &cosi, float sampleRate)
     {
         auto pitch = note_to_pitch_ignoring_tuning(x);
@@ -43,26 +37,22 @@ struct BasicTuningProvider
         cosi = cos(arg);
     }
 
-    static float note_to_pitch_ignoring_tuning(float x) { return powf(2.f, x * (1.f / 12.f)); }
-
-    static float note_to_pitch_inv_ignoring_tuning(float x)
+    static float twoToThe(float x)
     {
-        return 1.0f / note_to_pitch_ignoring_tuning(x);
+        static sst::basic_blocks::tables::TwoToTheXProvider provider;
+        static bool init{false};
+        if (!init)
+        {
+            provider.init();
+            init = true;
+        }
+        return provider.twoToThe(x);
     }
+    static float note_to_pitch_ignoring_tuning(float x) { return twoToThe(x / 12.f); }
+
+    static float note_to_pitch_inv_ignoring_tuning(float x) { return twoToThe(-x / 12.f); }
 
     static float note_to_pitch(float x) { return note_to_pitch_ignoring_tuning(x); }
-
-    struct CurrentTuning
-    {
-        static double logScaledFrequencyForMidiNote(int mn) { return (double)mn / 12.0; }
-    } currentTuning;
-
-    struct Patch
-    {
-        static constexpr bool correctlyTuneCombFilter = true;
-    } patch;
-
-    Patch *_patch = &patch;
 };
 } // namespace sst::filters::detail
 

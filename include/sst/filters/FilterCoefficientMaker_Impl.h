@@ -27,6 +27,88 @@ template <typename T> inline T db_to_linear(T in) { return pow((T)10, (T)0.05 * 
 
 constexpr float smooth = 0.2f;
 
+// A bit of code dealing with provider being null; and if it is null then provider
+// having to have static methods
+
+namespace details
+{
+// the careful reader will note that this doesnt distinguish between method and variable.
+// If you rpovide a tuning provider with static int note_to_pitch; it wil think it is callable
+// and not compile. Dont' do that.
+#define HAS_MEMBER(x)                                                                              \
+    template <class T, class = void> struct has_member_##x : public std::false_type                \
+    {                                                                                              \
+    };                                                                                             \
+    template <class T>                                                                             \
+    struct has_member_##x<T, std::void_t<decltype(T::x)>> : public std::true_type                  \
+    {                                                                                              \
+    };
+
+HAS_MEMBER(note_to_pitch)
+HAS_MEMBER(note_to_pitch_ignoring_tuning)
+HAS_MEMBER(note_to_pitch_inv_ignoring_tuning)
+HAS_MEMBER(note_to_omega_ignoring_tuning)
+HAS_MEMBER(tuningApplicationMode);
+HAS_MEMBER(_patch);
+#undef HAS_MEMBER
+} // namespace details
+template <typename TuningProvider>
+float FilterCoefficientMaker<TuningProvider>::provider_note_to_pitch(TuningProvider *provider,
+                                                                     float note)
+{
+    if constexpr (details::has_member_note_to_pitch<TuningProvider>::value)
+    {
+        return TuningProvider::note_to_pitch(note);
+    }
+    else
+    {
+        assert(provider);
+        return provider->note_to_pitch(note);
+    }
+}
+template <typename TuningProvider>
+float FilterCoefficientMaker<TuningProvider>::provider_note_to_pitch_ignoring_tuning(
+    TuningProvider *provider, float note)
+{
+    if constexpr (details::has_member_note_to_pitch_ignoring_tuning<TuningProvider>::value)
+    {
+        return TuningProvider::note_to_pitch_ignoring_tuning(note);
+    }
+    else
+    {
+        assert(provider);
+        return provider->note_to_pitch_ignoring_tuning(note);
+    }
+}
+template <typename TuningProvider>
+float FilterCoefficientMaker<TuningProvider>::provider_note_to_pitch_inv_ignoring_tuning(
+    TuningProvider *provider, float note)
+{
+    if constexpr (details::has_member_note_to_pitch_inv_ignoring_tuning<TuningProvider>::value)
+    {
+        return TuningProvider::note_to_pitch_inv_ignoring_tuning(note);
+    }
+    else
+    {
+        assert(provider);
+        return provider->note_to_pitch_inv_ignoring_tuning(note);
+    }
+}
+template <typename TuningProvider>
+void FilterCoefficientMaker<TuningProvider>::provider_note_to_omega_ignoring_tuning(
+    TuningProvider *provider, float x, float &sinu, float &cosi, float sampleRate)
+{
+    if constexpr (details::has_member_note_to_pitch_inv_ignoring_tuning<TuningProvider>::value)
+    {
+        TuningProvider::note_to_omega_ignoring_tuning(x, sinu, cosi, sampleRate);
+    }
+    else
+    {
+        assert(provider);
+        provider->note_to_omega_ignoring_tuning(x, sinu, cosi, sampleRate);
+    }
+}
+
 template <typename TuningProvider> FilterCoefficientMaker<TuningProvider>::FilterCoefficientMaker()
 {
     Reset();
@@ -93,22 +175,26 @@ void FilterCoefficientMaker<TuningProvider>::MakeCoeffs(float Freq, float Reso, 
     provider = providerI;
     if (provider)
     {
-        if (tuningAdjusted && provider->tuningApplicationMode == TuningProvider::RETUNE_ALL)
+        if constexpr (details::has_member_tuningApplicationMode<TuningProvider>::value)
         {
-            /*
-             * Modulations are not remapped and tuning is in effect; remap the note
-             */
-            auto idx = (int)floor(Freq + 69);
-            float frac =
-                (Freq + 69) - (float)idx; // frac is 0 means use idx; frac is 1 means use idx+1
+            if (tuningAdjusted && provider->tuningApplicationMode == TuningProvider::RETUNE_ALL)
+            {
+                /*
+                 * Modulations are not remapped and tuning is in effect; remap the note
+                 */
+                auto idx = (int)floor(Freq + 69);
+                float frac =
+                    (Freq + 69) - (float)idx; // frac is 0 means use idx; frac is 1 means use idx+1
 
-            float b0 = (float)provider->currentTuning.logScaledFrequencyForMidiNote(idx) * 12.0f;
-            float b1 =
-                (float)provider->currentTuning.logScaledFrequencyForMidiNote(idx + 1) * 12.0f;
+                float b0 =
+                    (float)provider->currentTuning.logScaledFrequencyForMidiNote(idx) * 12.0f;
+                float b1 =
+                    (float)provider->currentTuning.logScaledFrequencyForMidiNote(idx + 1) * 12.0f;
 
-            auto q = (1.f - frac) * b0 + frac * b1;
+                auto q = (1.f - frac) * b0 + frac * b1;
 
-            Freq = q - 69;
+                Freq = q - 69;
+            }
         }
     }
 
@@ -370,7 +456,7 @@ template <typename TuningProvider>
 void FilterCoefficientMaker<TuningProvider>::Coeff_SVF(float Freq, float Reso, bool FourPole)
 {
     using std::min;
-    double f = 440.f * provider->note_to_pitch_ignoring_tuning(Freq);
+    double f = 440.f * provider_note_to_pitch_ignoring_tuning(provider, Freq);
     double F1 = 2.0 * sin(M_PI * min(0.11, f * (0.5 * sampleRateInv))); // 2x oversampling
 
     Reso = sqrt(std::clamp(Reso, 0.f, 1.f));
@@ -400,7 +486,7 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_LP12(float freq, float reso, 
     float gain = resoscale(reso, subtype);
 
     freq = boundFreq(freq);
-    provider->note_to_omega_ignoring_tuning(freq, sinu, cosi, sampleRate);
+    provider_note_to_omega_ignoring_tuning(provider, freq, sinu, cosi, sampleRate);
 
     double alpha = sinu * Map2PoleResonance(reso, freq, subtype);
 
@@ -426,7 +512,7 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_LP24(float freq, float reso, 
     float gain = resoscale(reso, subtype);
 
     freq = boundFreq(freq);
-    provider->note_to_omega_ignoring_tuning(freq, sinu, cosi, sampleRate);
+    provider_note_to_omega_ignoring_tuning(provider, freq, sinu, cosi, sampleRate);
 
     double Q2inv = Map4PoleResonance((double)reso, (double)freq, subtype);
     double alpha = sinu * Q2inv;
@@ -453,7 +539,7 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_HP12(float freq, float reso, 
     float gain = resoscale(reso, subtype);
 
     freq = boundFreq(freq);
-    provider->note_to_omega_ignoring_tuning(freq, sinu, cosi, sampleRate);
+    provider_note_to_omega_ignoring_tuning(provider, freq, sinu, cosi, sampleRate);
 
     double Q2inv = Map2PoleResonance(reso, freq, subtype);
     double alpha = sinu * Q2inv;
@@ -480,7 +566,7 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_HP24(float freq, float reso, 
     float gain = resoscale(reso, subtype);
 
     freq = boundFreq(freq);
-    provider->note_to_omega_ignoring_tuning(freq, sinu, cosi, sampleRate);
+    provider_note_to_omega_ignoring_tuning(provider, freq, sinu, cosi, sampleRate);
 
     double Q2inv = Map4PoleResonance((double)reso, (double)freq, subtype);
     double alpha = sinu * Q2inv;
@@ -512,7 +598,7 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_BP12(float freq, float reso, 
     }
 
     freq = boundFreq(freq);
-    provider->note_to_omega_ignoring_tuning(freq, sinu, cosi, sampleRate);
+    provider_note_to_omega_ignoring_tuning(provider, freq, sinu, cosi, sampleRate);
 
     double Q2inv = Map2PoleResonance(reso, freq, subtype);
     double Q = 0.5 / Q2inv;
@@ -550,7 +636,7 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_BP24(float freq, float reso, 
     }
 
     freq = boundFreq(freq);
-    provider->note_to_omega_ignoring_tuning(freq, sinu, cosi, sampleRate);
+    provider_note_to_omega_ignoring_tuning(provider, freq, sinu, cosi, sampleRate);
 
     double Q2inv = Map4PoleResonance(reso, freq, subtype);
     double Q = 0.5 / Q2inv;
@@ -583,7 +669,7 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_Notch(float Freq, float Reso,
     double Q2inv;
 
     Freq = boundFreq(Freq);
-    provider->note_to_omega_ignoring_tuning(Freq, sinu, cosi, sampleRate);
+    provider_note_to_omega_ignoring_tuning(provider, Freq, sinu, cosi, sampleRate);
 
     if (SubType == st_NotchMild)
     {
@@ -609,7 +695,7 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_APF(float Freq, float Reso, i
     double Q2inv;
 
     Freq = boundFreq(Freq);
-    provider->note_to_omega_ignoring_tuning(Freq, sinu, cosi, sampleRate);
+    provider_note_to_omega_ignoring_tuning(provider, Freq, sinu, cosi, sampleRate);
 
     Q2inv = (2.5 - 2.49 * std::clamp((double)(1 - (1 - Reso) * (1 - Reso)), 0.0, 1.0));
 
@@ -624,9 +710,10 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_APF(float Freq, float Reso, i
 template <typename TuningProvider>
 void FilterCoefficientMaker<TuningProvider>::Coeff_LP4L(float freq, float reso, int /*subtype*/)
 {
-    double gg = std::clamp(
-        ((double)440 * provider->note_to_pitch_ignoring_tuning(freq) * (double)sampleRateInv), 0.0,
-        0.187); // gg
+    double gg = std::clamp(((double)440 * provider_note_to_pitch_ignoring_tuning(provider, freq) *
+                            (double)sampleRateInv),
+                           0.0,
+                           0.187); // gg
 
     float t_b1 = 1.f - (float)exp(-2 * M_PI * gg);
     float q = std::min(2.15f * std::clamp(reso, 0.f, 1.f), 0.5f / (t_b1 * t_b1 * t_b1 * t_b1));
@@ -649,13 +736,16 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_COMB(float freq, float reso, 
 
     int comb_length = extended ? utilities::MAX_FB_COMB_EXTENDED : utilities::MAX_FB_COMB;
 
-    float dtime = (1.f / 440.f) * provider->note_to_pitch_inv_ignoring_tuning(freq);
+    float dtime = (1.f / 440.f) * provider_note_to_pitch_inv_ignoring_tuning(provider, freq);
     dtime = dtime * sampleRate;
 
-    // See comment in SurgeStorage and issue #3248
-    if (provider != nullptr && !provider->_patch->correctlyTuneCombFilter)
+    if constexpr (details::has_member__patch<TuningProvider>::value)
     {
-        dtime -= utilities::SincTable::FIRoffset;
+        // See comment in SurgeStorage and issue #3248
+        if (provider != nullptr && !provider->_patch->correctlyTuneCombFilter)
+        {
+            dtime -= utilities::SincTable::FIRoffset;
+        }
     }
 
     dtime = std::clamp(dtime, (float)utilities::SincTable::FIRipol_N,
@@ -702,7 +792,8 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_COMB(float freq, float reso, 
 template <typename TuningProvider>
 void FilterCoefficientMaker<TuningProvider>::Coeff_SNH(float freq, float reso, int /*subtype*/)
 {
-    float dtime = (1.f / 440.f) * provider->note_to_pitch_ignoring_tuning(-freq) * sampleRate;
+    float dtime =
+        (1.f / 440.f) * provider_note_to_pitch_ignoring_tuning(provider, -freq) * sampleRate;
     float v1 = 1.0f / dtime;
 
     float c[n_cm_coeffs]{};
