@@ -27,29 +27,86 @@ template <typename T> inline T db_to_linear(T in) { return pow((T)10, (T)0.05 * 
 
 constexpr float smooth = 0.2f;
 
+// A bit of code dealing with provider being null; and if it is null then provider
+// having to have static methods
+
+namespace details
+{
+// the careful reader will note that this doesnt distinguish between method and variable.
+// If you rpovide a tuning provider with static int note_to_pitch; it wil think it is callable
+// and not compile. Dont' do that.
+#define HAS_MEMBER(x)                                                                              \
+    template <class T, class = void> struct has_member_##x : public std::false_type                \
+    {                                                                                              \
+    };                                                                                             \
+    template <class T>                                                                             \
+    struct has_member_##x<T, std::void_t<decltype(T::x)>> : public std::true_type                  \
+    {                                                                                              \
+    };
+
+HAS_MEMBER(note_to_pitch)
+HAS_MEMBER(note_to_pitch_ignoring_tuning)
+HAS_MEMBER(note_to_pitch_inv_ignoring_tuning)
+HAS_MEMBER(note_to_omega_ignoring_tuning)
+HAS_MEMBER(tuningApplicationMode);
+HAS_MEMBER(_patch);
+#undef HAS_MEMBER
+} // namespace details
 template <typename TuningProvider>
 float FilterCoefficientMaker<TuningProvider>::provider_note_to_pitch(TuningProvider *provider,
                                                                      float note)
 {
-    return provider->note_to_pitch(note);
+    if constexpr (details::has_member_note_to_pitch<TuningProvider>::value)
+    {
+        return TuningProvider::note_to_pitch(note);
+    }
+    else
+    {
+        assert(provider);
+        return provider->note_to_pitch(note);
+    }
 }
 template <typename TuningProvider>
 float FilterCoefficientMaker<TuningProvider>::provider_note_to_pitch_ignoring_tuning(
     TuningProvider *provider, float note)
 {
-    return provider->note_to_pitch_ignoring_tuning(note);
+    if constexpr (details::has_member_note_to_pitch_ignoring_tuning<TuningProvider>::value)
+    {
+        return TuningProvider::note_to_pitch_ignoring_tuning(note);
+    }
+    else
+    {
+        assert(provider);
+        return provider->note_to_pitch_ignoring_tuning(note);
+    }
 }
 template <typename TuningProvider>
 float FilterCoefficientMaker<TuningProvider>::provider_note_to_pitch_inv_ignoring_tuning(
     TuningProvider *provider, float note)
 {
-    return provider->note_to_pitch_inv_ignoring_tuning(note);
+    if constexpr (details::has_member_note_to_pitch_inv_ignoring_tuning<TuningProvider>::value)
+    {
+        return TuningProvider::note_to_pitch_inv_ignoring_tuning(note);
+    }
+    else
+    {
+        assert(provider);
+        return provider->note_to_pitch_inv_ignoring_tuning(note);
+    }
 }
 template <typename TuningProvider>
 void FilterCoefficientMaker<TuningProvider>::provider_note_to_omega_ignoring_tuning(
     TuningProvider *provider, float x, float &sinu, float &cosi, float sampleRate)
 {
-    provider->note_to_omega_ignoring_tuning(x, sinu, cosi, sampleRate);
+    if constexpr (details::has_member_note_to_pitch_inv_ignoring_tuning<TuningProvider>::value)
+    {
+        TuningProvider::note_to_omega_ignoring_tuning(x, sinu, cosi, sampleRate);
+    }
+    else
+    {
+        assert(provider);
+        provider->note_to_omega_ignoring_tuning(x, sinu, cosi, sampleRate);
+    }
 }
 
 template <typename TuningProvider> FilterCoefficientMaker<TuningProvider>::FilterCoefficientMaker()
@@ -118,22 +175,26 @@ void FilterCoefficientMaker<TuningProvider>::MakeCoeffs(float Freq, float Reso, 
     provider = providerI;
     if (provider)
     {
-        if (tuningAdjusted && provider->tuningApplicationMode == TuningProvider::RETUNE_ALL)
+        if constexpr (details::has_member_tuningApplicationMode<TuningProvider>::value)
         {
-            /*
-             * Modulations are not remapped and tuning is in effect; remap the note
-             */
-            auto idx = (int)floor(Freq + 69);
-            float frac =
-                (Freq + 69) - (float)idx; // frac is 0 means use idx; frac is 1 means use idx+1
+            if (tuningAdjusted && provider->tuningApplicationMode == TuningProvider::RETUNE_ALL)
+            {
+                /*
+                 * Modulations are not remapped and tuning is in effect; remap the note
+                 */
+                auto idx = (int)floor(Freq + 69);
+                float frac =
+                    (Freq + 69) - (float)idx; // frac is 0 means use idx; frac is 1 means use idx+1
 
-            float b0 = (float)provider->currentTuning.logScaledFrequencyForMidiNote(idx) * 12.0f;
-            float b1 =
-                (float)provider->currentTuning.logScaledFrequencyForMidiNote(idx + 1) * 12.0f;
+                float b0 =
+                    (float)provider->currentTuning.logScaledFrequencyForMidiNote(idx) * 12.0f;
+                float b1 =
+                    (float)provider->currentTuning.logScaledFrequencyForMidiNote(idx + 1) * 12.0f;
 
-            auto q = (1.f - frac) * b0 + frac * b1;
+                auto q = (1.f - frac) * b0 + frac * b1;
 
-            Freq = q - 69;
+                Freq = q - 69;
+            }
         }
     }
 
@@ -678,10 +739,13 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_COMB(float freq, float reso, 
     float dtime = (1.f / 440.f) * provider_note_to_pitch_inv_ignoring_tuning(provider, freq);
     dtime = dtime * sampleRate;
 
-    // See comment in SurgeStorage and issue #3248
-    if (provider != nullptr && !provider->_patch->correctlyTuneCombFilter)
+    if constexpr (details::has_member__patch<TuningProvider>::value)
     {
-        dtime -= utilities::SincTable::FIRoffset;
+        // See comment in SurgeStorage and issue #3248
+        if (provider != nullptr && !provider->_patch->correctlyTuneCombFilter)
+        {
+            dtime -= utilities::SincTable::FIRoffset;
+        }
     }
 
     dtime = std::clamp(dtime, (float)utilities::SincTable::FIRipol_N,

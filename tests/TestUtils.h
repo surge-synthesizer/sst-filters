@@ -105,7 +105,8 @@ struct TestConfig
 static float delayBufferData[4][utilities::MAX_FB_COMB + utilities::SincTable::FIRipol_N]{};
 static float delayBufferNew[4 * (utilities::MAX_FB_COMB + utilities::SincTable::FIRipol_N)]{};
 
-inline void runTest(const TestConfig &testConfig)
+template <typename TuningProvider>
+inline void runTestProvider(const TestConfig &testConfig, TuningProvider *tp)
 {
     auto filterState = sst::filters::QuadFilterUnitState{};
     for (int i = 0; i < 4; ++i)
@@ -120,10 +121,10 @@ inline void runTest(const TestConfig &testConfig)
 
     auto filterUnitPtr = sst::filters::GetQFPtrFilterUnit(testConfig.type, testConfig.subType);
 
-    sst::filters::FilterCoefficientMaker coefMaker;
+    sst::filters::FilterCoefficientMaker<TuningProvider> coefMaker;
     coefMaker.setSampleRateAndBlockSize(sampleRate, blockSize);
     coefMaker.MakeCoeffs(testConfig.cutoffFreq, testConfig.resonance, testConfig.type,
-                         testConfig.subType, nullptr, false);
+                         testConfig.subType, tp, false);
     coefMaker.updateState(filterState);
 
     std::array<float, numTestFreqs> actualRMSs{};
@@ -145,6 +146,41 @@ inline void runTest(const TestConfig &testConfig)
 
         std::cout << "}" << std::endl;
     }
+};
+
+struct NonStaticTuningProvider
+{
+    NonStaticTuningProvider() = default;
+
+    static constexpr double MIDI_0_FREQ = 8.17579891564371; // or 440.0 * pow( 2.0, - (69.0/12.0 ) )
+
+    void note_to_omega_ignoring_tuning(float x, float &sinu, float &cosi, float sampleRate)
+    {
+        sst::filters::detail::BasicTuningProvider::note_to_omega_ignoring_tuning(x, sinu, cosi,
+                                                                                 sampleRate);
+    }
+
+    float note_to_pitch_ignoring_tuning(float x)
+    {
+        return sst::filters::detail::BasicTuningProvider::note_to_pitch_ignoring_tuning(x);
+    }
+
+    float note_to_pitch_inv_ignoring_tuning(float x)
+    {
+        return sst::filters::detail::BasicTuningProvider::note_to_pitch_inv_ignoring_tuning(x);
+    }
+
+    float note_to_pitch(float x)
+    {
+        return sst::filters::detail::BasicTuningProvider::note_to_pitch(x);
+    }
+};
+
+inline void runTest(const TestConfig &testConfig)
+{
+    runTestProvider<sst::filters::detail::BasicTuningProvider>(testConfig, nullptr);
+    auto tp = std::make_unique<NonStaticTuningProvider>();
+    runTestProvider<NonStaticTuningProvider>(testConfig, tp.get());
 };
 
 inline void runTest(sst::filtersplusplus::FilterModels model,
