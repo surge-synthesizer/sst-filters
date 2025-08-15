@@ -37,8 +37,9 @@ namespace Common
 template <typename TuningProvider>
 inline float clampedFrequency(float pitch, float sampleRate, TuningProvider *provider)
 {
-    auto freq =
-        provider->note_to_pitch_ignoring_tuning(pitch + 69.0f) * (float)TuningProvider::MIDI_0_FREQ;
+    auto freq = FilterCoefficientMaker<TuningProvider>::provider_note_to_pitch_ignoring_tuning(
+                    provider, pitch + 69.0f) *
+                (float)TuningProvider::MIDI_0_FREQ;
     freq = std::clamp(freq, 5.f, sampleRate * 0.3f);
     return freq;
 }

@@ -84,6 +84,12 @@ template <typename TuningProvider = detail::BasicTuningProvider> class FilterCoe
     /** "Target" filter coefficients */
     float tC[n_cm_coeffs]{};
 
+    static float provider_note_to_pitch(TuningProvider *provider, float note);
+    static float provider_note_to_pitch_ignoring_tuning(TuningProvider *provider, float note);
+    static float provider_note_to_pitch_inv_ignoring_tuning(TuningProvider *provider, float note);
+    static void provider_note_to_omega_ignoring_tuning(TuningProvider *provider, float x,
+                                                       float &sinu, float &cosi, float sampleRate);
+
   private:
     void ToCoupledForm(double A0inv, double A1, double A2, double B0, double B1, double B2,
                        double G);
