@@ -84,18 +84,12 @@ void FilterCoefficientMaker<TuningProvider>::updateCoefficients(StateType &state
 }
 
 template <typename TuningProvider>
-TuningProvider FilterCoefficientMaker<TuningProvider>::baseTuningProviderInstance;
-
-template <typename TuningProvider>
 void FilterCoefficientMaker<TuningProvider>::MakeCoeffs(float Freq, float Reso, FilterType Type,
                                                         FilterSubType SubType,
                                                         TuningProvider *providerI,
                                                         bool tuningAdjusted, float extra,
                                                         float extra2, float extra3)
 {
-    if (!providerI)
-        providerI = &baseTuningProviderInstance;
-
     provider = providerI;
     if (provider)
     {

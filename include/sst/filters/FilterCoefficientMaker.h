@@ -36,9 +36,6 @@ constexpr int n_cm_coeffs = 8;
  */
 template <typename TuningProvider = detail::BasicTuningProvider> class FilterCoefficientMaker
 {
-    static_assert(std::is_default_constructible_v<TuningProvider>,
-                  "Tuning Provider must have a () ctor");
-
   public:
     /** Default constructor */
     FilterCoefficientMaker();
@@ -108,8 +105,6 @@ template <typename TuningProvider = detail::BasicTuningProvider> class FilterCoe
     bool FirstRun = true;
 
     TuningProvider *provider = nullptr;
-
-    static TuningProvider baseTuningProviderInstance;
 
     float sampleRate = 48000.0f;
     float sampleRateInv = 1.0f / sampleRate;
