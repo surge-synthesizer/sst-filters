@@ -5,3 +5,4 @@ CPMAddPackage("gh:juce-framework/JUCE#7.0.12")
 
 add_subdirectory(filter_plot_tool)
 add_subdirectory(filters_example_plugin)
+add_subdirectory(filters_plus_plus)

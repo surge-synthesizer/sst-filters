@@ -2,7 +2,7 @@
  * sst-filters - A header-only collection of SIMD filter
  * implementations by the Surge Synth Team
  *
- * Copyright 2019-2024, various authors, as described in the GitHub
+ * Copyright 2019-2025, various authors, as described in the GitHub
  * transaction log.
  *
  * sst-filters is released under the Gnu General Public Licens
@@ -38,6 +38,19 @@ TEST_CASE("Cutoff Warp")
         for (int subtype = 0; subtype < 12; ++subtype)
             runTest({FilterType::fut_cutoffwarp_lp, static_cast<FilterSubType>(subtype),
                      RMSs[subtype]});
+
+        namespace sfpp = sst::filtersplusplus;
+        int idx{0};
+        for (auto d : {sfpp::DriveTypes::Tanh, sfpp::DriveTypes::SoftClip, sfpp::DriveTypes::OJD})
+        {
+            for (auto s : {sfpp::SlopeLevels::Slope_1Stage, sfpp::SlopeLevels::Slope_2Stage,
+                           sfpp::SlopeLevels::Slope_3Stage, sfpp::SlopeLevels::Slope_4Stage})
+            {
+                runTest(sfpp::FilterModels::CutoffWarp, {sfpp::PassTypes::LP, s, d}, 0, 0.5,
+                        RMSs[idx]);
+                idx++;
+            }
+        }
     }
 
     SECTION("Highpass")
@@ -60,6 +73,19 @@ TEST_CASE("Cutoff Warp")
         for (int subtype = 0; subtype < 12; ++subtype)
             runTest({FilterType::fut_cutoffwarp_hp, static_cast<FilterSubType>(subtype),
                      RMSs[subtype]});
+
+        namespace sfpp = sst::filtersplusplus;
+        int idx{0};
+        for (auto d : {sfpp::DriveTypes::Tanh, sfpp::DriveTypes::SoftClip, sfpp::DriveTypes::OJD})
+        {
+            for (auto s : {sfpp::SlopeLevels::Slope_1Stage, sfpp::SlopeLevels::Slope_2Stage,
+                           sfpp::SlopeLevels::Slope_3Stage, sfpp::SlopeLevels::Slope_4Stage})
+            {
+                runTest(sfpp::FilterModels::CutoffWarp, {sfpp::PassTypes::HP, s, d}, 0, 0.5,
+                        RMSs[idx]);
+                idx++;
+            }
+        }
     }
 
     SECTION("Notch")
@@ -82,6 +108,19 @@ TEST_CASE("Cutoff Warp")
         for (int subtype = 0; subtype < 12; ++subtype)
             runTest(
                 {FilterType::fut_cutoffwarp_n, static_cast<FilterSubType>(subtype), RMSs[subtype]});
+
+        namespace sfpp = sst::filtersplusplus;
+        int idx{0};
+        for (auto d : {sfpp::DriveTypes::Tanh, sfpp::DriveTypes::SoftClip, sfpp::DriveTypes::OJD})
+        {
+            for (auto s : {sfpp::SlopeLevels::Slope_1Stage, sfpp::SlopeLevels::Slope_2Stage,
+                           sfpp::SlopeLevels::Slope_3Stage, sfpp::SlopeLevels::Slope_4Stage})
+            {
+                runTest(sfpp::FilterModels::CutoffWarp, {sfpp::PassTypes::Notch, s, d}, 0, 0.5,
+                        RMSs[idx]);
+                idx++;
+            }
+        }
     }
 
     SECTION("Bandpass")
@@ -104,6 +143,19 @@ TEST_CASE("Cutoff Warp")
         for (int subtype = 0; subtype < 12; ++subtype)
             runTest({FilterType::fut_cutoffwarp_bp, static_cast<FilterSubType>(subtype),
                      RMSs[subtype]});
+
+        namespace sfpp = sst::filtersplusplus;
+        int idx{0};
+        for (auto d : {sfpp::DriveTypes::Tanh, sfpp::DriveTypes::SoftClip, sfpp::DriveTypes::OJD})
+        {
+            for (auto s : {sfpp::SlopeLevels::Slope_1Stage, sfpp::SlopeLevels::Slope_2Stage,
+                           sfpp::SlopeLevels::Slope_3Stage, sfpp::SlopeLevels::Slope_4Stage})
+            {
+                runTest(sfpp::FilterModels::CutoffWarp, {sfpp::PassTypes::BP, s, d}, 0, 0.5,
+                        RMSs[idx]);
+                idx++;
+            }
+        }
     }
 
     SECTION("Allpass")
@@ -126,5 +178,18 @@ TEST_CASE("Cutoff Warp")
         for (int subtype = 0; subtype < 12; ++subtype)
             runTest({FilterType::fut_cutoffwarp_ap, static_cast<FilterSubType>(subtype),
                      RMSs[subtype]});
+
+        namespace sfpp = sst::filtersplusplus;
+        int idx{0};
+        for (auto d : {sfpp::DriveTypes::Tanh, sfpp::DriveTypes::SoftClip, sfpp::DriveTypes::OJD})
+        {
+            for (auto s : {sfpp::SlopeLevels::Slope_1Stage, sfpp::SlopeLevels::Slope_2Stage,
+                           sfpp::SlopeLevels::Slope_3Stage, sfpp::SlopeLevels::Slope_4Stage})
+            {
+                runTest(sfpp::FilterModels::CutoffWarp, {sfpp::PassTypes::AllPass, s, d}, 0, 0.5,
+                        RMSs[idx]);
+                idx++;
+            }
+        }
     }
 }

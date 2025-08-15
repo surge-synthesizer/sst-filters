@@ -2,7 +2,7 @@
  * sst-filters - A header-only collection of SIMD filter
  * implementations by the Surge Synth Team
  *
- * Copyright 2019-2024, various authors, as described in the GitHub
+ * Copyright 2019-2025, various authors, as described in the GitHub
  * transaction log.
  *
  * sst-filters is released under the Gnu General Public Licens
@@ -23,6 +23,7 @@
 #include <catch2/catch2.hpp>
 
 #include <sst/filters.h>
+#include <sst/filters++.h>
 
 namespace TestUtils
 {
@@ -61,6 +62,36 @@ inline float runSine(sst::filters::QuadFilterUnitState &filterState,
     return 20.0f * std::log10(rms);
 };
 
+inline float runSine(sst::filtersplusplus::Filter &filter, float co, float re, float testFreq,
+                     int numSamples)
+{
+    filter.reset();
+    auto bs = filter.getBlockSize();
+
+    std::vector<float> y(numSamples, 0.0f);
+    for (int i = 0; i < numSamples; ++i)
+    {
+        if (i % bs == 0)
+        {
+            if (i != 0)
+                filter.concludeBlock();
+            filter.makeCoefficients(0, co, re);
+            filter.prepareBlock();
+        }
+        auto x = (float)std::sin(2.0 * M_PI * (double)i * testFreq / sampleRate);
+
+        auto yVec = filter.processSample(SIMD_MM(set1_ps)(x));
+
+        float yArr alignas(16)[4];
+        SIMD_MM(store_ps)(yArr, yVec);
+        y[i] = yArr[0];
+    }
+
+    auto squareSum = std::inner_product(y.begin(), y.end(), y.begin(), 0.0f);
+    auto rms = std::sqrt(squareSum / (float)numSamples);
+    return 20.0f * std::log10(rms);
+};
+
 using RMSSet = std::array<float, numTestFreqs>;
 struct TestConfig
 {
@@ -72,6 +103,7 @@ struct TestConfig
 };
 
 static float delayBufferData[4][utilities::MAX_FB_COMB + utilities::SincTable::FIRipol_N]{};
+static float delayBufferNew[4 * (utilities::MAX_FB_COMB + utilities::SincTable::FIRipol_N)]{};
 
 inline void runTest(const TestConfig &testConfig)
 {
@@ -114,6 +146,50 @@ inline void runTest(const TestConfig &testConfig)
         std::cout << "}" << std::endl;
     }
 };
+
+inline void runTest(sst::filtersplusplus::FilterModels model,
+                    sst::filtersplusplus::ModelConfig config, float cutoff, float res,
+                    std::array<float, numTestFreqs> answer)
+{
+    auto filter = sst::filtersplusplus::Filter();
+    filter.setFilterModel(model);
+    filter.setModelConfiguration(config);
+    filter.setSampleRateAndBlockSize(sampleRate, blockSize);
+
+    memset(delayBufferNew, 0, sizeof(delayBufferNew));
+    for (int i = 0; i < 4; ++i)
+    {
+        filter.setActive(i, true);
+        if (auto rs = filter.requiredDelayLinesSizes(model, config))
+        {
+            filter.provideDelayLine(i, &delayBufferNew[0] + rs * i);
+        }
+    }
+    REQUIRE(filter.prepareInstance());
+
+    std::array<float, numTestFreqs> actualRMSs{};
+    for (int i = 0; i < numTestFreqs; ++i)
+    {
+        auto rmsDB = runSine(filter, cutoff, res, testFreqs[i], blockSize);
+
+        if constexpr (!printRMSs)
+        {
+            INFO("Comparing at point " << i);
+            REQUIRE(rmsDB == Approx(answer[i]).margin(1.0e-2f));
+        }
+        actualRMSs[i] = rmsDB;
+    }
+
+    if constexpr (printRMSs)
+    {
+        std::cout << "{ ";
+        for (int i = 0; i < numTestFreqs; ++i)
+            std::cout << actualRMSs[i] << "f, ";
+
+        std::cout << "}" << std::endl;
+    }
+};
+
 } // namespace TestUtils
 
 #endif // TESTS_TESTUTILS_H

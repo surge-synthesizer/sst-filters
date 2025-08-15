@@ -2,7 +2,7 @@
  * sst-filters - A header-only collection of SIMD filter
  * implementations by the Surge Synth Team
  *
- * Copyright 2019-2024, various authors, as described in the GitHub
+ * Copyright 2019-2025, various authors, as described in the GitHub
  * transaction log.
  *
  * sst-filters is released under the Gnu General Public Licens
@@ -84,12 +84,14 @@ static std::string subtypeLabel(int type, int subtype)
         case FilterType::fut_none:
         case FilterType::fut_lp12:
         case FilterType::fut_lp24:
-        case FilterType::fut_bp12:
         case FilterType::fut_bp24:
         case FilterType::fut_hp12:
         case FilterType::fut_hp24:
         case FilterType::fut_SNH:
             return sst::filters::fut_def_subtypes[i];
+            break;
+        case FilterType::fut_bp12:
+            return sst::filters::fut_bp12_subtypes[i];
             break;
         case FilterType::fut_tripole:
             // "i & 3" selects the lower two bits that represent the filter mode

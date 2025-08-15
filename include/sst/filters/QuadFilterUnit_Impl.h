@@ -2,7 +2,7 @@
  * sst-filters - A header-only collection of SIMD filter
  * implementations by the Surge Synth Team
  *
- * Copyright 2019-2024, various authors, as described in the GitHub
+ * Copyright 2019-2025, various authors, as described in the GitHub
  * transaction log.
  *
  * sst-filters is released under the Gnu General Public Licens
@@ -732,8 +732,10 @@ inline FilterUnitQFPtr GetCompensatedQFPtrFilterUnit(FilterType type, FilterSubT
         case st_Standard:
             return SVFBP12Aquad;
         case st_Driven:
+        case st_bp12_LegacyDriven:
             return IIR12CFCquad;
         case st_Clean:
+        case st_bp12_LegacyClean:
             return IIR12Bquad;
         default:
             break;
@@ -813,7 +815,14 @@ inline FilterUnitQFPtr GetCompensatedQFPtrFilterUnit(FilterType type, FilterSubT
         return OBXDFilter::process_2_pole;
         break;
     case fut_obxd_4pole:
-        return OBXDFilter::process_4_pole;
+        if (subtype == st_obxd4pole_broken24db)
+        {
+            return OBXDFilter::process_4_pole<true>;
+        }
+        else
+        {
+            return OBXDFilter::process_4_pole<false>;
+        }
         break;
     case fut_k35_lp:
         if (Compensated && subtype == 2)

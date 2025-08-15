@@ -2,7 +2,9 @@ message(STATUS "Add sst-filters-tests")
 add_executable(sst-filters-tests)
 target_include_directories(sst-filters-tests PRIVATE . ../libs)
 target_link_libraries(sst-filters-tests PRIVATE ${PROJECT_NAME} simde)
-target_compile_definitions(sst-filters-tests PRIVATE CATCH_CONFIG_DISABLE_EXCEPTIONS=1)
+#target_compile_definitions(sst-filters-tests PRIVATE CATCH_CONFIG_DISABLE_EXCEPTIONS=1)
+#target_compile_options(sst-filters-tests PRIVATE -fsanitize=address -fsanitize=undefined)
+#target_link_options(sst-filters-tests PRIVATE -fsanitize=address -fsanitize=undefined)
 target_sources(sst-filters-tests
         PRIVATE
         BasicFiltersTest.cpp
@@ -16,6 +18,7 @@ target_sources(sst-filters-tests
         ResonanceWarpTest.cpp
         TriPoleFilterTest.cpp
         VintageLaddersTest.cpp
+        filters_plus_plus.cpp
         tests.cpp
 )
 

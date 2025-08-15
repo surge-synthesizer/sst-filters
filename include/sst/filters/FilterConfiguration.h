@@ -2,7 +2,7 @@
  * sst-filters - A header-only collection of SIMD filter
  * implementations by the Surge Synth Team
  *
- * Copyright 2019-2024, various authors, as described in the GitHub
+ * Copyright 2019-2025, various authors, as described in the GitHub
  * transaction log.
  *
  * sst-filters is released under the Gnu General Public Licens
@@ -161,6 +161,9 @@ const char fut_def_subtypes[3][32] = {
     "Clean",
 };
 
+const char fut_bp12_subtypes[5][32] = {"Standard", "Driven", "Clean", "Driven (Legacy)",
+                                       "Clean (Legacy)"};
+
 const char fut_ldr_subtypes[4][32] = {
     "6 dB",
     "12 dB",
@@ -177,12 +180,8 @@ const char fut_vintageladder_subtypes[6][32] = {
 
 const char fut_obxd_2p_subtypes[2][32] = {"Standard", "Pushed"};
 
-const char fut_obxd_4p_subtypes[4][32] = {
-    "6 dB",
-    "12 dB",
-    "18 dB",
-    "24 dB",
-};
+const char fut_obxd_4p_subtypes[6][32] = {"6 dB",  "12 dB",        "18 dB",
+                                          "24 dB", "24 dB + 18dB", "Morph"};
 
 const char fut_k35_subtypes[5][32] = {"No Saturation", "Mild Saturation", "Moderate Saturation",
                                       "Heavy Saturation", "Extreme Saturation"};
@@ -224,13 +223,13 @@ const int fut_subcount[num_filter_types] = {
     4,  // fut_lpmoog
     3,  // fut_hp12
     3,  // fut_hp24
-    3,  // fut_bp12
+    5,  // fut_bp12
     2,  // fut_notch12
-    2,  // fut_comb_pos
+    2,  // fut_comb_pos (excluding morph)
     0,  // fut_SNH
     4,  // fut_vintageladder
     2,  // fut_obxd_2pole
-    4,  // fut_obxd_4pole
+    5,  // fut_obxd_4pole (excluding morph)
     5,  // fut_k35_lp
     5,  // fut_k35_hp
     4,  // fut_diode
@@ -314,6 +313,26 @@ enum FilterSubType
     st_tripole_LHL3 = 9,  /**< Low -> High -> Low, third */
     st_tripole_HLH3 = 10, /**< High -> Low -> High, third */
     st_tripole_HHH3 = 11, /**< High -> High -> High, third */
+
+    // Surge 1.x has a broken 24db. This retains it.
+    st_obxd4pole_6db = 0,
+    st_obxd4pole_12db = 1,
+    st_obxd4pole_18db = 2,
+    st_obxd4pole_24db = 3,
+    st_obxd4pole_broken24db = 4,
+    st_obxd4pole_morph = 5, // this is a sentinel value to use extra2
+
+    st_obxd2pole_standard = 0,
+    st_obxd2pole_pushed = 1,
+
+    // Comb is special. Its the same CME and 0123 and 50/100/50/100 but for pos neg so
+    st_comb_continuous_pos = 4,    // this works with pos
+    st_comb_continuous_neg = 5,    // this works with pos
+    st_comb_continuous_posneg = 6, // this works with pos
+
+    // Legacy fixes for BP12 misconfiguration
+    st_bp12_LegacyDriven = 3,
+    st_bp12_LegacyClean = 4,
 };
 
 } // namespace sst::filters
