@@ -14,6 +14,7 @@
  */
 
 #include <iostream>
+#include <functional>
 
 // I just use STB here to make quick and dirty plots. sst-filters doesn't need it.
 #define STB_IMAGE_WRITE_IMPLEMENTATION
