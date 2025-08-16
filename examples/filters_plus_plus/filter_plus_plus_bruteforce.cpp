@@ -21,6 +21,9 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "pngplot.h"
 
+static float
+    buffer[4][sst::filters::utilities::MAX_FB_COMB + sst::filters::utilities::SincTable::FIRipol_M];
+
 PNGPlot::curve_t
 bruteForceResponseCurve(std::function<void(sst::filtersplusplus::Filter &)> config,
                         std::function<void(sst::filtersplusplus::Filter &, int voice)> setCoeff)
@@ -37,8 +40,16 @@ bruteForceResponseCurve(std::function<void(sst::filtersplusplus::Filter &)> conf
         config(filter);
 
         filter.setSampleRateAndBlockSize(sr, blockSize);
-
         filter.setQuad();
+
+        if (filter.requiredDelayLinesSizes(filter.getFilterModel(), filter.getModelConfiguration()))
+        {
+            memset(buffer, 0, sizeof(buffer));
+            for (int i = 0; i < 4; ++i)
+            {
+                filter.provideDelayLine(i, &buffer[i][0]);
+            }
+        }
 
         if (!filter.prepareInstance())
         {
@@ -109,9 +120,6 @@ bruteForceResponseCurve(std::function<void(sst::filtersplusplus::Filter &)> conf
     }
     return res;
 }
-
-static float
-    buffer[4][sst::filters::utilities::MAX_FB_COMB + sst::filters::utilities::SincTable::FIRipol_M];
 
 int main(int, char **)
 {
@@ -188,8 +196,6 @@ int main(int, char **)
                 [model, cfg](auto &filter) {
                     filter.setFilterModel(model);
                     filter.setModelConfiguration(cfg);
-                    if (!filter.prepareInstance())
-                        std::cout << "SETUP ERROR" << std::endl;
                 },
                 [c, res](auto &filter, int voice) { filter.makeCoefficients(voice, c, res); });
             std::cout << "   cutoff = " << c << "\n   res   = " << res << std::endl;
