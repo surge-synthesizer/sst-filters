@@ -149,6 +149,7 @@ struct FilterPayload
 #include "../models/SampleAndHold.h"
 #include "../models/Comb.h"
 #include "../models/Tripole.h"
+#include "../models/CytomicSVF.h"
 
 namespace sst::filtersplusplus::details
 {
@@ -187,6 +188,7 @@ inline FilterPayload::legacyType_t FilterPayload::resolveLegacyType()
         FILTER_MODEL_CASE(FilterModels::SampleAndHold, models::sampleandhold);
         FILTER_MODEL_CASE(FilterModels::Comb, models::comb);
         FILTER_MODEL_CASE(FilterModels::TriPole, models::tripole);
+        FILTER_MODEL_CASE(FilterModels::CytomicSVF, models::cytomicsvf);
     default:
         // remove this
         break;
@@ -232,6 +234,7 @@ inline std::vector<ModelConfig> FilterPayload::availableModelConfigurations(Filt
         FILTER_MODEL_CASE(FilterModels::SampleAndHold, models::sampleandhold);
         FILTER_MODEL_CASE(FilterModels::Comb, models::comb);
         FILTER_MODEL_CASE(FilterModels::TriPole, models::tripole);
+        FILTER_MODEL_CASE(FilterModels::CytomicSVF, models::cytomicsvf);
     default:
         // remove this
         break;

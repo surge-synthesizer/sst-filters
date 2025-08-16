@@ -162,6 +162,13 @@ int main(int, char **)
     std::cout << "\n\nMethod\n\n";
     std::cout << "1 - co=440, sweep resonance\n"
               << "2 - sweep co, resonance = 0.3\n";
+
+    bool hasExtra{false};
+    if (sfpp::Filter::coefficientsExtraCount(model, cfg) > 0)
+    {
+        hasExtra = true;
+        std::cout << "3 - co=440, res=0.3, sweep extra 0->1\n";
+    }
     std::cout << "\nfilt> ";
 
     std::getline(std::cin, inl);
@@ -179,30 +186,62 @@ int main(int, char **)
     }
     std::cout << "\nWriting to " << fname << "\n";
 
-    auto cos = idx2 == 1 ? 0 : -20;
-    auto coe = idx2 == 1 ? 0 : 20;
-    auto cop = idx2 == 1 ? 1 : 10;
+    float cos{0}, coe{0}, cop{1};
+    float ros{0.3}, roe{1.0}, rop{1};
+    float e1s{0}, e1e{0}, e1p{1};
 
-    auto ros = idx2 == 2 ? 0.3 : 0;
-    auto roe = idx2 == 2 ? 0.3 : 1;
-    auto rop = 0.2;
+    switch (idx2)
+    {
+    case 1:
+        std::cout << "Resonance Sweep Mode" << std::endl;
+        ros = 0;
+        roe = 1;
+        rop = 0.2;
+        break;
+    case 2:
+        std::cout << "Cutoff Sweep Mode" << std::endl;
+        cos = -20;
+        coe = 20;
+        cop = 10;
+        ros = 0.3;
+        break;
+    case 3:
+        std::cout << "Extra1 Sweep Mode positive" << std::endl;
+        ros = 0.3;
+        e1s = 0;
+        e1e = 1;
+        e1p = 0.2;
+        break;
+    }
 
     ci = 0;
     for (auto c = cos; c <= coe; c += cop)
     {
         for (auto res = ros; res <= roe; res += rop)
         {
-            auto lpRes = bruteForceResponseCurve(
-                [model, cfg](auto &filter) {
-                    filter.setFilterModel(model);
-                    filter.setModelConfiguration(cfg);
-                },
-                [c, res](auto &filter, int voice) { filter.makeCoefficients(voice, c, res); });
-            std::cout << "   cutoff = " << c << "\n   res   = " << res << std::endl;
+            for (auto e1 = e1s; e1 <= e1e; e1 += e1p)
+            {
+                std::cout << "   cutoff = " << c << "\n   res   = " << res << "\n";
+                if (hasExtra)
+                    std::cout << "   extra  = " << e1 << std::endl;
 
-            auto [r, g, b] = colors[ci];
-            ci = (ci + 1) % colors.size();
-            plot.add(lpRes, r, g, b);
+                auto lpRes = bruteForceResponseCurve(
+                    [model, cfg](auto &filter) {
+                        filter.setFilterModel(model);
+                        filter.setModelConfiguration(cfg);
+                    },
+                    [c, res, e1](auto &filter, int voice) {
+                        // e1 is optional for most models and defaults to 0 if not added
+                        // if (voice == 0)
+                        filter.makeCoefficients(voice, c, res, e1);
+                        // else
+                        // filter.copyCoefficientsFromVoiceToVoice(0, voice);
+                    });
+
+                auto [r, g, b] = colors[ci];
+                ci = (ci + 1) % colors.size();
+                plot.add(lpRes, r, g, b);
+            }
         }
     }
 

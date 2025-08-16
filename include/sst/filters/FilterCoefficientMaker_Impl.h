@@ -358,6 +358,10 @@ void FilterCoefficientMaker<TuningProvider>::MakeCoeffs(float Freq, float Reso, 
         TriPoleFilter::makeCoefficients(this, Freq, Reso, Type, sampleRate, providerI);
         break;
 
+    case fut_cytomicsvf:
+        cytomic_quadform::makeCoefficients(this, Freq, Reso, SubType, sampleRate, sampleRateInv,
+                                           providerI, extra);
+
     case num_filter_types:
         // This should really be an error condition of course
     case fut_none:

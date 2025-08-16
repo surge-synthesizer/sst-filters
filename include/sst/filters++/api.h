@@ -200,6 +200,14 @@ struct Filter
                           float extra2 = 0.f, float extra3 = 0.f);
 
     /**
+     * If you want two voices to share coefficients - so a stereo pair with the same cutoff
+     * and resonance for instance - it is usually faster to copy coefficients from voice A to voice
+     * B that it is to compute them twice. The voices retain independent registers of course, so
+     * will still do stereo or quad processing.
+     */
+    void copyCoefficientsFromVoiceToVoice(int from, int to);
+
+    /**
      * With a given voice, for a given cutoff and resonance, set the internal coefficient
      * state. This method will assume the coefficients are fixed and so is appropriate for
      * static filter configurations and only needs to be called once, between prepareInstance
