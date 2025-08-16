@@ -60,6 +60,15 @@ inline int Filter::coefficientsExtraCount(FilterModels model, const ModelConfig 
         return config.st == SlopeLevels::Slope_Morph ? 1 : 0;
     case FilterModels::Comb:
         return config.st == SlopeLevels::Comb_Bipolar_ContinuousMix ? 1 : 0;
+    case FilterModels::CytomicSVF:
+    {
+        if (config.pt == PassTypes::Bell || config.pt == PassTypes::LowShelf ||
+            config.pt == PassTypes::HighShelf)
+        {
+            return 1;
+        }
+        return 0;
+    }
     default:
         return 0;
     }
@@ -81,6 +90,16 @@ inline void Filter::makeCoefficients(int voice, float cutoff, float resonance, f
                                          extra2, extra3);
     }
     break;
+    }
+}
+
+inline void Filter::copyCoefficientsFromVoiceToVoice(int from, int to)
+{
+    for (int i = 0; i < sst::filters::n_cm_coeffs; ++i)
+    {
+        payload.makers[to].C[i] = payload.makers[from].C[i];
+        payload.makers[to].tC[i] = payload.makers[from].dC[i];
+        payload.makers[to].tC[i] = payload.makers[from].dC[i];
     }
 }
 
@@ -131,8 +150,8 @@ inline std::vector<FilterModels> Filter::availableModels()
     return {FilterModels::VemberClassic, FilterModels::VemberAllPass, FilterModels::VemberLadder,
             FilterModels::OBXD_2Pole,    FilterModels::OBXD_4Pole,    FilterModels::K35,
             FilterModels::DiodeLadder,   FilterModels::VintageLadder, FilterModels::CutoffWarp,
-            FilterModels::ResonanceWarp, FilterModels::TriPole,       FilterModels::Comb,
-            FilterModels::SampleAndHold};
+            FilterModels::ResonanceWarp, FilterModels::CytomicSVF,    FilterModels::TriPole,
+            FilterModels::Comb,          FilterModels::SampleAndHold};
 }
 
 inline size_t Filter::requiredDelayLinesSizes(FilterModels model, const ModelConfig &k)

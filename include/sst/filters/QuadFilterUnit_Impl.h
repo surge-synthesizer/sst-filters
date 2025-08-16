@@ -26,6 +26,7 @@
 #include "CutoffWarp.h"
 #include "ResonanceWarp.h"
 #include "TriPoleFilter.h"
+#include "CytomicSVFQuadForm.h"
 
 namespace sst::filters
 {
@@ -947,6 +948,12 @@ inline FilterUnitQFPtr GetCompensatedQFPtrFilterUnit(FilterType type, FilterSubT
             break;
         }
         break;
+    case fut_cytomicsvf:
+        if (subtype == st_cytomic_lp)
+            return cytomic_quadform::CytomicQuad<true>;
+        else
+            return cytomic_quadform::CytomicQuad;
+
     case fut_none:
     case num_filter_types:
         break;

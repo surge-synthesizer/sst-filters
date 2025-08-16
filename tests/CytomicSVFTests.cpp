@@ -15,6 +15,7 @@
 
 #include "catch2/catch2.hpp"
 #include "sst/filters/CytomicSVF.h"
+#include "TestUtils.h"
 
 #include <iostream>
 #include <cmath>
@@ -183,4 +184,36 @@ TEST_CASE("Cytomic SVF Response Curves")
             }
         }
     }
+}
+
+TEST_CASE("Cytomic SVF QuadFilter Test")
+{
+    using namespace TestUtils;
+    namespace sfpp = sst::filtersplusplus;
+
+    std::vector<RMSSet> ans = {
+        {-2.81053f, -2.27167f, -3.09009f, -16.3563f, -51.5564f},
+        {-31.4792f, -15.8393f, -3.12771f, -2.2901f, -3.00617f},
+        {-17.8248f, -9.17934f, -3.11892f, -9.39847f, -31.4778f},
+        {-2.92205f, -3.02689f, -3.00706f, -3.01887f, -3.01214f},
+        {-2.52717f, -0.639164f, 2.90231f, -0.742297f, -2.99382f},
+        {-2.99243f, -3.0779f, -3.15685f, -3.02565f, -3.01241f},
+    };
+    runTest({FilterType::fut_cytomicsvf, FilterSubType::st_cytomic_lp, ans[0]});
+    runTest(sfpp::FilterModels::CytomicSVF, sfpp::PassTypes::LP, 0, 0.5, ans[0]);
+
+    runTest({FilterType::fut_cytomicsvf, FilterSubType::st_cytomic_hp, ans[1]});
+    runTest(sfpp::FilterModels::CytomicSVF, sfpp::PassTypes::HP, 0, 0.5, ans[1]);
+
+    runTest({FilterType::fut_cytomicsvf, FilterSubType::st_cytomic_bp, ans[2]});
+    runTest(sfpp::FilterModels::CytomicSVF, sfpp::PassTypes::BP, 0, 0.5, ans[2]);
+
+    runTest({FilterType::fut_cytomicsvf, FilterSubType::st_cytomic_notch, ans[3]});
+    runTest(sfpp::FilterModels::CytomicSVF, sfpp::PassTypes::Notch, 0, 0.5, ans[3]);
+
+    runTest({FilterType::fut_cytomicsvf, FilterSubType::st_cytomic_peak, ans[4]});
+    runTest(sfpp::FilterModels::CytomicSVF, sfpp::PassTypes::Peak, 0, 0.5, ans[4]);
+
+    runTest({FilterType::fut_cytomicsvf, FilterSubType::st_cytomic_all, ans[5]});
+    runTest(sfpp::FilterModels::CytomicSVF, sfpp::PassTypes::AllPass, 0, 0.5, ans[5]);
 }

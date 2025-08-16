@@ -34,6 +34,9 @@ inline std::string toString(const FilterModels &f)
     case FilterModels::VemberLadder:
         return "VemberLadder";
 
+    case FilterModels::CytomicSVF:
+        return "Cytomic SVF";
+
     case FilterModels::K35:
         return "K35";
     case FilterModels::DiodeLadder:

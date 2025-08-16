@@ -56,6 +56,7 @@ enum FilterType
     fut_resonancewarp_bp, /**< Bandpass - Resonance Warp */
     fut_resonancewarp_ap, /**< Effect - Resonance Warp Allpass */
     fut_tripole,          /**< Multi - Tri-pole */
+    fut_cytomicsvf,
     num_filter_types,
 };
 
@@ -100,6 +101,7 @@ const char filter_type_names[num_filter_types][32] = {
     "BP Res Warp",       // fut_resonancewarp_bp
     "FX Res Warp AP",    // fut_resonancewarp_ap
     "MULTI Tri-pole",    // fut_tripole
+    "Cytomic SVF",
     /* this is a ruler to ensure names do not exceed 31 characters
      0123456789012345678901234567890
     */
@@ -140,6 +142,7 @@ const char filter_menu_names[num_filter_types][32] = {
     "Resonance Warp", // BP
     "Resonance Warp Allpass",
     "Tri-pole",
+    "Cytomic SVF",
     /* this is a ruler to ensure names do not exceed 31 characters
      0123456789012345678901234567890
     */
@@ -333,6 +336,17 @@ enum FilterSubType
     // Legacy fixes for BP12 misconfiguration
     st_bp12_LegacyDriven = 3,
     st_bp12_LegacyClean = 4,
+
+    // Cytomic has the passtypes as syb models
+    st_cytomic_lp = 0,
+    st_cytomic_hp = 1,
+    st_cytomic_bp = 2,
+    st_cytomic_notch = 3,
+    st_cytomic_peak = 4,
+    st_cytomic_all = 5,
+    st_cytomic_bell = 6, // these three use "extra1"
+    st_cytomic_lowshelf = 7,
+    st_cytomic_highhelf = 8
 };
 
 } // namespace sst::filters

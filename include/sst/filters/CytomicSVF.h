@@ -58,6 +58,9 @@
  * Higher level functions like when to call the setCoeff
  * and how to run as a block are left as an exercise to the client of this
  * class. This is just the raw functions coded up.
+ *
+ * To use this in the filters++ or filters api, see the
+ * re-implementation in CytomicSVFQuadForm
  */
 
 namespace sst::filters
