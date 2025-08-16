@@ -19,50 +19,7 @@
 
 // I just use STB here to make quick and dirty plots. sst-filters doesn't need it.
 #define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "stb_image_write.h"
-#include <vector>
-
-#include "sst/filters++.h"
-
-struct PNGPlot
-{
-    static constexpr size_t w{500}, h{500}, ch{3};
-    unsigned char data[w * h * ch];
-    PNGPlot() { memset(data, 0xCC, sizeof(data)); }
-
-    void save(const char *fn) { stbi_write_png(fn, w, h, ch, data, w * ch); }
-
-    using curve_t = std::vector<std::pair<float, float>>;
-    void add(const curve_t &points, int r = 0, int g = 0, int b = 0)
-    {
-        assert(!points.empty());
-        for (auto &n : points)
-        {
-            auto nf = toPixels(n);
-            auto x = nf.first;
-            auto y = nf.second;
-
-            for (int dx = -1; dx <= 1; ++dx)
-            {
-                for (int dy = -1; dy <= 1; ++dy)
-                {
-                    data[(x + dx + (y + dy) * h) * ch] = r;
-                    data[(x + dx + (y + dy) * h) * ch + 1] = g;
-                    data[(x + dx + (y + dy) * h) * ch + 2] = b;
-                }
-            }
-        }
-    }
-
-    std::pair<int, int> toPixels(const std::pair<float, float> &p)
-    {
-        auto xp = std::clamp((p.first - xMin) / (xMax - xMin) * (w - 8), 0.f, w - 8.f);
-        auto yp = std::clamp(h - 8 - (p.second - yMin) / (yMax - yMin) * (h - 8), 0.f, h - 8.f);
-        return {xp + 4, yp + 4};
-    }
-
-    float xMin = 0, xMax = 127, yMin = -30, yMax = 12;
-};
+#include "pngplot.h"
 
 PNGPlot::curve_t
 bruteForceResponseCurve(std::function<void(sst::filtersplusplus::Filter &)> config,
@@ -242,6 +199,8 @@ int main(int, char **)
             plot.add(lpRes, r, g, b);
         }
     }
+
+    plot.addTitle(sst::filtersplusplus::toString(model) + " " + cfg.toString());
 
     plot.save(fname.c_str());
 #if MAC_FILE
