@@ -166,6 +166,8 @@ inline std::string toString(const DriveTypes &d)
         return "Heavy";
     case DriveTypes::K35_Extreme:
         return "Extreme";
+    case DriveTypes::K35_Continuous:
+        return "Continuous";
 
     // For the res and cutoff warp circuits
     case DriveTypes::Tanh:

@@ -109,6 +109,7 @@ enum struct DriveTypes : uint32_t
     K35_Moderate = 0x34,
     K35_Heavy = 0x36,
     K35_Extreme = 0x38,
+    K35_Continuous = 0x39,
 
     // For the res and cutoff warp circuits
     Tanh = 0x40,

@@ -337,6 +337,14 @@ enum FilterSubType
     st_bp12_LegacyDriven = 3,
     st_bp12_LegacyClean = 4,
 
+    // K35
+    st_k35_none = 0,
+    st_k35_mild = 1,
+    st_k35_moderate = 2,
+    st_k35_heavy = 3,
+    st_k35_extreme = 4,
+    st_k35_continuous = 5,
+
     // Cytomic has the passtypes as syb models
     st_cytomic_lp = 0,
     st_cytomic_hp = 1,

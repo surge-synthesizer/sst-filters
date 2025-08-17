@@ -330,12 +330,30 @@ void FilterCoefficientMaker<TuningProvider>::MakeCoeffs(float Freq, float Reso, 
     }
     break;
     case fut_k35_lp:
-        K35Filter::makeCoefficients(this, Freq, Reso, true, fut_k35_saturations[SubType],
-                                    sampleRate, sampleRateInv, providerI);
+        if (SubType == st_k35_continuous)
+        {
+            K35Filter::makeCoefficients(this, Freq, Reso, true,
+                                        extra * fut_k35_saturations[st_k35_extreme], sampleRate,
+                                        sampleRateInv, providerI);
+        }
+        else
+        {
+            K35Filter::makeCoefficients(this, Freq, Reso, true, fut_k35_saturations[SubType],
+                                        sampleRate, sampleRateInv, providerI);
+        }
         break;
     case fut_k35_hp:
-        K35Filter::makeCoefficients(this, Freq, Reso, false, fut_k35_saturations[SubType],
-                                    sampleRate, sampleRateInv, providerI);
+        if (SubType == st_k35_continuous)
+        {
+            K35Filter::makeCoefficients(this, Freq, Reso, false,
+                                        extra * fut_k35_saturations[st_k35_extreme], sampleRate,
+                                        sampleRateInv, providerI);
+        }
+        else
+        {
+            K35Filter::makeCoefficients(this, Freq, Reso, false, fut_k35_saturations[SubType],
+                                        sampleRate, sampleRateInv, providerI);
+        }
         break;
     case fut_diode:
         DiodeLadderFilter::makeCoefficients(this, Freq, Reso, sampleRate, sampleRateInv, providerI);
