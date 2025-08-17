@@ -60,6 +60,8 @@ inline int Filter::coefficientsExtraCount(FilterModels model, const ModelConfig 
         return config.st == SlopeLevels::Slope_Morph ? 1 : 0;
     case FilterModels::Comb:
         return config.st == SlopeLevels::Comb_Bipolar_ContinuousMix ? 1 : 0;
+    case FilterModels::K35:
+        return config.dt == DriveTypes::K35_Continuous ? 1 : 0;
     case FilterModels::CytomicSVF:
     {
         if (config.pt == PassTypes::Bell || config.pt == PassTypes::LowShelf ||
