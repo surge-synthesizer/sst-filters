@@ -113,11 +113,11 @@ inline std::string toString(const SlopeLevels &s)
     case SlopeLevels::Slope_1Stage:
         return "1 Stage";
     case SlopeLevels::Slope_2Stage:
-        return "2 Stage";
+        return "2 Stages";
     case SlopeLevels::Slope_3Stage:
-        return "3 Stage";
+        return "3 Stages";
     case SlopeLevels::Slope_4Stage:
-        return "4 Stage";
+        return "4 Stages";
 
     case SlopeLevels::Slope_Morph:
         return "Morph";
