@@ -183,8 +183,8 @@ const char fut_vintageladder_subtypes[6][32] = {
 
 const char fut_obxd_2p_subtypes[2][32] = {"Standard", "Pushed"};
 
-const char fut_obxd_4p_subtypes[6][32] = {"6 dB",  "12 dB",        "18 dB",
-                                          "24 dB", "24 dB + 18dB", "Morph"};
+const char fut_obxd_4p_subtypes[6][32] = {"6 dB",  "12 dB",          "18 dB",
+                                          "24 dB", "24 dB (Legacy)", "Morph"};
 
 const char fut_k35_subtypes[5][32] = {"No Saturation", "Mild Saturation", "Moderate Saturation",
                                       "Heavy Saturation", "Extreme Saturation"};
