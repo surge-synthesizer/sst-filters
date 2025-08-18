@@ -14,7 +14,7 @@
  */
 
 /*
- * An important note on Licensing. sst-filters is, by and large,
+ * An important note on licensing. sst-filters is, by and large,
  * GPL3 code, but Andy kindly made his entire work on this filter
  * available to everyone, so this header file is available
  * for you to copy in an MIT licensed context. You will have to
