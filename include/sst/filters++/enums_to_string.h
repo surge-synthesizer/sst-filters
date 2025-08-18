@@ -28,11 +28,11 @@ inline std::string toString(const FilterModels &f)
     case FilterModels::Off:
         return "Off";
     case FilterModels::VemberClassic:
-        return "VemberClassic";
+        return "Vember Classic";
     case FilterModels::VemberAllPass:
-        return "VemberAllPass";
+        return "Vember Allpass";
     case FilterModels::VemberLadder:
-        return "VemberLadder";
+        return "Vember Ladder";
 
     case FilterModels::CytomicSVF:
         return "Cytomic SVF";
@@ -40,27 +40,27 @@ inline std::string toString(const FilterModels &f)
     case FilterModels::K35:
         return "K35";
     case FilterModels::DiodeLadder:
-        return "DiodeLadder";
+        return "Diode Ladder";
 
     case FilterModels::VintageLadder:
-        return "VintageLadder";
+        return "Vintage Ladder";
 
     case FilterModels::CutoffWarp:
-        return "CutoffWarp";
+        return "Cutoff Warp";
     case FilterModels::ResonanceWarp:
-        return "ResonanceWarp";
+        return "Resonance Warp";
 
     case FilterModels::OBXD_4Pole:
-        return "OBXD 4Pole";
+        return "OB-Xd 24 dB";
     case FilterModels::OBXD_2Pole:
-        return "OBXD 2Pole";
+        return "OB-Xd 12 dB";
 
     case FilterModels::TriPole:
-        return "TriPole";
+        return "Tri-Pole";
     case FilterModels::Comb:
         return "Comb";
     case FilterModels::SampleAndHold:
-        return "Sample and Hold";
+        return "Sample & Hold";
     };
     return "MODEL_ERROR";
 }
@@ -73,17 +73,17 @@ inline std::string toString(const PassTypes &p)
         return "UNSUPPORTED";
 
     case PassTypes::LP:
-        return "LowPass";
+        return "Lowpass";
     case PassTypes::HP:
-        return "HighPass";
+        return "Highpass";
     case PassTypes::BP:
-        return "BandPass";
+        return "Bandpass";
     case PassTypes::Notch:
         return "Notch";
     case PassTypes::Peak:
         return "Peak";
     case PassTypes::AllPass:
-        return "AllPass";
+        return "Allpass";
     case PassTypes::LowShelf:
         return "Low Shelf";
     case PassTypes::Bell:
@@ -102,40 +102,40 @@ inline std::string toString(const SlopeLevels &s)
         return "UNSUPPORTED";
 
     case SlopeLevels::Slope_6db:
-        return "6db";
+        return "6 dB";
     case SlopeLevels::Slope_12db:
-        return "12db";
+        return "12 dB";
     case SlopeLevels::Slope_18db:
-        return "18db";
+        return "18 dB";
     case SlopeLevels::Slope_24db:
-        return "24db";
+        return "24 dB";
 
     case SlopeLevels::Slope_1Stage:
         return "1 Stage";
     case SlopeLevels::Slope_2Stage:
-        return "2 Stage";
+        return "2 Stages";
     case SlopeLevels::Slope_3Stage:
-        return "3 Stage";
+        return "3 Stages";
     case SlopeLevels::Slope_4Stage:
-        return "4 Stage";
+        return "4 Stages";
 
     case SlopeLevels::Slope_Morph:
         return "Morph";
 
     case SlopeLevels::Comb_Negative_100:
-        return "Negative FB, Mix 100%";
+        return "Negative Feedback, Mix 100%";
     case SlopeLevels::Comb_Negative_50:
-        return "Negative FB, Mix 50%";
+        return "Negative Feedback, Mix 50%";
     case SlopeLevels::Comb_Positive_50:
-        return "Postive FB, Mix 50%";
+        return "Postive Feedback, Mix 50%";
     case SlopeLevels::Comb_Positive_100:
-        return "Positive FB, Mix 100%";
+        return "Positive Feedback, Mix 100%";
     case SlopeLevels::Comb_Bipolar_ContinuousMix:
-        return "Bipolar Continuous Mix";
+        return "Bipolar, Variable Mix";
     case SlopeLevels::Comb_Positive_ContinuousMix:
-        return "Positive FB, Mix Variable";
+        return "Positive Feedback, Variable Mix";
     case SlopeLevels::Comb_Negative_ContinuousMix:
-        return "Negative FB, Mix Variable";
+        return "Negative Feedback, Variable Mix";
     }
     return "SLOPELEVELS_ERROR";
 }
@@ -169,11 +169,11 @@ inline std::string toString(const DriveTypes &d)
     case DriveTypes::K35_Continuous:
         return "Continuous";
 
-    // For the res and cutoff warp circuits
+    // For the Cutoff/Resonance Warp
     case DriveTypes::Tanh:
-        return "Tanh";
+        return "tanh";
     case DriveTypes::SoftClip:
-        return "SoftClip";
+        return "Soft Clip";
     case DriveTypes::OJD:
         return "OJD";
 
@@ -190,21 +190,21 @@ inline std::string toString(const SubModelTypes &s)
     case SubModelTypes::UNSUPPORTED:
         return "UNSUPPORTED";
 
-    // For obxd
+    // For OB-Xd
     case SubModelTypes::BrokenOBXD4Pole24:
-        return "Broken Legacy 24db";
+        return "24 dB (Legacy)";
 
-    // For vintage ladder
+    // For Vintage Ladder
     case SubModelTypes::RungeKutta:
-        return "RungeKutta";
+        return "Runge-Kutta";
     case SubModelTypes::RungeKuttaCompensated:
-        return "RungeKutta Compensated";
+        return "Runge-Kutta Compensated";
     case SubModelTypes::Huov:
-        return "Huov";
+        return "Huovilainen";
     case SubModelTypes::HuovCompensated:
-        return "Huov Compensated";
+        return "Huovilainen Compensated";
 
-    // For tripole
+    // For Tri-Pole
     case SubModelTypes::LowLowLow:
         return "Low/Low/Low";
     case SubModelTypes::LowHighLow:

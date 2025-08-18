@@ -14,12 +14,12 @@
  */
 
 /*
- * An important noce on Licensing. sst-filters is, by and large,
- * gpl3 code, but Andy kindly made his entire work on this filter
- * available to everyone, so this header file s available
+ * An important note on licensing. sst-filters is, by and large,
+ * GPL3 code, but Andy kindly made his entire work on this filter
+ * available to everyone, so this header file is available
  * for you to copy in an MIT licensed context. You will have to
- * implement your own fast tan sse or use tanh below, but basically
- * go anead and use it however you want, in the same spirit as andy's
+ * implement your own FastTan SSE or use tanh below, but basically
+ * go ahead and use it however you want, in the same spirit as Andy's
  * sharing the work.
  */
 
