@@ -57,6 +57,7 @@ enum FilterType
     fut_resonancewarp_ap, /**< Effect - Resonance Warp Allpass */
     fut_tripole,          /**< Multi - Tri-pole */
     fut_cytomicsvf,
+    fut_obxd_xpander, /**< OB-Xd XPander */
     num_filter_types,
 };
 
@@ -143,6 +144,7 @@ const char filter_menu_names[num_filter_types][32] = {
     "Resonance Warp Allpass",
     "Tri-pole",
     "Cytomic SVF",
+    "OBXD XPander"
     /* this is a ruler to ensure names do not exceed 31 characters
      0123456789012345678901234567890
     */
@@ -218,6 +220,11 @@ const char fut_tripole_output_stage[3][16]{
     "Third",
 };
 
+const char fut_obxd_xpander_subtypes[15][32] = {
+    "LP-4",     "LP-3",        "LP-2",        "LP-1",           "HP-3",
+    "HP-2",     "HP-1",        "BP-4",        "BP-2",           "Notch-2",
+    "Phaser-3", "HP-2 + LP-1", "HP-3 + LP-1", "Notch-2 + LP-1", "Phaser-3 + LP-1"};
+
 /** The number of sub-types for each filter type */
 const int fut_subcount[num_filter_types] = {
     0,  // fut_none
@@ -254,6 +261,8 @@ const int fut_subcount[num_filter_types] = {
     8,  // fut_resonancewarp_bp
     8,  // fut_resonancewarp_ap
     12, // fut_tripole
+    9,  // fut_cytomic
+    15  // fit_obxd_xpander
 };
 
 /** Sub-types for each filter are defined here */
@@ -354,7 +363,23 @@ enum FilterSubType
     st_cytomic_all = 5,
     st_cytomic_bell = 6, // these three use "extra1"
     st_cytomic_lowshelf = 7,
-    st_cytomic_highhelf = 8
+    st_cytomic_highhelf = 8,
+
+    st_obxdX_lp4 = 0,
+    st_obxdX_lp3 = 1,
+    st_obxdX_lp2 = 2,
+    st_obxdX_lp1 = 3,
+    st_obxdX_hp3 = 4,
+    st_obxdX_hp2 = 5,
+    st_obxdX_hp1 = 6,
+    st_obxdX_bp4 = 7,
+    st_obxdX_bp2 = 8,
+    st_obxdX_n2 = 9,
+    st_obxdX_ph3 = 10,
+    st_obxdX_hp2lp1 = 11,
+    st_obxdX_hp3lp1 = 12,
+    st_obxdX_n2lp1 = 13,
+    st_obxdX_ph3lp1 = 14
 };
 
 } // namespace sst::filters

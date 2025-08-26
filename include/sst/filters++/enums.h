@@ -38,6 +38,7 @@ enum struct FilterModels : uint32_t
 
     OBXD_4Pole = 0x40,
     OBXD_2Pole = 0x45,
+    OBXD_XPander = 0x47,
 
     VintageLadder = 0x50,
 
@@ -63,7 +64,13 @@ enum struct PassTypes : uint32_t
     AllPass = 0x18,
     LowShelf = 0x50,
     Bell = 0x60,
-    HighShelf = 0x70
+    HighShelf = 0x70,
+
+    Phaser = 0x80,
+
+    HPAndLP = 0x90,
+    NotchAndLP = 0x92,
+    PhaserAndLP = 0x94
 };
 
 std::string toString(const PassTypes &p);

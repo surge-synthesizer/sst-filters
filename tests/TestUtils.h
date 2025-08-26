@@ -140,11 +140,15 @@ inline void runTestProvider(const TestConfig &testConfig, TuningProvider *tp)
 
     if constexpr (printRMSs)
     {
+        auto pfx = "";
         std::cout << "{ ";
         for (int i = 0; i < numTestFreqs; ++i)
-            std::cout << actualRMSs[i] << "f, ";
+        {
+            std::cout << pfx << actualRMSs[i] << "f";
+            pfx = ", ";
+        }
 
-        std::cout << "}" << std::endl;
+        std::cout << " }" << std::endl;
     }
 };
 

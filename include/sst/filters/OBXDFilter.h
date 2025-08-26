@@ -28,7 +28,8 @@ namespace sst::filters::OBXDFilter
 enum Poles
 {
     TWO_POLE,
-    FOUR_POLE
+    FOUR_POLE,
+    XPANDER
 };
 
 enum Obxd12dBCoeff
@@ -46,7 +47,7 @@ enum Obxd24dBCoeff
     g24,
     R24,
     rcor24,
-    rcor24inv,
+    rcor24inv,        // if this isn't last before mix, update 4 pole eval
     pole_mix,         // mm
     pole_mix_inv_int, // mmch
     pole_mix_scaled,  // mmt
@@ -122,7 +123,7 @@ inline void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, Poles p
 
         lC[self_osc_push] = (sub > 3);
     }
-    else
+    else if (p == FOUR_POLE || p == XPANDER)
     {
         lC[rcor24] = (970.0f / 44000.0f) * rcrate;
         lC[rcor24inv] = 1.0f / lC[rcor24];
@@ -261,12 +262,44 @@ inline static SIMD_M128 tptpc(SIMD_M128 &state, SIMD_M128 inp, SIMD_M128 cutoff)
     return res;
 }
 
-template <bool broken24db>
+enum FourPoleMode
+{
+    MORPH,
+    LP6,
+    LP12,
+    LP18,
+    LP24,
+    LPBroken24,
+    XPANDER_HP3,
+    XPANDER_HP2,
+    XPANDER_HP1,
+    XPANDER_BP4,
+    XPANDER_BP2,
+    XPANDER_N2,
+    XPANDER_PH3,
+    XPANDER_HP2LP1,
+    XPANDER_HP3LP1,
+    XPANDER_N2LP1,
+    XPANDER_PH3LP1,
+};
+
+template <FourPoleMode fpm>
 inline SIMD_M128 process_4_pole(QuadFilterUnitState *__restrict f, SIMD_M128 sample)
 {
-    for (int i = 0; i < n_obxd24_coeff; i++)
+    if constexpr (fpm == MORPH)
     {
-        f->C[i] = SIMD_MM(add_ps)(f->C[i], f->dC[i]);
+        for (int i = 0; i < n_obxd24_coeff; i++)
+        {
+            f->C[i] = SIMD_MM(add_ps)(f->C[i], f->dC[i]);
+        }
+    }
+    else
+    {
+        // don't need the pole mix evolved
+        for (int i = 0; i <= rcor24inv; i++)
+        {
+            f->C[i] = SIMD_MM(add_ps)(f->C[i], f->dC[i]);
+        }
     }
 
     // float lpc = f->C[g] / (1 + f->C[g]);
@@ -313,31 +346,130 @@ inline SIMD_M128 process_4_pole(QuadFilterUnitState *__restrict f, SIMD_M128 sam
 
     auto zero_mask = SIMD_MM(cmpeq_ps)(f->C[pole_mix_inv_int], zero);
     SIMD_M128 zero_val;
-    if constexpr (broken24db)
+    // 6db is 3, 12 2, 18 1, 24 zero
+    if constexpr (fpm == FourPoleMode::LP6)
     {
-        // This second mul was mis-coded as an add.
-        zero_val = SIMD_MM(add_ps)(SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(one, f->C[pole_mix_scaled]), y4),
-                                   SIMD_MM(add_ps)(f->C[pole_mix_scaled], y3));
+        mc = y1;
     }
-    else
+    else if constexpr (fpm == FourPoleMode::LP12)
     {
-        zero_val = SIMD_MM(add_ps)(SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(one, f->C[pole_mix_scaled]), y4),
-                                   SIMD_MM(mul_ps)(f->C[pole_mix_scaled], y3));
+        mc = y2;
     }
+    else if constexpr (fpm == FourPoleMode::LP18)
+    {
+        mc = y3;
+    }
+    else if constexpr (fpm == FourPoleMode::LP24)
+    {
+        mc = y4;
+    }
+    else if constexpr (fpm == FourPoleMode::LPBroken24)
+    {
+        mc = SIMD_MM(add_ps)(y3, y4);
+    }
+    else if constexpr (fpm == FourPoleMode::XPANDER_HP3)
+    {
+        // 1 -3 3 -1 0
+        auto t1 = SIMD_MM(sub_ps)(y0, SIMD_MM(mul_ps)(y1, three));
+        auto t2 = SIMD_MM(sub_ps)(SIMD_MM(mul_ps)(y2, three), y3);
+        mc = SIMD_MM(add_ps)(t1, t2);
+    }
+    else if constexpr (fpm == FourPoleMode::XPANDER_HP2)
+    {
+        // 1 -2 1 0 0
+        // or y0-y1 + y2-y1
+        auto t1 = SIMD_MM(sub_ps)(y0, y1);
+        auto t2 = SIMD_MM(sub_ps)(y2, y1);
+        mc = SIMD_MM(add_ps)(t1, t2);
+    }
+    else if constexpr (fpm == FourPoleMode::XPANDER_HP1)
+    {
+        // 1 -1 0 0 0
+        mc = SIMD_MM(sub_ps)(y0, y1);
+    }
+    else if constexpr (fpm == FourPoleMode::XPANDER_BP4)
+    {
+        //{0,  0,  2, -4,  2}, // BP4
+        // 2y2 - 4y3 + 2y4
+        // 2*((y2 - y3) + (y4 - y3))
+        auto t1 = SIMD_MM(sub_ps)(y2, y3);
+        auto t2 = SIMD_MM(sub_ps)(y4, y3);
+        auto t3 = SIMD_MM(add_ps)(t1, t2);
+        mc = SIMD_MM(mul_ps)(two, t3);
+    }
+    else if constexpr (fpm == FourPoleMode::XPANDER_BP2)
+    {
+        //{0, -2,  2,  0,  0}, // BP2
+        auto t1 = SIMD_MM(sub_ps)(y2, y1);
+        mc = SIMD_MM(mul_ps)(two, t1);
+    }
+    else if constexpr (fpm == FourPoleMode::XPANDER_N2)
+    {
+        //{1, -2,  2,  0,  0}, // N2
+        // or 2 * (y2-y1) + y0
+        auto t1 = SIMD_MM(sub_ps)(y2, y1);
+        auto t2 = SIMD_MM(mul_ps)(two, t1);
+        mc = SIMD_MM(add_ps)(y0, t2);
+    }
+    else if constexpr (fpm == FourPoleMode::XPANDER_PH3)
+    {
+        //{1, -3,  6, -4,  0}, // PH3
+        // y0 - 3 y1 + 6 y2 - 4 y3
+        auto t1 = SIMD_MM(sub_ps)(y0, SIMD_MM(mul_ps)(y1, three));
+        auto t2 = SIMD_MM(sub_ps)(SIMD_MM(mul_ps)(y2, three), SIMD_MM(mul_ps)(y3, two));
+        mc = SIMD_MM(add_ps)(t1, SIMD_MM(mul_ps)(two, t2));
+    }
+    else if constexpr (fpm == FourPoleMode::XPANDER_HP2LP1)
+    {
+        //{0, -1,  2, -1,  0}, // HP2+LP1
+        auto t1 = SIMD_MM(sub_ps)(y2, y1);
+        auto t2 = SIMD_MM(sub_ps)(y2, y3);
+        mc = SIMD_MM(add_ps)(t1, t2);
+    }
+    else if constexpr (fpm == FourPoleMode::XPANDER_HP3LP1)
+    {
+        //{0, -1,  3, -3,  1}, // HP3+LP1
+        auto t1 = SIMD_MM(sub_ps)(SIMD_MM(mul_ps)(y2, three), y1);
+        auto t2 = SIMD_MM(sub_ps)(y4, SIMD_MM(mul_ps)(y3, three));
+        mc = SIMD_MM(add_ps)(t1, t2);
+    }
+    else if constexpr (fpm == FourPoleMode::XPANDER_N2LP1)
+    {
+        //{0, -1,  2, -2,  0}, // N2+LP1
+        auto t1 = SIMD_MM(sub_ps)(SIMD_MM(mul_ps)(y2, two), y1);
+        auto t2 = SIMD_MM(mul_ps)(y3, two);
+        mc = SIMD_MM(sub_ps)(t1, t2);
+    }
+    else if constexpr (fpm == FourPoleMode::XPANDER_PH3LP1)
+    {
+        //{0, -1,  3, -6,  4}, // PH3+LP1
+        auto t1 = SIMD_MM(sub_ps)(SIMD_MM(mul_ps)(y2, three), y1);
+        auto t2 = SIMD_MM(sub_ps)(SIMD_MM(mul_ps)(y4, two), SIMD_MM(mul_ps)(y3, three));
+        mc = SIMD_MM(add_ps)(t1, SIMD_MM(mul_ps)(two, t2));
+    }
+    else if constexpr (fpm == FourPoleMode::MORPH)
+    {
+        auto zero_val =
+            SIMD_MM(add_ps)(SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(one, f->C[pole_mix_scaled]), y4),
+                            SIMD_MM(mul_ps)(f->C[pole_mix_scaled], y3));
 
-    auto one_mask = SIMD_MM(cmpeq_ps)(f->C[pole_mix_inv_int], one);
-    auto one_val = SIMD_MM(add_ps)(SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(one, f->C[pole_mix_scaled]), y3),
-                                   SIMD_MM(mul_ps)(f->C[pole_mix_scaled], y2));
+        auto one_mask = SIMD_MM(cmpeq_ps)(f->C[pole_mix_inv_int], one);
+        auto one_val =
+            SIMD_MM(add_ps)(SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(one, f->C[pole_mix_scaled]), y3),
+                            SIMD_MM(mul_ps)(f->C[pole_mix_scaled], y2));
 
-    auto two_mask = SIMD_MM(cmpeq_ps)(f->C[pole_mix_inv_int], two);
-    auto two_val = SIMD_MM(add_ps)(SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(one, f->C[pole_mix_scaled]), y2),
-                                   SIMD_MM(mul_ps)(f->C[pole_mix_scaled], y1));
+        auto two_mask = SIMD_MM(cmpeq_ps)(f->C[pole_mix_inv_int], two);
+        auto two_val =
+            SIMD_MM(add_ps)(SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(one, f->C[pole_mix_scaled]), y2),
+                            SIMD_MM(mul_ps)(f->C[pole_mix_scaled], y1));
 
-    auto three_mask = SIMD_MM(cmpeq_ps)(f->C[pole_mix_inv_int], three);
-    auto three_val = y1;
-    mc = SIMD_MM(add_ps)(SIMD_MM(and_ps)(zero_mask, zero_val), SIMD_MM(and_ps)(one_mask, one_val));
-    mc = SIMD_MM(add_ps)(mc, SIMD_MM(add_ps)(SIMD_MM(and_ps)(two_mask, two_val),
-                                             SIMD_MM(and_ps)(three_mask, three_val)));
+        auto three_mask = SIMD_MM(cmpeq_ps)(f->C[pole_mix_inv_int], three);
+        auto three_val = y1;
+        mc = SIMD_MM(add_ps)(SIMD_MM(and_ps)(zero_mask, zero_val),
+                             SIMD_MM(and_ps)(one_mask, one_val));
+        mc = SIMD_MM(add_ps)(mc, SIMD_MM(add_ps)(SIMD_MM(and_ps)(two_mask, two_val),
+                                                 SIMD_MM(and_ps)(three_mask, three_val)));
+    }
 
     // half volume compensation
     auto out =

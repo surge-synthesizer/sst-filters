@@ -816,15 +816,64 @@ inline FilterUnitQFPtr GetCompensatedQFPtrFilterUnit(FilterType type, FilterSubT
         return OBXDFilter::process_2_pole;
         break;
     case fut_obxd_4pole:
-        if (subtype == st_obxd4pole_broken24db)
+        switch (subtype)
         {
-            return OBXDFilter::process_4_pole<true>;
+        case st_obxd4pole_6db:
+            return OBXDFilter::process_4_pole<OBXDFilter::LP6>;
+        case st_obxd4pole_12db:
+            return OBXDFilter::process_4_pole<OBXDFilter::LP12>;
+        case st_obxd4pole_18db:
+            return OBXDFilter::process_4_pole<OBXDFilter::LP18>;
+        case st_obxd4pole_24db:
+            return OBXDFilter::process_4_pole<OBXDFilter::LP24>;
+        case st_obxd4pole_broken24db:
+            return OBXDFilter::process_4_pole<OBXDFilter::LPBroken24>;
+        case st_obxd4pole_morph:
+            return OBXDFilter::process_4_pole<OBXDFilter::MORPH>;
+        default:
+            return nullptr;
         }
-        else
+
+        break;
+
+    case fut_obxd_xpander:
+        switch (subtype)
         {
-            return OBXDFilter::process_4_pole<false>;
+        case st_obxdX_lp1:
+            return OBXDFilter::process_4_pole<OBXDFilter::LP6>;
+        case st_obxdX_lp2:
+            return OBXDFilter::process_4_pole<OBXDFilter::LP12>;
+        case st_obxdX_lp3:
+            return OBXDFilter::process_4_pole<OBXDFilter::LP18>;
+        case st_obxdX_lp4:
+            return OBXDFilter::process_4_pole<OBXDFilter::LP24>;
+        case st_obxdX_hp1:
+            return OBXDFilter::process_4_pole<OBXDFilter::XPANDER_HP1>;
+        case st_obxdX_hp2:
+            return OBXDFilter::process_4_pole<OBXDFilter::XPANDER_HP2>;
+        case st_obxdX_hp3:
+            return OBXDFilter::process_4_pole<OBXDFilter::XPANDER_HP3>;
+        case st_obxdX_bp4:
+            return OBXDFilter::process_4_pole<OBXDFilter::XPANDER_BP4>;
+        case st_obxdX_bp2:
+            return OBXDFilter::process_4_pole<OBXDFilter::XPANDER_BP2>;
+        case st_obxdX_n2:
+            return OBXDFilter::process_4_pole<OBXDFilter::XPANDER_N2>;
+        case st_obxdX_ph3:
+            return OBXDFilter::process_4_pole<OBXDFilter::XPANDER_PH3>;
+        case st_obxdX_hp2lp1:
+            return OBXDFilter::process_4_pole<OBXDFilter::XPANDER_HP2LP1>;
+        case st_obxdX_hp3lp1:
+            return OBXDFilter::process_4_pole<OBXDFilter::XPANDER_HP3LP1>;
+        case st_obxdX_n2lp1:
+            return OBXDFilter::process_4_pole<OBXDFilter::XPANDER_N2LP1>;
+        case st_obxdX_ph3lp1:
+            return OBXDFilter::process_4_pole<OBXDFilter::XPANDER_PH3LP1>;
+        default:
+            return nullptr;
         }
         break;
+
     case fut_k35_lp:
         if (Compensated && subtype == 2)
             return ScaleQFPtr<0700, K35Filter::process_lp>;

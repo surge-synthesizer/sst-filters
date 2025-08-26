@@ -329,6 +329,10 @@ void FilterCoefficientMaker<TuningProvider>::MakeCoeffs(float Freq, float Reso, 
                                      providerI, useM, extra);
     }
     break;
+    case fut_obxd_xpander:
+        OBXDFilter::makeCoefficients(this, OBXDFilter::XPANDER, Freq, Reso, 0, sampleRateInv,
+                                     providerI, false, extra);
+        break;
     case fut_k35_lp:
         if (SubType == st_k35_continuous)
         {
