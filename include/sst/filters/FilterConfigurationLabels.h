@@ -103,6 +103,9 @@ static std::string subtypeLabel(int type, int subtype)
         case FilterType::fut_cytomic_svf:
             return "t/k";
             break;
+        case FilterType::fut_obxd_xpander:
+            return "t/k";
+            break;
         case FilterType::num_filter_types:
             return "ERROR";
             break;
