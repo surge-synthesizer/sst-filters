@@ -25,42 +25,41 @@ namespace sst::filtersplusplus
 struct ModelConfig
 {
     ModelConfig() {}
-    ModelConfig(PassTypes p, SlopeLevels s, DriveTypes d, SubModelTypes m)
-        : pt(p), st(s), dt(d), mt(m){};
-    ModelConfig(PassTypes p) : pt(p){};
-    ModelConfig(SlopeLevels s) : st(s){};
-    ModelConfig(PassTypes p, SlopeLevels s, DriveTypes d) : pt(p), st(s), dt(d) {}
-    ModelConfig(PassTypes p, DriveTypes d) : pt(p), dt(d) {}
-    ModelConfig(PassTypes p, SlopeLevels s) : pt(p), st(s) {}
-    ModelConfig(PassTypes p, SubModelTypes m) : pt(p), mt(m) {}
-    ModelConfig(PassTypes p, SlopeLevels s, SubModelTypes m) : pt(p), st(s), mt(m) {}
-    ModelConfig(SlopeLevels s, SubModelTypes m) : st(s), mt(m) {}
+    ModelConfig(Passband p, Slope s, DriveMode d, FilterSubModel m) : pt(p), st(s), dt(d), mt(m) {}
+    ModelConfig(Passband p) : pt(p) {}
+    ModelConfig(Slope s) : st(s) {}
+    ModelConfig(Passband p, Slope s, DriveMode d) : pt(p), st(s), dt(d) {}
+    ModelConfig(Passband p, DriveMode d) : pt(p), dt(d) {}
+    ModelConfig(Passband p, Slope s) : pt(p), st(s) {}
+    ModelConfig(Passband p, FilterSubModel m) : pt(p), mt(m) {}
+    ModelConfig(Passband p, Slope s, FilterSubModel m) : pt(p), st(s), mt(m) {}
+    ModelConfig(Slope s, FilterSubModel m) : st(s), mt(m) {}
 
-    PassTypes pt{PassTypes::UNSUPPORTED};
-    SlopeLevels st{SlopeLevels::UNSUPPORTED};
-    DriveTypes dt{DriveTypes::UNSUPPORTED};
-    SubModelTypes mt{SubModelTypes::UNSUPPORTED};
+    Passband pt{Passband::UNSUPPORTED};
+    Slope st{Slope::UNSUPPORTED};
+    DriveMode dt{DriveMode::UNSUPPORTED};
+    FilterSubModel mt{FilterSubModel::UNSUPPORTED};
 
     std::string toString() const
     {
         std::ostringstream oss;
         std::string pfx{};
-        if (pt != PassTypes::UNSUPPORTED)
+        if (pt != Passband::UNSUPPORTED)
         {
             oss << pfx << filtersplusplus::toString(pt);
             pfx = " ";
         }
-        if (st != SlopeLevels::UNSUPPORTED)
+        if (st != Slope::UNSUPPORTED)
         {
             oss << pfx << filtersplusplus::toString(st);
             pfx = " ";
         }
-        if (dt != DriveTypes::UNSUPPORTED)
+        if (dt != DriveMode::UNSUPPORTED)
         {
             oss << pfx << filtersplusplus::toString(dt);
             pfx = " ";
         }
-        if (mt != SubModelTypes::UNSUPPORTED)
+        if (mt != FilterSubModel::UNSUPPORTED)
         {
             oss << pfx << filtersplusplus::toString(mt);
             pfx = " ";

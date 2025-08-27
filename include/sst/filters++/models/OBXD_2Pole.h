@@ -26,24 +26,24 @@ inline const details::FilterPayload::configMap_t &getModelConfigurations()
 {
     namespace sft = sst::filters;
     static details::FilterPayload::configMap_t configs{
-        {{PassTypes::LP, DriveTypes::Standard},
+        {{Passband::LP, DriveMode::Standard},
          {sft::FilterType::fut_obxd_2pole_lp, sft::FilterSubType::st_obxd2pole_standard}},
-        {{PassTypes::LP, DriveTypes::Pushed},
+        {{Passband::LP, DriveMode::Pushed},
          {sft::FilterType::fut_obxd_2pole_lp, sft::FilterSubType::st_obxd2pole_pushed}},
 
-        {{PassTypes::HP, DriveTypes::Standard},
+        {{Passband::HP, DriveMode::Standard},
          {sft::FilterType::fut_obxd_2pole_hp, sft::FilterSubType::st_obxd2pole_standard}},
-        {{PassTypes::HP, DriveTypes::Pushed},
+        {{Passband::HP, DriveMode::Pushed},
          {sft::FilterType::fut_obxd_2pole_hp, sft::FilterSubType::st_obxd2pole_pushed}},
 
-        {{PassTypes::BP, DriveTypes::Standard},
+        {{Passband::BP, DriveMode::Standard},
          {sft::FilterType::fut_obxd_2pole_bp, sft::FilterSubType::st_obxd2pole_standard}},
-        {{PassTypes::BP, DriveTypes::Pushed},
+        {{Passband::BP, DriveMode::Pushed},
          {sft::FilterType::fut_obxd_2pole_bp, sft::FilterSubType::st_obxd2pole_pushed}},
 
-        {{PassTypes::Notch, DriveTypes::Standard},
+        {{Passband::Notch, DriveMode::Standard},
          {sft::FilterType::fut_obxd_2pole_n, sft::FilterSubType::st_obxd2pole_standard}},
-        {{PassTypes::Notch, DriveTypes::Pushed},
+        {{Passband::Notch, DriveMode::Pushed},
          {sft::FilterType::fut_obxd_2pole_n, sft::FilterSubType::st_obxd2pole_pushed}},
 
     };

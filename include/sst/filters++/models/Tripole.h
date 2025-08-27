@@ -26,32 +26,32 @@ inline const details::FilterPayload::configMap_t &getModelConfigurations()
 {
     namespace sft = sst::filters;
     static details::FilterPayload::configMap_t configs{
-        {{SlopeLevels::Slope_1Stage, SubModelTypes::LowLowLow},
+        {{Slope::Slope_1Stage, FilterSubModel::LowLowLow},
          {sft::FilterType::fut_tripole, sft::FilterSubType::st_tripole_LLL1}},
-        {{SlopeLevels::Slope_2Stage, SubModelTypes::LowLowLow},
+        {{Slope::Slope_2Stage, FilterSubModel::LowLowLow},
          {sft::FilterType::fut_tripole, sft::FilterSubType::st_tripole_LLL2}},
-        {{SlopeLevels::Slope_3Stage, SubModelTypes::LowLowLow},
+        {{Slope::Slope_3Stage, FilterSubModel::LowLowLow},
          {sft::FilterType::fut_tripole, sft::FilterSubType::st_tripole_LLL3}},
 
-        {{SlopeLevels::Slope_1Stage, SubModelTypes::LowHighLow},
+        {{Slope::Slope_1Stage, FilterSubModel::LowHighLow},
          {sft::FilterType::fut_tripole, sft::FilterSubType::st_tripole_LHL1}},
-        {{SlopeLevels::Slope_2Stage, SubModelTypes::LowHighLow},
+        {{Slope::Slope_2Stage, FilterSubModel::LowHighLow},
          {sft::FilterType::fut_tripole, sft::FilterSubType::st_tripole_LHL2}},
-        {{SlopeLevels::Slope_3Stage, SubModelTypes::LowHighLow},
+        {{Slope::Slope_3Stage, FilterSubModel::LowHighLow},
          {sft::FilterType::fut_tripole, sft::FilterSubType::st_tripole_LHL3}},
 
-        {{SlopeLevels::Slope_1Stage, SubModelTypes::HighLowHigh},
+        {{Slope::Slope_1Stage, FilterSubModel::HighLowHigh},
          {sft::FilterType::fut_tripole, sft::FilterSubType::st_tripole_HLH1}},
-        {{SlopeLevels::Slope_2Stage, SubModelTypes::HighLowHigh},
+        {{Slope::Slope_2Stage, FilterSubModel::HighLowHigh},
          {sft::FilterType::fut_tripole, sft::FilterSubType::st_tripole_HLH2}},
-        {{SlopeLevels::Slope_3Stage, SubModelTypes::HighLowHigh},
+        {{Slope::Slope_3Stage, FilterSubModel::HighLowHigh},
          {sft::FilterType::fut_tripole, sft::FilterSubType::st_tripole_HLH3}},
 
-        {{SlopeLevels::Slope_1Stage, SubModelTypes::HighHighHigh},
+        {{Slope::Slope_1Stage, FilterSubModel::HighHighHigh},
          {sft::FilterType::fut_tripole, sft::FilterSubType::st_tripole_HHH1}},
-        {{SlopeLevels::Slope_2Stage, SubModelTypes::HighHighHigh},
+        {{Slope::Slope_2Stage, FilterSubModel::HighHighHigh},
          {sft::FilterType::fut_tripole, sft::FilterSubType::st_tripole_HHH2}},
-        {{SlopeLevels::Slope_3Stage, SubModelTypes::HighHighHigh},
+        {{Slope::Slope_3Stage, FilterSubModel::HighHighHigh},
          {sft::FilterType::fut_tripole, sft::FilterSubType::st_tripole_HHH3}},
 
     };

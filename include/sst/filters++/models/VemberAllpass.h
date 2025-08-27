@@ -26,7 +26,7 @@ inline const details::FilterPayload::configMap_t &getModelConfigurations()
 {
     namespace sft = sst::filters;
     static details::FilterPayload::configMap_t configs{
-        {{PassTypes::AllPass}, {sft::FilterType::fut_apf, sft::FilterSubType::st_Standard}},
+        {{Passband::Allpass}, {sft::FilterType::fut_apf, sft::FilterSubType::st_Standard}},
     };
     return configs;
 }

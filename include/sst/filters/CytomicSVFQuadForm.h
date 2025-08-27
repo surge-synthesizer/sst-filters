@@ -94,7 +94,7 @@ void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, float freq, fl
         cm->C[Coeff::m1] = -k;
         cm->C[Coeff::m2] = -2;
         break;
-    case st_cytomic_all:
+    case st_cytomic_allpass:
         cm->C[Coeff::m0] = 1.0;
         cm->C[Coeff::m1] = -2 * k;
         cm->C[Coeff::m2] = 0;
@@ -115,7 +115,7 @@ void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, float freq, fl
         cm->C[Coeff::m2] = A * A - 1;
     }
     break;
-    case st_cytomic_highhelf:
+    case st_cytomic_highshelf:
     {
         auto A = std::clamp(bellShelfAmp, 0.001f, 0.999f);
         cm->C[Coeff::m0] = A * A;

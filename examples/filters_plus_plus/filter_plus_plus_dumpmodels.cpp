@@ -41,27 +41,27 @@ int main(int, char **)
             auto [pt, st, dt, smt] = s;
             std::cout << "   -";
             std::string pfx = " ";
-            if (pt != sfpp::PassTypes::UNSUPPORTED)
+            if (pt != sfpp::Passband::UNSUPPORTED)
             {
-                std::cout << pfx << "PassType=`" << sfpp::toString(pt) << "` (0x" << std::hex
+                std::cout << pfx << "Passband = `" << sfpp::toString(pt) << "` (0x" << std::hex
                           << (int)pt << ")";
                 pfx = "; ";
             }
-            if (st != sfpp::SlopeLevels::UNSUPPORTED)
+            if (st != sfpp::Slope::UNSUPPORTED)
             {
-                std::cout << pfx << "SlopeLevel=`" << sfpp::toString(st) << "` (0x" << std::hex
+                std::cout << pfx << "Slope = `" << sfpp::toString(st) << "` (0x" << std::hex
                           << (int)st << ")";
                 pfx = "; ";
             }
-            if (dt != sfpp::DriveTypes::UNSUPPORTED)
+            if (dt != sfpp::DriveMode::UNSUPPORTED)
             {
-                std::cout << pfx << "DriveType=`" << sfpp::toString(dt) << "` (0x" << std::hex
+                std::cout << pfx << "Drive = `" << sfpp::toString(dt) << "` (0x" << std::hex
                           << (int)dt << ")";
                 pfx = "; ";
             }
-            if (smt != sfpp::SubModelTypes::UNSUPPORTED)
+            if (smt != sfpp::FilterSubModel::UNSUPPORTED)
             {
-                std::cout << pfx << "SubModelType=`" << sfpp::toString(smt) << "` (0x" << std::hex
+                std::cout << pfx << "Submodel = `" << sfpp::toString(smt) << "` (0x" << std::hex
                           << (int)smt << ")";
                 pfx = "; ";
             }

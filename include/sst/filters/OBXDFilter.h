@@ -229,8 +229,8 @@ inline SIMD_M128 process_2_pole(QuadFilterUnitState *__restrict f, SIMD_M128 sam
     return SIMD_MM(mul_ps)(mc, gainAdjustment2Pole);
 }
 
-inline SIMD_M128 NewtonRaphsonR24dB(SIMD_M128 sample, SIMD_M128 lpc,
-                                    QuadFilterUnitState *__restrict f)
+inline SIMD_M128 NewtonRaphson24dB(SIMD_M128 sample, SIMD_M128 lpc,
+                                   QuadFilterUnitState *__restrict f)
 {
     // float ml = 1 / (1+g24);
     auto ml = SIMD_MM(div_ps)(one, SIMD_MM(add_ps)(one, f->C[g24]));
@@ -269,7 +269,7 @@ enum FourPoleMode
     LP12,
     LP18,
     LP24,
-    LPBroken24,
+    LP24Broken,
     XPANDER_HP3,
     XPANDER_HP2,
     XPANDER_HP1,
@@ -305,8 +305,8 @@ inline SIMD_M128 process_4_pole(QuadFilterUnitState *__restrict f, SIMD_M128 sam
     // float lpc = f->C[g] / (1 + f->C[g]);
     auto lpc = SIMD_MM(div_ps)(f->C[g24], SIMD_MM(add_ps)(one, f->C[g24]));
 
-    // float y0 = NewtonRaphsonR24dB(sample,f->C[g],lpc);
-    auto y0 = NewtonRaphsonR24dB(sample, lpc, f);
+    // float y0 = NewtonRaphson24dB(sample,f->C[g],lpc);
+    auto y0 = NewtonRaphson24dB(sample, lpc, f);
 
     // first lowpass in cascade
     // double v = (y0 - f->R[s1]) * lpc;
@@ -346,7 +346,7 @@ inline SIMD_M128 process_4_pole(QuadFilterUnitState *__restrict f, SIMD_M128 sam
 
     auto zero_mask = SIMD_MM(cmpeq_ps)(f->C[pole_mix_inv_int], zero);
     SIMD_M128 zero_val;
-    // 6db is 3, 12 2, 18 1, 24 zero
+    // 6dB is 3, 12 2, 18 1, 24 zero
     if constexpr (fpm == FourPoleMode::LP6)
     {
         mc = y1;
@@ -363,7 +363,7 @@ inline SIMD_M128 process_4_pole(QuadFilterUnitState *__restrict f, SIMD_M128 sam
     {
         mc = y4;
     }
-    else if constexpr (fpm == FourPoleMode::LPBroken24)
+    else if constexpr (fpm == FourPoleMode::LP24Broken)
     {
         mc = SIMD_MM(add_ps)(y3, y4);
     }

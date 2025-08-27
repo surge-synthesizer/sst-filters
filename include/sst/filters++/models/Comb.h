@@ -26,15 +26,15 @@ inline const details::FilterPayload::configMap_t &getModelConfigurations()
 {
     namespace sft = sst::filters;
     static details::FilterPayload::configMap_t configs{
-        {{SlopeLevels::Comb_Positive_50}, {sft::FilterType::fut_comb_pos, sft::FilterSubType(0)}},
-        {{SlopeLevels::Comb_Positive_100}, {sft::FilterType::fut_comb_pos, sft::FilterSubType(1)}},
-        {{SlopeLevels::Comb_Negative_50}, {sft::FilterType::fut_comb_neg, sft::FilterSubType(0)}},
-        {{SlopeLevels::Comb_Negative_100}, {sft::FilterType::fut_comb_neg, sft::FilterSubType(1)}},
-        {{SlopeLevels::Comb_Positive_ContinuousMix},
+        {{Slope::Comb_Positive_50}, {sft::FilterType::fut_comb_pos, sft::FilterSubType(0)}},
+        {{Slope::Comb_Positive_100}, {sft::FilterType::fut_comb_pos, sft::FilterSubType(1)}},
+        {{Slope::Comb_Negative_50}, {sft::FilterType::fut_comb_neg, sft::FilterSubType(0)}},
+        {{Slope::Comb_Negative_100}, {sft::FilterType::fut_comb_neg, sft::FilterSubType(1)}},
+        {{Slope::Comb_Positive_ContinuousMix},
          {sft::FilterType::fut_comb_pos, sft::st_comb_continuous_pos}},
-        {{SlopeLevels::Comb_Negative_ContinuousMix},
+        {{Slope::Comb_Negative_ContinuousMix},
          {sft::FilterType::fut_comb_pos, sft::st_comb_continuous_neg}},
-        {{SlopeLevels::Comb_Bipolar_ContinuousMix},
+        {{Slope::Comb_Bipolar_ContinuousMix},
          {sft::FilterType::fut_comb_pos, sft::st_comb_continuous_posneg}},
 
     };

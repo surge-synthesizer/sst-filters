@@ -107,7 +107,7 @@ std::array<double, 3> upDown(int M, bool steep, const std::function<float(float)
     return {rmsUp, rmsDn, rmsSelf};
 };
 
-TEST_CASE("HalfRate Filter")
+TEST_CASE("Half Rate Filter")
 {
 
     for (int order = 1; order <= sst::filters::HalfRate::halfrate_max_M; ++order)

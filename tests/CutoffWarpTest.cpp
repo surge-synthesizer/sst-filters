@@ -41,12 +41,12 @@ TEST_CASE("Cutoff Warp")
 
         namespace sfpp = sst::filtersplusplus;
         int idx{0};
-        for (auto d : {sfpp::DriveTypes::Tanh, sfpp::DriveTypes::SoftClip, sfpp::DriveTypes::OJD})
+        for (auto d : {sfpp::DriveMode::Tanh, sfpp::DriveMode::SoftClip, sfpp::DriveMode::OJD})
         {
-            for (auto s : {sfpp::SlopeLevels::Slope_1Stage, sfpp::SlopeLevels::Slope_2Stage,
-                           sfpp::SlopeLevels::Slope_3Stage, sfpp::SlopeLevels::Slope_4Stage})
+            for (auto s : {sfpp::Slope::Slope_1Stage, sfpp::Slope::Slope_2Stage,
+                           sfpp::Slope::Slope_3Stage, sfpp::Slope::Slope_4Stage})
             {
-                runTest(sfpp::FilterModels::CutoffWarp, {sfpp::PassTypes::LP, s, d}, 0, 0.5,
+                runTest(sfpp::FilterModel::CutoffWarp, {sfpp::Passband::LP, s, d}, 0, 0.5,
                         RMSs[idx]);
                 idx++;
             }
@@ -76,12 +76,12 @@ TEST_CASE("Cutoff Warp")
 
         namespace sfpp = sst::filtersplusplus;
         int idx{0};
-        for (auto d : {sfpp::DriveTypes::Tanh, sfpp::DriveTypes::SoftClip, sfpp::DriveTypes::OJD})
+        for (auto d : {sfpp::DriveMode::Tanh, sfpp::DriveMode::SoftClip, sfpp::DriveMode::OJD})
         {
-            for (auto s : {sfpp::SlopeLevels::Slope_1Stage, sfpp::SlopeLevels::Slope_2Stage,
-                           sfpp::SlopeLevels::Slope_3Stage, sfpp::SlopeLevels::Slope_4Stage})
+            for (auto s : {sfpp::Slope::Slope_1Stage, sfpp::Slope::Slope_2Stage,
+                           sfpp::Slope::Slope_3Stage, sfpp::Slope::Slope_4Stage})
             {
-                runTest(sfpp::FilterModels::CutoffWarp, {sfpp::PassTypes::HP, s, d}, 0, 0.5,
+                runTest(sfpp::FilterModel::CutoffWarp, {sfpp::Passband::HP, s, d}, 0, 0.5,
                         RMSs[idx]);
                 idx++;
             }
@@ -111,12 +111,12 @@ TEST_CASE("Cutoff Warp")
 
         namespace sfpp = sst::filtersplusplus;
         int idx{0};
-        for (auto d : {sfpp::DriveTypes::Tanh, sfpp::DriveTypes::SoftClip, sfpp::DriveTypes::OJD})
+        for (auto d : {sfpp::DriveMode::Tanh, sfpp::DriveMode::SoftClip, sfpp::DriveMode::OJD})
         {
-            for (auto s : {sfpp::SlopeLevels::Slope_1Stage, sfpp::SlopeLevels::Slope_2Stage,
-                           sfpp::SlopeLevels::Slope_3Stage, sfpp::SlopeLevels::Slope_4Stage})
+            for (auto s : {sfpp::Slope::Slope_1Stage, sfpp::Slope::Slope_2Stage,
+                           sfpp::Slope::Slope_3Stage, sfpp::Slope::Slope_4Stage})
             {
-                runTest(sfpp::FilterModels::CutoffWarp, {sfpp::PassTypes::Notch, s, d}, 0, 0.5,
+                runTest(sfpp::FilterModel::CutoffWarp, {sfpp::Passband::Notch, s, d}, 0, 0.5,
                         RMSs[idx]);
                 idx++;
             }
@@ -146,12 +146,12 @@ TEST_CASE("Cutoff Warp")
 
         namespace sfpp = sst::filtersplusplus;
         int idx{0};
-        for (auto d : {sfpp::DriveTypes::Tanh, sfpp::DriveTypes::SoftClip, sfpp::DriveTypes::OJD})
+        for (auto d : {sfpp::DriveMode::Tanh, sfpp::DriveMode::SoftClip, sfpp::DriveMode::OJD})
         {
-            for (auto s : {sfpp::SlopeLevels::Slope_1Stage, sfpp::SlopeLevels::Slope_2Stage,
-                           sfpp::SlopeLevels::Slope_3Stage, sfpp::SlopeLevels::Slope_4Stage})
+            for (auto s : {sfpp::Slope::Slope_1Stage, sfpp::Slope::Slope_2Stage,
+                           sfpp::Slope::Slope_3Stage, sfpp::Slope::Slope_4Stage})
             {
-                runTest(sfpp::FilterModels::CutoffWarp, {sfpp::PassTypes::BP, s, d}, 0, 0.5,
+                runTest(sfpp::FilterModel::CutoffWarp, {sfpp::Passband::BP, s, d}, 0, 0.5,
                         RMSs[idx]);
                 idx++;
             }
@@ -181,12 +181,12 @@ TEST_CASE("Cutoff Warp")
 
         namespace sfpp = sst::filtersplusplus;
         int idx{0};
-        for (auto d : {sfpp::DriveTypes::Tanh, sfpp::DriveTypes::SoftClip, sfpp::DriveTypes::OJD})
+        for (auto d : {sfpp::DriveMode::Tanh, sfpp::DriveMode::SoftClip, sfpp::DriveMode::OJD})
         {
-            for (auto s : {sfpp::SlopeLevels::Slope_1Stage, sfpp::SlopeLevels::Slope_2Stage,
-                           sfpp::SlopeLevels::Slope_3Stage, sfpp::SlopeLevels::Slope_4Stage})
+            for (auto s : {sfpp::Slope::Slope_1Stage, sfpp::Slope::Slope_2Stage,
+                           sfpp::Slope::Slope_3Stage, sfpp::Slope::Slope_4Stage})
             {
-                runTest(sfpp::FilterModels::CutoffWarp, {sfpp::PassTypes::AllPass, s, d}, 0, 0.5,
+                runTest(sfpp::FilterModel::CutoffWarp, {sfpp::Passband::Allpass, s, d}, 0, 0.5,
                         RMSs[idx]);
                 idx++;
             }

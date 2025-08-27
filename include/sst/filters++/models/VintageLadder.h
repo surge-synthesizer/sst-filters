@@ -26,13 +26,13 @@ inline const details::FilterPayload::configMap_t &getModelConfigurations()
 {
     namespace sft = sst::filters;
     static details::FilterPayload::configMap_t configs{
-        {{PassTypes::LP, SubModelTypes::RungeKutta},
+        {{Passband::LP, FilterSubModel::RungeKutta},
          {sft::FilterType::fut_vintageladder, sft::FilterSubType::st_vintage_type1}},
-        {{PassTypes::LP, SubModelTypes::RungeKuttaCompensated},
+        {{Passband::LP, FilterSubModel::RungeKuttaCompensated},
          {sft::FilterType::fut_vintageladder, sft::FilterSubType::st_vintage_type1_compensated}},
-        {{PassTypes::LP, SubModelTypes::Huov},
+        {{Passband::LP, FilterSubModel::Huov},
          {sft::FilterType::fut_vintageladder, sft::FilterSubType::st_vintage_type2}},
-        {{PassTypes::LP, SubModelTypes::HuovCompensated},
+        {{Passband::LP, FilterSubModel::HuovCompensated},
          {sft::FilterType::fut_vintageladder, sft::FilterSubType::st_vintage_type2_compensated}},
 
     };

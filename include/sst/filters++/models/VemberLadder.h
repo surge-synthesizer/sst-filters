@@ -26,13 +26,13 @@ inline const details::FilterPayload::configMap_t &getModelConfigurations()
 {
     namespace sft = sst::filters;
     static details::FilterPayload::configMap_t configs{
-        {{PassTypes::LP, SlopeLevels::Slope_6db},
+        {{Passband::LP, Slope::Slope_6dB},
          {sft::FilterType::fut_lpmoog, sft::FilterSubType::st_lpmoog_6dB}},
-        {{PassTypes::LP, SlopeLevels::Slope_12db},
+        {{Passband::LP, Slope::Slope_12dB},
          {sft::FilterType::fut_lpmoog, sft::FilterSubType::st_lpmoog_12dB}},
-        {{PassTypes::LP, SlopeLevels::Slope_18db},
+        {{Passband::LP, Slope::Slope_18dB},
          {sft::FilterType::fut_lpmoog, sft::FilterSubType::st_lpmoog_18dB}},
-        {{PassTypes::LP, SlopeLevels::Slope_24db},
+        {{Passband::LP, Slope::Slope_24dB},
          {sft::FilterType::fut_lpmoog, sft::FilterSubType::st_lpmoog_24dB}},
 
     };

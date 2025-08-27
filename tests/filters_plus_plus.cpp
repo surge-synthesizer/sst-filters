@@ -17,44 +17,44 @@
 #include "catch2/catch2.hpp"
 #include <iostream>
 
-TEST_CASE("FiltersPlusPlus Ultra Basic")
+TEST_CASE("Filters++ Ultra Basic")
 {
-    SECTION("Make a Vember LowPass")
+    SECTION("Make a Vember Lowpass")
     {
         namespace sfpp = sst::filtersplusplus;
 
         auto filter = sfpp::Filter();
-        filter.setFilterModel(sfpp::FilterModels::VemberClassic);
-        filter.setPassType(sfpp::PassTypes::LP);
-        filter.setSlopeLevel(sfpp::SlopeLevels::Slope_24db);
-        filter.setDriveType(sfpp::DriveTypes::Standard);
+        filter.setFilterModel(sfpp::FilterModel::VemberClassic);
+        filter.setPassband(sfpp::Passband::LP);
+        filter.setSlope(sfpp::Slope::Slope_24dB);
+        filter.setDriveMode(sfpp::DriveMode::Standard);
         REQUIRE(filter.prepareInstance());
         REQUIRE(filter.coefficientsExtraCount(filter.getFilterModel(),
                                               filter.getModelConfiguration()) == 0);
     }
 
-    SECTION("Vember AllPass isn't a thing")
+    SECTION("Vember Allpass isn't a thing")
     {
         namespace sfpp = sst::filtersplusplus;
 
         auto filter = sfpp::Filter();
-        filter.setFilterModel(sfpp::FilterModels::VemberClassic);
-        filter.setPassType(sfpp::PassTypes::AllPass);
-        filter.setSlopeLevel(sfpp::SlopeLevels::Slope_24db);
-        filter.setDriveType(sfpp::DriveTypes::Standard);
+        filter.setFilterModel(sfpp::FilterModel::VemberClassic);
+        filter.setPassband(sfpp::Passband::Allpass);
+        filter.setSlope(sfpp::Slope::Slope_24dB);
+        filter.setDriveMode(sfpp::DriveMode::Standard);
         REQUIRE_FALSE(filter.prepareInstance());
     }
 
-    SECTION("OBXD 4Pole")
+    SECTION("OB-Xd 4-pole")
     {
         namespace sfpp = sst::filtersplusplus;
         auto filter = sfpp::Filter();
 
         filter.setSampleRateAndBlockSize(48000, 16);
 
-        filter.setFilterModel(sfpp::FilterModels::OBXD_4Pole);
-        filter.setPassType(sfpp::PassTypes::LP);
-        filter.setSlopeLevel(sfpp::SlopeLevels::Slope_18db);
+        filter.setFilterModel(sfpp::FilterModel::OBXD_4Pole);
+        filter.setPassband(sfpp::Passband::LP);
+        filter.setSlope(sfpp::Slope::Slope_18dB);
         if (!filter.prepareInstance())
             REQUIRE(false);
 
@@ -90,10 +90,10 @@ TEST_CASE("FiltersPlusPlus API Consistency")
             namespace sfpp = sst::filtersplusplus;
 
             auto filter = sfpp::Filter();
-            filter.setFilterModel(sfpp::FilterModels::VemberClassic);
-            filter.setPassType(sfpp::PassTypes::LP);
-            filter.setSlopeLevel(sfpp::SlopeLevels::Slope_24db);
-            filter.setDriveType(sfpp::DriveTypes::Standard);
+            filter.setFilterModel(sfpp::FilterModel::VemberClassic);
+            filter.setPassband(sfpp::Passband::LP);
+            filter.setSlope(sfpp::Slope::Slope_24dB);
+            filter.setDriveMode(sfpp::DriveMode::Standard);
 
             filter.setSampleRateAndBlockSize(48000, 16);
             REQUIRE(filter.prepareInstance());
@@ -168,16 +168,16 @@ TEST_CASE("FiltersPlusPlus API Consistency")
         }
     }
 
-    SECTION("constant coefficients work")
+    SECTION("Constant coefficients work")
     {
         auto mkf = []() {
             namespace sfpp = sst::filtersplusplus;
 
             auto filter = sfpp::Filter();
-            filter.setFilterModel(sfpp::FilterModels::VemberClassic);
-            filter.setPassType(sfpp::PassTypes::LP);
-            filter.setSlopeLevel(sfpp::SlopeLevels::Slope_24db);
-            filter.setDriveType(sfpp::DriveTypes::Standard);
+            filter.setFilterModel(sfpp::FilterModel::VemberClassic);
+            filter.setPassband(sfpp::Passband::LP);
+            filter.setSlope(sfpp::Slope::Slope_24dB);
+            filter.setDriveMode(sfpp::DriveMode::Standard);
 
             filter.setSampleRateAndBlockSize(48000, 16);
             REQUIRE(filter.prepareInstance());

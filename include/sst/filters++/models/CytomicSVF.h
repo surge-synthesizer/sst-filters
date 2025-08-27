@@ -26,20 +26,20 @@ inline const details::FilterPayload::configMap_t &getModelConfigurations()
 {
     namespace sft = sst::filters;
     static details::FilterPayload::configMap_t configs{
-        {{PassTypes::LP}, {sft::FilterType::fut_cytomicsvf, sft::FilterSubType::st_cytomic_lp}},
-        {{PassTypes::HP}, {sft::FilterType::fut_cytomicsvf, sft::FilterSubType::st_cytomic_hp}},
-        {{PassTypes::BP}, {sft::FilterType::fut_cytomicsvf, sft::FilterSubType::st_cytomic_bp}},
-        {{PassTypes::Notch},
-         {sft::FilterType::fut_cytomicsvf, sft::FilterSubType::st_cytomic_notch}},
-        {{PassTypes::Peak}, {sft::FilterType::fut_cytomicsvf, sft::FilterSubType::st_cytomic_peak}},
-        {{PassTypes::AllPass},
-         {sft::FilterType::fut_cytomicsvf, sft::FilterSubType::st_cytomic_all}},
-        {{PassTypes::LP}, {sft::FilterType::fut_cytomicsvf, sft::FilterSubType::st_cytomic_lp}},
-        {{PassTypes::LowShelf},
-         {sft::FilterType::fut_cytomicsvf, sft::FilterSubType::st_cytomic_lowshelf}},
-        {{PassTypes::HighShelf},
-         {sft::FilterType::fut_cytomicsvf, sft::FilterSubType::st_cytomic_highhelf}},
-        {{PassTypes::Bell}, {sft::FilterType::fut_cytomicsvf, sft::FilterSubType::st_cytomic_bell}},
+        {{Passband::LP}, {sft::FilterType::fut_cytomic_svf, sft::FilterSubType::st_cytomic_lp}},
+        {{Passband::HP}, {sft::FilterType::fut_cytomic_svf, sft::FilterSubType::st_cytomic_hp}},
+        {{Passband::BP}, {sft::FilterType::fut_cytomic_svf, sft::FilterSubType::st_cytomic_bp}},
+        {{Passband::Notch},
+         {sft::FilterType::fut_cytomic_svf, sft::FilterSubType::st_cytomic_notch}},
+        {{Passband::Peak}, {sft::FilterType::fut_cytomic_svf, sft::FilterSubType::st_cytomic_peak}},
+        {{Passband::Allpass},
+         {sft::FilterType::fut_cytomic_svf, sft::FilterSubType::st_cytomic_allpass}},
+        {{Passband::LP}, {sft::FilterType::fut_cytomic_svf, sft::FilterSubType::st_cytomic_lp}},
+        {{Passband::LowShelf},
+         {sft::FilterType::fut_cytomic_svf, sft::FilterSubType::st_cytomic_lowshelf}},
+        {{Passband::HighShelf},
+         {sft::FilterType::fut_cytomic_svf, sft::FilterSubType::st_cytomic_highshelf}},
+        {{Passband::Bell}, {sft::FilterType::fut_cytomic_svf, sft::FilterSubType::st_cytomic_bell}},
 
     };
     return configs;

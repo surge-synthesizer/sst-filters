@@ -797,7 +797,7 @@ inline FilterUnitQFPtr GetCompensatedQFPtrFilterUnit(FilterType type, FilterSubT
         case 0:
         case 1:
             if constexpr (Compensated)
-                // Scale up by 6db = 1.994 amplitudes
+                // Scale up by 6dB = 1.994 amplitudes
                 return ScaleQFPtr<1994, VintageLadder::RK::process>;
             else
                 return VintageLadder::RK::process;
@@ -818,16 +818,16 @@ inline FilterUnitQFPtr GetCompensatedQFPtrFilterUnit(FilterType type, FilterSubT
     case fut_obxd_4pole:
         switch (subtype)
         {
-        case st_obxd4pole_6db:
+        case st_obxd4pole_6dB:
             return OBXDFilter::process_4_pole<OBXDFilter::LP6>;
-        case st_obxd4pole_12db:
+        case st_obxd4pole_12dB:
             return OBXDFilter::process_4_pole<OBXDFilter::LP12>;
-        case st_obxd4pole_18db:
+        case st_obxd4pole_18dB:
             return OBXDFilter::process_4_pole<OBXDFilter::LP18>;
-        case st_obxd4pole_24db:
+        case st_obxd4pole_24dB:
             return OBXDFilter::process_4_pole<OBXDFilter::LP24>;
-        case st_obxd4pole_broken24db:
-            return OBXDFilter::process_4_pole<OBXDFilter::LPBroken24>;
+        case st_obxd4pole_broken24dB:
+            return OBXDFilter::process_4_pole<OBXDFilter::LP24Broken>;
         case st_obxd4pole_morph:
             return OBXDFilter::process_4_pole<OBXDFilter::MORPH>;
         default:
@@ -839,35 +839,35 @@ inline FilterUnitQFPtr GetCompensatedQFPtrFilterUnit(FilterType type, FilterSubT
     case fut_obxd_xpander:
         switch (subtype)
         {
-        case st_obxdX_lp1:
+        case st_obxdxpander_lp1:
             return OBXDFilter::process_4_pole<OBXDFilter::LP6>;
-        case st_obxdX_lp2:
+        case st_obxdxpander_lp2:
             return OBXDFilter::process_4_pole<OBXDFilter::LP12>;
-        case st_obxdX_lp3:
+        case st_obxdxpander_lp3:
             return OBXDFilter::process_4_pole<OBXDFilter::LP18>;
-        case st_obxdX_lp4:
+        case st_obxdxpander_lp4:
             return OBXDFilter::process_4_pole<OBXDFilter::LP24>;
-        case st_obxdX_hp1:
+        case st_obxdxpander_hp1:
             return OBXDFilter::process_4_pole<OBXDFilter::XPANDER_HP1>;
-        case st_obxdX_hp2:
+        case st_obxdxpander_hp2:
             return OBXDFilter::process_4_pole<OBXDFilter::XPANDER_HP2>;
-        case st_obxdX_hp3:
+        case st_obxdxpander_hp3:
             return OBXDFilter::process_4_pole<OBXDFilter::XPANDER_HP3>;
-        case st_obxdX_bp4:
+        case st_obxdxpander_bp4:
             return OBXDFilter::process_4_pole<OBXDFilter::XPANDER_BP4>;
-        case st_obxdX_bp2:
+        case st_obxdxpander_bp2:
             return OBXDFilter::process_4_pole<OBXDFilter::XPANDER_BP2>;
-        case st_obxdX_n2:
+        case st_obxdxpander_n2:
             return OBXDFilter::process_4_pole<OBXDFilter::XPANDER_N2>;
-        case st_obxdX_ph3:
+        case st_obxdxpander_ph3:
             return OBXDFilter::process_4_pole<OBXDFilter::XPANDER_PH3>;
-        case st_obxdX_hp2lp1:
+        case st_obxdxpander_hp2lp1:
             return OBXDFilter::process_4_pole<OBXDFilter::XPANDER_HP2LP1>;
-        case st_obxdX_hp3lp1:
+        case st_obxdxpander_hp3lp1:
             return OBXDFilter::process_4_pole<OBXDFilter::XPANDER_HP3LP1>;
-        case st_obxdX_n2lp1:
+        case st_obxdxpander_n2lp1:
             return OBXDFilter::process_4_pole<OBXDFilter::XPANDER_N2LP1>;
-        case st_obxdX_ph3lp1:
+        case st_obxdxpander_ph3lp1:
             return OBXDFilter::process_4_pole<OBXDFilter::XPANDER_PH3LP1>;
         default:
             return nullptr;
@@ -997,7 +997,7 @@ inline FilterUnitQFPtr GetCompensatedQFPtrFilterUnit(FilterType type, FilterSubT
             break;
         }
         break;
-    case fut_cytomicsvf:
+    case fut_cytomic_svf:
         if (subtype == st_cytomic_lp)
             return cytomic_quadform::CytomicQuad<true>;
         else
