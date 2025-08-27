@@ -103,6 +103,7 @@ const char filter_type_names[num_filter_types][32] = {
     "FX Res Warp AP",    // fut_resonancewarp_ap
     "MULTI Tri-pole",    // fut_tripole
     "Cytomic SVF",
+    "OBXD XPander"
     /* this is a ruler to ensure names do not exceed 31 characters
      0123456789012345678901234567890
     */
@@ -220,9 +221,11 @@ const char fut_tripole_output_stage[3][16]{
     "Third",
 };
 
+const char fut_cytomic_subtypes[9][32] = {"LP",  "HP",   "BP",        "Notch",     "Peak",
+                                          "All", "Bell", "Low Shelf", "High Shelf"};
 const char fut_obxd_xpander_subtypes[15][32] = {
-    "LP-4",     "LP-3",        "LP-2",        "LP-1",           "HP-3",
-    "HP-2",     "HP-1",        "BP-4",        "BP-2",           "Notch-2",
+    "LP-1",     "LP-2",        "LP-3",        "LP-4",           "HP-1",
+    "HP-2",     "HP-3",        "BP-2",        "BP-4",           "Notch-2",
     "Phaser-3", "HP-2 + LP-1", "HP-3 + LP-1", "Notch-2 + LP-1", "Phaser-3 + LP-1"};
 
 /** The number of sub-types for each filter type */
@@ -365,15 +368,15 @@ enum FilterSubType
     st_cytomic_lowshelf = 7,
     st_cytomic_highhelf = 8,
 
-    st_obxdX_lp4 = 0,
-    st_obxdX_lp3 = 1,
-    st_obxdX_lp2 = 2,
-    st_obxdX_lp1 = 3,
-    st_obxdX_hp3 = 4,
+    st_obxdX_lp1 = 0,
+    st_obxdX_lp2 = 1,
+    st_obxdX_lp3 = 2,
+    st_obxdX_lp4 = 3,
+    st_obxdX_hp1 = 4,
     st_obxdX_hp2 = 5,
-    st_obxdX_hp1 = 6,
-    st_obxdX_bp4 = 7,
-    st_obxdX_bp2 = 8,
+    st_obxdX_hp3 = 6,
+    st_obxdX_bp2 = 7,
+    st_obxdX_bp4 = 8,
     st_obxdX_n2 = 9,
     st_obxdX_ph3 = 10,
     st_obxdX_hp2lp1 = 11,
