@@ -145,6 +145,7 @@ struct FilterPayload
 #include "../models/ResonanceWarp.h"
 #include "../models/DiodeLadder.h"
 #include "../models/OBXD_4Pole.h"
+#include "../models/OBXD_XPander.h"
 #include "../models/OBXD_2Pole.h"
 #include "../models/SampleAndHold.h"
 #include "../models/Comb.h"
@@ -185,6 +186,7 @@ inline FilterPayload::legacyType_t FilterPayload::resolveLegacyType()
         FILTER_MODEL_CASE(FilterModels::DiodeLadder, models::diodeladder);
         FILTER_MODEL_CASE(FilterModels::OBXD_4Pole, models::obxd_4pole);
         FILTER_MODEL_CASE(FilterModels::OBXD_2Pole, models::obxd_2pole);
+        FILTER_MODEL_CASE(FilterModels::OBXD_XPander, models::obxd_xpander);
         FILTER_MODEL_CASE(FilterModels::SampleAndHold, models::sampleandhold);
         FILTER_MODEL_CASE(FilterModels::Comb, models::comb);
         FILTER_MODEL_CASE(FilterModels::TriPole, models::tripole);
@@ -231,6 +233,7 @@ inline std::vector<ModelConfig> FilterPayload::availableModelConfigurations(Filt
         FILTER_MODEL_CASE(FilterModels::DiodeLadder, models::diodeladder);
         FILTER_MODEL_CASE(FilterModels::OBXD_4Pole, models::obxd_4pole);
         FILTER_MODEL_CASE(FilterModels::OBXD_2Pole, models::obxd_2pole);
+        FILTER_MODEL_CASE(FilterModels::OBXD_XPander, models::obxd_xpander);
         FILTER_MODEL_CASE(FilterModels::SampleAndHold, models::sampleandhold);
         FILTER_MODEL_CASE(FilterModels::Comb, models::comb);
         FILTER_MODEL_CASE(FilterModels::TriPole, models::tripole);

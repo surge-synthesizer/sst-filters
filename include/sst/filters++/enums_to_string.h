@@ -54,6 +54,8 @@ inline std::string toString(const FilterModels &f)
         return "OB-Xd 24 dB";
     case FilterModels::OBXD_2Pole:
         return "OB-Xd 12 dB";
+    case FilterModels::OBXD_XPander:
+        return "OB-Xd XPander";
 
     case FilterModels::TriPole:
         return "Tri-Pole";
@@ -90,6 +92,15 @@ inline std::string toString(const PassTypes &p)
         return "Bell";
     case PassTypes::HighShelf:
         return "High Shelf";
+
+    case PassTypes::Phaser:
+        return "Phaser";
+    case PassTypes::HPAndLP:
+        return "HP + LP";
+    case PassTypes::NotchAndLP:
+        return "Notch + LP";
+    case PassTypes::PhaserAndLP:
+        return "Phaser + LP";
     }
     return "PASSTYPE_ERROR";
 }
