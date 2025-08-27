@@ -37,14 +37,14 @@ namespace sst::filtersplusplus
  *
  * The Filter is configured in a two-part hierarchy, which is specified in `enums.h`.
  *
- * The top of the heirarchy is the `FilterModels` enum. That provides the classes of
- * filters which surge provides. The method `Filter::availableFilterModels()` returns you
+ * The top of the heirarchy is the `FilterModel` enum. That provides the classes of
+ * filters which surge provides. The method `Filter::availableFilterModel()` returns you
  * a list of them.
  *
  * Once you have a model, the model is configured by a tuple of {passtype, slopelevel, drivetype,
  * submodel} each of which is a separate enum. Any of these can be left out (or set to
- * `UNSUPPORTED`). So for instance, the model `FilterModels::VemberClassic` has a configuration
- * `{PassTypes::LP, SlopeLeveLs::Slope_12db, DriveTypes::Clean}`. You can enumerate all the
+ * `UNSUPPORTED`). So for instance, the model `FilterModel::VemberClassic` has a configuration
+ * `{Passband::LP, SlopeLeveLs::Slope_12dB, DriveMode::Clean}`. You can enumerate all the
  * configuration tuples ysing `Filter::availableModelConfigurations()`.
  *
  * Each of the filters is implemented to simultaneously run 4-wide SIMD on a vector of 4 floats in
@@ -64,9 +64,9 @@ namespace sst::filtersplusplus
  *
  *      filter.setSampleRateAndBlockSize(48000, 16);
  *
- *      filter.setFilterModel(sfpp::FilterModels::OBXD_4Pole);
- *      filter.setPassType(sfpp::PassTypes::LP);
- *      filter.setSlopeLevel(sfpp::SlopeLevels::Slope_18db);
+ *      filter.setFilterModel(sfpp::FilterModel::OBXD_4Pole);
+ *      filter.setPassband(sfpp::Passband::LP);
+ *      filter.setSlope(sfpp::Slope::Slope_18dB);
  *      if (!filter.prepareInstance())
  *          REQUIRE(false);
  *
@@ -97,16 +97,16 @@ struct Filter
 {
     /*
      * These APIs set up the configuration either with model + individual enums
-     * or Model + ModeLConfig (which is an object with each of the enums).
+     * or Model + ModelConfig (which is an object with each of the enums).
      */
 
-    void setFilterModel(FilterModels model) { payload.setFilterModel(model); }
-    FilterModels getFilterModel() const { return payload.filterModel; }
+    void setFilterModel(FilterModel model) { payload.setFilterModel(model); }
+    FilterModel getFilterModel() const { return payload.filterModel; }
 
-    void setPassType(PassTypes type) { payload.setPassType(type); }
-    void setSlopeLevel(SlopeLevels slope) { payload.setSlopeLevel(slope); }
-    void setDriveType(DriveTypes drive) { payload.setDriveType(drive); }
-    void setSubModelType(SubModelTypes smt) { payload.setSubModelType(smt); }
+    void setPassband(Passband type) { payload.setPassband(type); }
+    void setSlope(Slope slope) { payload.setSlope(slope); }
+    void setDriveMode(DriveMode drive) { payload.setDriveType(drive); }
+    void setSubmodel(FilterSubModel smt) { payload.setSubmodel(smt); }
 
     void setModelConfiguration(const ModelConfig &sk) { payload.setModelConfiguration(sk); }
     ModelConfig getModelConfiguration() const { return payload.getModelConfiguration(); }
@@ -126,7 +126,7 @@ struct Filter
      * @param k  Configured how
      * @return how many floats must the delay line have
      */
-    static size_t requiredDelayLinesSizes(FilterModels model, const ModelConfig &k);
+    static size_t requiredDelayLinesSizes(FilterModel model, const ModelConfig &k);
 
     /**
      * If a delay line is needed, each active voice requires one.
@@ -154,25 +154,25 @@ struct Filter
 
     /**
      * Some models have coefficient features beyond jsut cutoff and resonance. For instance the
-     * OBXD 4 pole low pass has a continous pole morphing mode (SlopeLevels::Slope_Morph). In that
+     * OBXD 4 pole low pass has a continous pole morphing mode (Slope::Slope_Morph). In that
      * case you will need to provide the 'extra' arguments to the makeCoefficients call to get
      * the feature. This function tells you how manu such 'extra' arguments are consumed for
      * a given model/config.
      *
      */
-    [[nodiscard]] static int coefficientsExtraCount(FilterModels model, const ModelConfig &c);
+    [[nodiscard]] static int coefficientsExtraCount(FilterModel model, const ModelConfig &c);
 
     /**
      * Get a list of the available models supported by the API
      */
-    static std::vector<FilterModels> availableModels();
+    static std::vector<FilterModel> availableModels();
 
     /**
      * For a given model, return the configurations that model supports. The list by
      * default will be unsorted, but the sort option allows you to sort it. Note that this
      * is an allocating API to make that vector so you dont want to use it while processing.
      */
-    static std::vector<ModelConfig> availableModelConfigurations(FilterModels model,
+    static std::vector<ModelConfig> availableModelConfigurations(FilterModel model,
                                                                  bool sort = false)
     {
         return details::FilterPayload::availableModelConfigurations(model, sort);

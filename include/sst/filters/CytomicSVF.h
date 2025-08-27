@@ -81,26 +81,27 @@ struct CytomicSVF
     SIMD_M128 negoneSSE{SETALL(-1.0)};
     SIMD_M128 twoSSE{SETALL(2.0)};
     SIMD_M128 negtwoSSE{SETALL(-2.0)};
-    enum Mode
+
+    enum struct Mode : uint32_t
     {
-        LP,
-        HP,
-        BP,
-        NOTCH,
-        PEAK,
-        ALL,
-        BELL,
-        LOW_SHELF,
-        HIGH_SHELF
+        Lowpass,
+        Highpass,
+        Bandpass,
+        Notch,
+        Peak,
+        Allpass,
+        Bell,
+        LowShelf,
+        HighShelf
     };
 
     /*
      * Mode per above
-     * freq is frequency in hz
+     * freq is frequency in Hz
      * Resonance is 0...1 resonance
      * srInv is the inverse sample rate
-     * bellShelfAmp is only used in BELL/LOW_SHELF/HIGH_SHELF for the amplitude.
-     * The cytomic documents use 10^db/40 scale but here we assume the pow happens
+     * bellShelfAmp is only used in Bell/LowShelf/HighShelf for the amplitude.
+     * The Cytomic documents use 10^db/40 scale, but here we assume the pow() happens
      * outside throught some other means
      */
     void setCoeff(Mode mode, float freq, float res, float srInv, float bellShelfAmp = 1.f)
@@ -112,7 +113,7 @@ struct CytomicSVF
         g = SETALL(sst::basic_blocks::dsp::fasttan(M_PI * conorm));
         k = SETALL(2.0 - 2 * res);
 
-        if (mode == BELL)
+        if (mode == Mode::Bell)
         {
             k = DIV(k, SETALL(bellShelfAmp));
         }
@@ -122,8 +123,8 @@ struct CytomicSVF
     void setCoeff(Mode mode, float freqL, float freqR, float resL, float resR, float srInv,
                   float bellShelfAmpL, float bellShelfAmpR)
     {
-        auto coL = M_PI * std::clamp(freqL * srInv, 0.f, 0.499f); // stable until nyquist
-        auto coR = M_PI * std::clamp(freqR * srInv, 0.f, 0.499f); // stable until nyquist
+        auto coL = M_PI * std::clamp(freqL * srInv, 0.f, 0.499f); // stable until Nyquist
+        auto coR = M_PI * std::clamp(freqR * srInv, 0.f, 0.499f); // stable until Nyquist
         g = sst::basic_blocks::dsp::fasttanSSE(SIMD_MM(set_ps)(0, 0, coR, coL));
         auto res =
             SIMD_MM(set_ps)(0, 0, std::clamp(resR, 0.f, 0.98f), std::clamp(resL, 0.f, 0.98f));
@@ -132,7 +133,7 @@ struct CytomicSVF
             SIMD_MM(set_ps)(0, 0, std::max(bellShelfAmpL, 0.001f), std::max(bellShelfAmpR, 0.001f));
 
         k = SUB(twoSSE, MUL(twoSSE, res));
-        if (mode == BELL)
+        if (mode == Mode::Bell)
         {
             k = DIV(k, bellShelfAmp);
         }
@@ -148,37 +149,37 @@ struct CytomicSVF
 
         switch (mode)
         {
-        case LP:
+        case Mode::Lowpass:
             m0 = SIMD_MM(setzero_ps)();
             m1 = SIMD_MM(setzero_ps)();
             m2 = oneSSE;
             break;
-        case BP:
+        case Mode::Bandpass:
             m0 = SIMD_MM(setzero_ps)();
             m1 = oneSSE;
             m2 = SIMD_MM(setzero_ps)();
             break;
-        case HP:
+        case Mode::Highpass:
             m0 = oneSSE;
             m1 = SUB(SIMD_MM(setzero_ps)(), k);
             m2 = negoneSSE;
             break;
-        case NOTCH:
+        case Mode::Notch:
             m0 = oneSSE;
             m1 = SUB(SIMD_MM(setzero_ps)(), k);
             m2 = SIMD_MM(setzero_ps)();
             break;
-        case PEAK:
+        case Mode::Peak:
             m0 = oneSSE;
             m1 = SUB(SIMD_MM(setzero_ps)(), k);
             m2 = negtwoSSE;
             break;
-        case ALL:
+        case Mode::Allpass:
             m0 = oneSSE;
             m1 = MUL(negtwoSSE, k);
             m2 = SIMD_MM(setzero_ps)();
             break;
-        case BELL:
+        case Mode::Bell:
         {
             auto A = bellShelfSSE;
             m0 = oneSSE;
@@ -186,7 +187,7 @@ struct CytomicSVF
             m2 = SIMD_MM(setzero_ps)();
         }
         break;
-        case LOW_SHELF:
+        case Mode::LowShelf:
         {
             auto A = bellShelfSSE;
             m0 = oneSSE;
@@ -194,7 +195,7 @@ struct CytomicSVF
             m2 = SUB(MUL(A, A), oneSSE);
         }
         break;
-        case HIGH_SHELF:
+        case Mode::HighShelf:
         {
             auto A = bellShelfSSE;
             m0 = MUL(A, A);
@@ -461,35 +462,35 @@ inline float CytomicSVFGainAt(CytomicSVF::Mode mode, float cutoff, float res, fl
 
     switch (mode)
     {
-    case CytomicSVF::LP:
+    case CytomicSVF::Mode::Lowpass:
     {
         auto num = g * g * zp1_sqrd;
         auto den = zm1_sqrd + g * g * zp1_sqrd + g * k * m1p_zsqrd;
         resC = num / den;
     }
     break;
-    case CytomicSVF::BP:
+    case CytomicSVF::Mode::Bandpass:
     {
         auto num = g * m1p_zsqrd;
         auto den = zm1_sqrd + g * g * zp1_sqrd + g * k * m1p_zsqrd;
         resC = num / den;
     }
     break;
-    case CytomicSVF::HP:
+    case CytomicSVF::Mode::Highpass:
     {
         auto num = zm1_sqrd;
         auto den = zm1_sqrd + g * g * zp1_sqrd + g * k * m1p_zsqrd;
         resC = num / den;
     }
     break;
-    case CytomicSVF::NOTCH:
+    case CytomicSVF::Mode::Notch:
     {
         auto num = zm1_sqrd + g * g * zp1_sqrd;
         auto den = zm1_sqrd + g * g * zp1_sqrd + g * k * m1p_zsqrd;
         resC = num / den;
     }
     break;
-    case CytomicSVF::PEAK:
+    case CytomicSVF::Mode::Peak:
     {
         auto n1 = (1.0 + g + (g - 1.0) * z);
         auto n2 = (-1.0 + g + z + g * z);
@@ -498,12 +499,12 @@ inline float CytomicSVFGainAt(CytomicSVF::Mode mode, float cutoff, float res, fl
         resC = num / den;
     }
     break;
-    case CytomicSVF::ALL:
+    case CytomicSVF::Mode::Allpass:
     {
         resC = {1.0, 0.0};
     }
     break;
-    case CytomicSVF::BELL:
+    case CytomicSVF::Mode::Bell:
     {
         double A = bellShelfAmp;
         auto m0 = 1.0;
@@ -514,7 +515,7 @@ inline float CytomicSVFGainAt(CytomicSVF::Mode mode, float cutoff, float res, fl
         resC = num / den;
     }
     break;
-    case CytomicSVF::LOW_SHELF:
+    case CytomicSVF::Mode::LowShelf:
     {
         double A = bellShelfAmp;
 
@@ -527,7 +528,7 @@ inline float CytomicSVFGainAt(CytomicSVF::Mode mode, float cutoff, float res, fl
         resC = num / den;
     }
     break;
-    case CytomicSVF::HIGH_SHELF:
+    case CytomicSVF::Mode::HighShelf:
     {
         double A = bellShelfAmp;
         auto sqrtA = std::sqrt(A);

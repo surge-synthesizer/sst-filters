@@ -56,13 +56,13 @@ enum FilterType
     fut_resonancewarp_bp, /**< Bandpass - Resonance Warp */
     fut_resonancewarp_ap, /**< Effect - Resonance Warp Allpass */
     fut_tripole,          /**< Multi - Tri-pole */
-    fut_cytomicsvf,
-    fut_obxd_xpander, /**< OB-Xd XPander */
+    fut_cytomic_svf,      /**< Multi - Cytomic SVF */
+    fut_obxd_xpander,     /**< Multi - OB-Xd Xpander */
     num_filter_types,
 };
 
 /*
- * Each filter needs w names (alas). there's the name we show in the automation parameter and
+ * Each filter needs names (alas). there's the name we show in the automation parameter and
  * so on (the value for get_display_name) which is in 'fut_names'. There's the value we put
  * in the menu which generally strips out Lowpass and Highpass and stuff, since they are already
  * grouped in submenus, and this is in fut_menu array
@@ -102,8 +102,8 @@ const char filter_type_names[num_filter_types][32] = {
     "BP Res Warp",       // fut_resonancewarp_bp
     "FX Res Warp AP",    // fut_resonancewarp_ap
     "MULTI Tri-pole",    // fut_tripole
-    "Cytomic SVF",
-    "OBXD XPander"
+    "MULTI Fast SVF",    // fut_cytomic_svf
+    "MULTI Xpander"      // fut_obxd_xpander
     /* this is a ruler to ensure names do not exceed 31 characters
      0123456789012345678901234567890
     */
@@ -144,8 +144,8 @@ const char filter_menu_names[num_filter_types][32] = {
     "Resonance Warp", // BP
     "Resonance Warp Allpass",
     "Tri-pole",
-    "Cytomic SVF",
-    "OBXD XPander"
+    "Fast SVF",
+    "Xpander"
     /* this is a ruler to ensure names do not exceed 31 characters
      0123456789012345678901234567890
     */
@@ -221,12 +221,12 @@ const char fut_tripole_output_stage[3][16]{
     "Third",
 };
 
-const char fut_cytomic_subtypes[9][32] = {"LP",  "HP",   "BP",        "Notch",     "Peak",
-                                          "All", "Bell", "Low Shelf", "High Shelf"};
-const char fut_obxd_xpander_subtypes[15][32] = {
-    "LP-1",     "LP-2",        "LP-3",        "LP-4",           "HP-1",
-    "HP-2",     "HP-3",        "BP-2",        "BP-4",           "Notch-2",
-    "Phaser-3", "HP-2 + LP-1", "HP-3 + LP-1", "Notch-2 + LP-1", "Phaser-3 + LP-1"};
+const char fut_cytomic_subtypes[9][32] = {"LP",      "HP",   "BP",        "Notch",     "Peak",
+                                          "Allpass", "Bell", "Low Shelf", "High Shelf"};
+
+const char fut_obxd_xpander_subtypes[15][32] = {"LP1", "LP2",     "LP3",     "LP4",    "HP1",
+                                                "HP2", "HP3",     "BP2",     "BP4",    "N2",
+                                                "PH3", "HP2+LP1", "HP3+LP1", "N2+LP1", "PH3+LP1"};
 
 /** The number of sub-types for each filter type */
 const int fut_subcount[num_filter_types] = {
@@ -303,9 +303,9 @@ enum FilterSubType
     st_cutoffwarp_ojd4 = 11,     /**< Cutoff Warp - 4 Stages OJD */
 
     st_vintage_type1 = 0,             /**< Vintage Ladder - Runge Kutta  */
-    st_vintage_type1_compensated = 1, /**<  and with bass compensation */
+    st_vintage_type1_compensated = 1, /**< and with bass compensation */
     st_vintage_type2 = 2,             /**< Vintage Ladder - Huovilean Model */
-    st_vintage_type2_compensated = 3, /**<  and with bass compensation */
+    st_vintage_type2_compensated = 3, /**< and with bass compensation */
 
     st_resonancewarp_tanh1 = 0,     /**< Resonance Warp - 1 Stage tanh */
     st_resonancewarp_tanh2 = 1,     /**< Resonance Warp - 2 Stages tanh */
@@ -316,25 +316,25 @@ enum FilterSubType
     st_resonancewarp_softclip3 = 6, /**< Resonance Warp - 3 Stages Soft Clip */
     st_resonancewarp_softclip4 = 7, /**< Resonance Warp - 4 Stages Soft Clip */
 
-    st_tripole_LLL1 = 0,  /**< Low -> Low -> Low, first */
-    st_tripole_LHL1 = 1,  /**< Low -> High -> Low, first */
-    st_tripole_HLH1 = 2,  /**< High -> Low -> High, first */
-    st_tripole_HHH1 = 3,  /**< High -> High -> High, first */
-    st_tripole_LLL2 = 4,  /**< Low -> Low -> Low, second */
-    st_tripole_LHL2 = 5,  /**< Low -> High -> Low, second */
-    st_tripole_HLH2 = 6,  /**< High -> Low -> High, second */
-    st_tripole_HHH2 = 7,  /**< High -> High -> High, second */
-    st_tripole_LLL3 = 8,  /**< Low -> Low -> Low, third */
-    st_tripole_LHL3 = 9,  /**< Low -> High -> Low, third */
-    st_tripole_HLH3 = 10, /**< High -> Low -> High, third */
-    st_tripole_HHH3 = 11, /**< High -> High -> High, third */
+    st_tripole_LLL1 = 0,  /**< Low -> Low -> Low, first stage output */
+    st_tripole_LHL1 = 1,  /**< Low -> High -> Low, first stage output */
+    st_tripole_HLH1 = 2,  /**< High -> Low -> High, first stage output */
+    st_tripole_HHH1 = 3,  /**< High -> High -> High, first stage output */
+    st_tripole_LLL2 = 4,  /**< Low -> Low -> Low, second stage output */
+    st_tripole_LHL2 = 5,  /**< Low -> High -> Low, second stage output */
+    st_tripole_HLH2 = 6,  /**< High -> Low -> High, second stage output */
+    st_tripole_HHH2 = 7,  /**< High -> High -> High, second stage output */
+    st_tripole_LLL3 = 8,  /**< Low -> Low -> Low, third stage output */
+    st_tripole_LHL3 = 9,  /**< Low -> High -> Low, third stage output */
+    st_tripole_HLH3 = 10, /**< High -> Low -> High, third stage output */
+    st_tripole_HHH3 = 11, /**< High -> High -> High, third stage output */
 
-    // Surge 1.x has a broken 24db. This retains it.
-    st_obxd4pole_6db = 0,
-    st_obxd4pole_12db = 1,
-    st_obxd4pole_18db = 2,
-    st_obxd4pole_24db = 3,
-    st_obxd4pole_broken24db = 4,
+    // Surge 1.x has a broken 24dB. This retains it.
+    st_obxd4pole_6dB = 0,
+    st_obxd4pole_12dB = 1,
+    st_obxd4pole_18dB = 2,
+    st_obxd4pole_24dB = 3,
+    st_obxd4pole_broken24dB = 4,
     st_obxd4pole_morph = 5, // this is a sentinel value to use extra2
 
     st_obxd2pole_standard = 0,
@@ -357,32 +357,32 @@ enum FilterSubType
     st_k35_extreme = 4,
     st_k35_continuous = 5,
 
-    // Cytomic has the passtypes as syb models
+    // Cytomic has the passtypes as subtypes
     st_cytomic_lp = 0,
     st_cytomic_hp = 1,
     st_cytomic_bp = 2,
     st_cytomic_notch = 3,
     st_cytomic_peak = 4,
-    st_cytomic_all = 5,
+    st_cytomic_allpass = 5,
     st_cytomic_bell = 6, // these three use "extra1"
     st_cytomic_lowshelf = 7,
-    st_cytomic_highhelf = 8,
+    st_cytomic_highshelf = 8,
 
-    st_obxdX_lp1 = 0,
-    st_obxdX_lp2 = 1,
-    st_obxdX_lp3 = 2,
-    st_obxdX_lp4 = 3,
-    st_obxdX_hp1 = 4,
-    st_obxdX_hp2 = 5,
-    st_obxdX_hp3 = 6,
-    st_obxdX_bp2 = 7,
-    st_obxdX_bp4 = 8,
-    st_obxdX_n2 = 9,
-    st_obxdX_ph3 = 10,
-    st_obxdX_hp2lp1 = 11,
-    st_obxdX_hp3lp1 = 12,
-    st_obxdX_n2lp1 = 13,
-    st_obxdX_ph3lp1 = 14
+    st_obxdxpander_lp1 = 0,
+    st_obxdxpander_lp2 = 1,
+    st_obxdxpander_lp3 = 2,
+    st_obxdxpander_lp4 = 3,
+    st_obxdxpander_hp1 = 4,
+    st_obxdxpander_hp2 = 5,
+    st_obxdxpander_hp3 = 6,
+    st_obxdxpander_bp2 = 7,
+    st_obxdxpander_bp4 = 8,
+    st_obxdxpander_n2 = 9,
+    st_obxdxpander_ph3 = 10,
+    st_obxdxpander_hp2lp1 = 11,
+    st_obxdxpander_hp3lp1 = 12,
+    st_obxdxpander_n2lp1 = 13,
+    st_obxdxpander_ph3lp1 = 14
 };
 
 } // namespace sst::filters

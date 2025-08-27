@@ -196,7 +196,7 @@ class alignas(16) HalfRateFilter
          * Then y2 = y1, y1 = y0 and y0 = x2 + (x0-y2) * a
          *
          * Then o = y0. Fine. But what's that filter step doing. Basically it is saying for each
-         * L and R pair we get two AllPass updates. So expanding the vector you get
+         * L and R pair we get two Allpass updates. So expanding the vector you get
          *
          * 0: y0_0 = x2_0 + (L - y2_0) + B
          * 1: y0_0 = x2_0 + (L - y2_0) + A
@@ -206,8 +206,8 @@ class alignas(16) HalfRateFilter
          * So at the end of this loop for each order, the 'o' array will be filled
          * with the cascade of coefficient B or A all passes and will be in order
          *
-         * o_i: AllPassCascade_B(L_i), AllPassCascade_A(L_i), AllPassCascade_B(R_i),
-         * AllPassCascade_A(R_i)
+         * o_i: AllpassCascade_B(L_i), AllpassCascade_A(L_i), AllpassCascade_B(R_i),
+         * AllpassCascade_A(R_i)
          */
         for (auto j = 0U; j < M; j++)
         {

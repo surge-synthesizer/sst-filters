@@ -242,7 +242,7 @@ void FilterCoefficientMaker<TuningProvider>::MakeCoeffs(float Freq, float Reso, 
         {
             // this false has been there forever, but in the coeff
             // its just a small resonance push and the evaluator is the
-            // 24db so i"m going to leave it as either an eternal typo
+            // 24dB so i"m going to leave it as either an eternal typo
             // or a smart choice in some regime i dont see
             Coeff_SVF(Freq, Reso, false);
         }
@@ -323,7 +323,7 @@ void FilterCoefficientMaker<TuningProvider>::MakeCoeffs(float Freq, float Reso, 
     case fut_obxd_4pole:
     {
         auto useM = SubType == st_obxd4pole_morph;
-        auto broken3 = SubType == st_obxd4pole_broken24db;
+        auto broken3 = SubType == st_obxd4pole_broken24dB;
         auto st = useM ? 0 : (broken3 ? 3 : SubType);
         OBXDFilter::makeCoefficients(this, OBXDFilter::FOUR_POLE, Freq, Reso, st, sampleRateInv,
                                      providerI, useM, extra);
@@ -380,7 +380,7 @@ void FilterCoefficientMaker<TuningProvider>::MakeCoeffs(float Freq, float Reso, 
         TriPoleFilter::makeCoefficients(this, Freq, Reso, Type, sampleRate, providerI);
         break;
 
-    case fut_cytomicsvf:
+    case fut_cytomic_svf:
         cytomic_quadform::makeCoefficients(this, Freq, Reso, SubType, sampleRate, sampleRateInv,
                                            providerI, extra);
 

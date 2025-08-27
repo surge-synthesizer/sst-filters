@@ -30,19 +30,19 @@ inline const details::FilterPayload::configMap_t &getModelConfigurations()
     if (configs.empty())
     {
         // This one is too tedious to not fill programatically
-        for (auto [pt, qft] : {std::make_pair(PassTypes::LP, sft::FilterType::fut_cutoffwarp_lp),
-                               {PassTypes::HP, sft::FilterType::fut_cutoffwarp_hp},
-                               {PassTypes::BP, sft::FilterType::fut_cutoffwarp_bp},
-                               {PassTypes::Notch, sft::FilterType::fut_cutoffwarp_n},
-                               {PassTypes::AllPass, sft::FilterType::fut_cutoffwarp_ap}})
+        for (auto [pt, qft] : {std::make_pair(Passband::LP, sft::FilterType::fut_cutoffwarp_lp),
+                               {Passband::HP, sft::FilterType::fut_cutoffwarp_hp},
+                               {Passband::BP, sft::FilterType::fut_cutoffwarp_bp},
+                               {Passband::Notch, sft::FilterType::fut_cutoffwarp_n},
+                               {Passband::Allpass, sft::FilterType::fut_cutoffwarp_ap}})
         {
-            for (auto [dt, off] : {std::make_pair(DriveTypes::Tanh, 0),
-                                   {DriveTypes::SoftClip, 4},
-                                   {DriveTypes::OJD, 8}})
+            for (auto [dt, off] : {std::make_pair(DriveMode::Tanh, 0),
+                                   {DriveMode::SoftClip, 4},
+                                   {DriveMode::OJD, 8}})
             {
                 auto idx{0};
-                for (auto sl : {SlopeLevels::Slope_1Stage, SlopeLevels::Slope_2Stage,
-                                SlopeLevels::Slope_3Stage, SlopeLevels::Slope_4Stage})
+                for (auto sl : {Slope::Slope_1Stage, Slope::Slope_2Stage, Slope::Slope_3Stage,
+                                Slope::Slope_4Stage})
                 {
                     auto key = details::FilterPayload::modelConfig_t{pt, sl, dt};
                     auto fv =

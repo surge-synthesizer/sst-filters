@@ -31,27 +31,28 @@ namespace sst::filtersplusplus::details
 struct FilterPayload
 {
     FilterPayload() { init(); }
-    void setFilterModel(FilterModels model)
+
+    void setFilterModel(FilterModel model)
     {
         filterModel = model;
         valid = false;
     }
-    void setPassType(PassTypes type)
+    void setPassband(Passband type)
     {
         passType = type;
         valid = false;
     }
-    void setSlopeLevel(SlopeLevels slope)
+    void setSlope(Slope slope)
     {
         slopeLevel = slope;
         valid = false;
     }
-    void setDriveType(DriveTypes drive)
+    void setDriveType(DriveMode drive)
     {
         driveType = drive;
         valid = false;
     }
-    void setSubModelType(SubModelTypes s)
+    void setSubmodel(FilterSubModel s)
     {
         subModelType = s;
         valid = false;
@@ -90,20 +91,20 @@ struct FilterPayload
         return displayName(filterModel, currentModelConfig);
     }
 
-    static std::string displayName(FilterModels f, const ModelConfig &k)
+    static std::string displayName(FilterModel f, const ModelConfig &k)
     {
         auto mn = filtersplusplus::toString(f);
         auto cn = k.toString();
         return mn + (cn.empty() ? "" : " ") + cn;
     }
 
-    static std::vector<ModelConfig> availableModelConfigurations(FilterModels m, bool sort = false);
+    static std::vector<ModelConfig> availableModelConfigurations(FilterModel m, bool sort = false);
 
-    FilterModels filterModel{FilterModels::Off};
-    PassTypes passType{PassTypes::UNSUPPORTED};
-    SlopeLevels slopeLevel{SlopeLevels::UNSUPPORTED};
-    DriveTypes driveType{DriveTypes::UNSUPPORTED};
-    SubModelTypes subModelType{SubModelTypes::UNSUPPORTED};
+    FilterModel filterModel{FilterModel::Off};
+    Passband passType{Passband::UNSUPPORTED};
+    Slope slopeLevel{Slope::UNSUPPORTED};
+    DriveMode driveType{DriveMode::UNSUPPORTED};
+    FilterSubModel subModelType{FilterSubModel::UNSUPPORTED};
 
     double sampleRate{1.}, sampleRateInv{1.};
     size_t blockSize{0};
@@ -138,14 +139,14 @@ struct FilterPayload
 
 #include "../models/VemberClassic.h"
 #include "../models/VemberLadder.h"
-#include "../models/VemberAllPass.h"
+#include "../models/VemberAllpass.h"
 #include "../models/K35.h"
 #include "../models/VintageLadder.h"
 #include "../models/CutoffWarp.h"
 #include "../models/ResonanceWarp.h"
 #include "../models/DiodeLadder.h"
 #include "../models/OBXD_4Pole.h"
-#include "../models/OBXD_XPander.h"
+#include "../models/OBXD_Xpander.h"
 #include "../models/OBXD_2Pole.h"
 #include "../models/SampleAndHold.h"
 #include "../models/Comb.h"
@@ -176,21 +177,21 @@ inline FilterPayload::legacyType_t FilterPayload::resolveLegacyType()
 
     switch (filterModel)
     {
-        FILTER_MODEL_CASE(FilterModels::VemberLadder, models::vemberladder);
-        FILTER_MODEL_CASE(FilterModels::VemberAllPass, models::vemberallpass);
-        FILTER_MODEL_CASE(FilterModels::K35, models::k35);
-        FILTER_MODEL_CASE(FilterModels::VemberClassic, models::vemberclassic);
-        FILTER_MODEL_CASE(FilterModels::VintageLadder, models::vintageladder);
-        FILTER_MODEL_CASE(FilterModels::CutoffWarp, models::cutoffwarp);
-        FILTER_MODEL_CASE(FilterModels::ResonanceWarp, models::resonancewarp);
-        FILTER_MODEL_CASE(FilterModels::DiodeLadder, models::diodeladder);
-        FILTER_MODEL_CASE(FilterModels::OBXD_4Pole, models::obxd_4pole);
-        FILTER_MODEL_CASE(FilterModels::OBXD_2Pole, models::obxd_2pole);
-        FILTER_MODEL_CASE(FilterModels::OBXD_XPander, models::obxd_xpander);
-        FILTER_MODEL_CASE(FilterModels::SampleAndHold, models::sampleandhold);
-        FILTER_MODEL_CASE(FilterModels::Comb, models::comb);
-        FILTER_MODEL_CASE(FilterModels::TriPole, models::tripole);
-        FILTER_MODEL_CASE(FilterModels::CytomicSVF, models::cytomicsvf);
+        FILTER_MODEL_CASE(FilterModel::VemberLadder, models::vemberladder);
+        FILTER_MODEL_CASE(FilterModel::VemberAllpass, models::vemberallpass);
+        FILTER_MODEL_CASE(FilterModel::K35, models::k35);
+        FILTER_MODEL_CASE(FilterModel::VemberClassic, models::vemberclassic);
+        FILTER_MODEL_CASE(FilterModel::VintageLadder, models::vintageladder);
+        FILTER_MODEL_CASE(FilterModel::CutoffWarp, models::cutoffwarp);
+        FILTER_MODEL_CASE(FilterModel::ResonanceWarp, models::resonancewarp);
+        FILTER_MODEL_CASE(FilterModel::DiodeLadder, models::diodeladder);
+        FILTER_MODEL_CASE(FilterModel::OBXD_4Pole, models::obxd_4pole);
+        FILTER_MODEL_CASE(FilterModel::OBXD_2Pole, models::obxd_2pole);
+        FILTER_MODEL_CASE(FilterModel::OBXD_Xpander, models::obxd_xpander);
+        FILTER_MODEL_CASE(FilterModel::SampleAndHold, models::sampleandhold);
+        FILTER_MODEL_CASE(FilterModel::Comb, models::comb);
+        FILTER_MODEL_CASE(FilterModel::TriPole, models::tripole);
+        FILTER_MODEL_CASE(FilterModel::CytomicSVF, models::cytomicsvf);
     default:
         // remove this
         break;
@@ -204,7 +205,7 @@ inline FilterPayload::legacyType_t FilterPayload::resolveLegacyType()
     return currentLegacyType;
 }
 
-inline std::vector<ModelConfig> FilterPayload::availableModelConfigurations(FilterModels m,
+inline std::vector<ModelConfig> FilterPayload::availableModelConfigurations(FilterModel m,
                                                                             bool sort)
 {
 #define FILTER_MODEL_CASE(model, ns)                                                               \
@@ -223,21 +224,21 @@ inline std::vector<ModelConfig> FilterPayload::availableModelConfigurations(Filt
 
     switch (m)
     {
-        FILTER_MODEL_CASE(FilterModels::VemberLadder, models::vemberladder);
-        FILTER_MODEL_CASE(FilterModels::VemberAllPass, models::vemberallpass);
-        FILTER_MODEL_CASE(FilterModels::K35, models::k35);
-        FILTER_MODEL_CASE(FilterModels::VemberClassic, models::vemberclassic);
-        FILTER_MODEL_CASE(FilterModels::VintageLadder, models::vintageladder);
-        FILTER_MODEL_CASE(FilterModels::CutoffWarp, models::cutoffwarp);
-        FILTER_MODEL_CASE(FilterModels::ResonanceWarp, models::resonancewarp);
-        FILTER_MODEL_CASE(FilterModels::DiodeLadder, models::diodeladder);
-        FILTER_MODEL_CASE(FilterModels::OBXD_4Pole, models::obxd_4pole);
-        FILTER_MODEL_CASE(FilterModels::OBXD_2Pole, models::obxd_2pole);
-        FILTER_MODEL_CASE(FilterModels::OBXD_XPander, models::obxd_xpander);
-        FILTER_MODEL_CASE(FilterModels::SampleAndHold, models::sampleandhold);
-        FILTER_MODEL_CASE(FilterModels::Comb, models::comb);
-        FILTER_MODEL_CASE(FilterModels::TriPole, models::tripole);
-        FILTER_MODEL_CASE(FilterModels::CytomicSVF, models::cytomicsvf);
+        FILTER_MODEL_CASE(FilterModel::VemberLadder, models::vemberladder);
+        FILTER_MODEL_CASE(FilterModel::VemberAllpass, models::vemberallpass);
+        FILTER_MODEL_CASE(FilterModel::K35, models::k35);
+        FILTER_MODEL_CASE(FilterModel::VemberClassic, models::vemberclassic);
+        FILTER_MODEL_CASE(FilterModel::VintageLadder, models::vintageladder);
+        FILTER_MODEL_CASE(FilterModel::CutoffWarp, models::cutoffwarp);
+        FILTER_MODEL_CASE(FilterModel::ResonanceWarp, models::resonancewarp);
+        FILTER_MODEL_CASE(FilterModel::DiodeLadder, models::diodeladder);
+        FILTER_MODEL_CASE(FilterModel::OBXD_4Pole, models::obxd_4pole);
+        FILTER_MODEL_CASE(FilterModel::OBXD_2Pole, models::obxd_2pole);
+        FILTER_MODEL_CASE(FilterModel::OBXD_Xpander, models::obxd_xpander);
+        FILTER_MODEL_CASE(FilterModel::SampleAndHold, models::sampleandhold);
+        FILTER_MODEL_CASE(FilterModel::Comb, models::comb);
+        FILTER_MODEL_CASE(FilterModel::TriPole, models::tripole);
+        FILTER_MODEL_CASE(FilterModel::CytomicSVF, models::cytomicsvf);
     default:
         // remove this
         break;

@@ -26,18 +26,18 @@ inline const details::FilterPayload::configMap_t &getModelConfigurations()
 {
     namespace sft = sst::filters;
     static details::FilterPayload::configMap_t configs{
-        {{PassTypes::LP, SlopeLevels::Slope_6db},
-         {sft::FilterType::fut_obxd_4pole, sft::FilterSubType::st_obxd4pole_6db}},
-        {{PassTypes::LP, SlopeLevels::Slope_12db},
-         {sft::FilterType::fut_obxd_4pole, sft::FilterSubType::st_obxd4pole_12db}},
-        {{PassTypes::LP, SlopeLevels::Slope_18db},
-         {sft::FilterType::fut_obxd_4pole, sft::FilterSubType::st_obxd4pole_18db}},
-        {{PassTypes::LP, SlopeLevels::Slope_24db},
-         {sft::FilterType::fut_obxd_4pole, sft::FilterSubType::st_obxd4pole_24db}},
-        {{PassTypes::LP, SlopeLevels::Slope_24db, SubModelTypes::BrokenOBXD4Pole24},
-         {sft::FilterType::fut_obxd_4pole, sft::FilterSubType::st_obxd4pole_broken24db}},
+        {{Passband::LP, Slope::Slope_6dB},
+         {sft::FilterType::fut_obxd_4pole, sft::FilterSubType::st_obxd4pole_6dB}},
+        {{Passband::LP, Slope::Slope_12dB},
+         {sft::FilterType::fut_obxd_4pole, sft::FilterSubType::st_obxd4pole_12dB}},
+        {{Passband::LP, Slope::Slope_18dB},
+         {sft::FilterType::fut_obxd_4pole, sft::FilterSubType::st_obxd4pole_18dB}},
+        {{Passband::LP, Slope::Slope_24dB},
+         {sft::FilterType::fut_obxd_4pole, sft::FilterSubType::st_obxd4pole_24dB}},
+        {{Passband::LP, Slope::Slope_24dB, FilterSubModel::BrokenOBXD4Pole24},
+         {sft::FilterType::fut_obxd_4pole, sft::FilterSubType::st_obxd4pole_broken24dB}},
 
-        {{PassTypes::LP, SlopeLevels::Slope_Morph},
+        {{Passband::LP, Slope::Slope_Morph},
          {sft::FilterType::fut_obxd_4pole, sft::FilterSubType::st_obxd4pole_morph}},
     };
     return configs;

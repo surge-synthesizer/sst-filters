@@ -25,7 +25,7 @@ inline SIMD_M128 offFun(sst::filters::QuadFilterUnitState *__restrict, SIMD_M128
 inline bool Filter::prepareInstance()
 {
     reset();
-    if (payload.filterModel == FilterModels::Off)
+    if (payload.filterModel == FilterModel::Off)
     {
         payload.func = offFun;
         payload.valid = true;
@@ -52,20 +52,20 @@ inline bool Filter::prepareInstance()
     return payload.func != nullptr;
 }
 
-inline int Filter::coefficientsExtraCount(FilterModels model, const ModelConfig &config)
+inline int Filter::coefficientsExtraCount(FilterModel model, const ModelConfig &config)
 {
     switch (model)
     {
-    case FilterModels::OBXD_4Pole:
-        return config.st == SlopeLevels::Slope_Morph ? 1 : 0;
-    case FilterModels::Comb:
-        return config.st == SlopeLevels::Comb_Bipolar_ContinuousMix ? 1 : 0;
-    case FilterModels::K35:
-        return config.dt == DriveTypes::K35_Continuous ? 1 : 0;
-    case FilterModels::CytomicSVF:
+    case FilterModel::OBXD_4Pole:
+        return config.st == Slope::Slope_Morph ? 1 : 0;
+    case FilterModel::Comb:
+        return config.st == Slope::Comb_Bipolar_ContinuousMix ? 1 : 0;
+    case FilterModel::K35:
+        return config.dt == DriveMode::K35_Continuous ? 1 : 0;
+    case FilterModel::CytomicSVF:
     {
-        if (config.pt == PassTypes::Bell || config.pt == PassTypes::LowShelf ||
-            config.pt == PassTypes::HighShelf)
+        if (config.pt == Passband::Bell || config.pt == Passband::LowShelf ||
+            config.pt == Passband::HighShelf)
         {
             return 1;
         }
@@ -82,12 +82,13 @@ inline void Filter::makeCoefficients(int voice, float cutoff, float resonance, f
 {
     assert(payload.valid);
     auto [type, subtype] = payload.currentLegacyType;
-    // We may have in the future models which don't use the QFS so
+
+    // We may have models which don't use the QuadFilterUnitState in the future, so...
     switch (payload.filterModel)
     {
     default:
     {
-        // ToDo: Cache This
+        // TODO: Cache this!
         payload.makers[voice].MakeCoeffs(cutoff, resonance, type, subtype, nullptr, false, extra,
                                          extra2, extra3);
     }
@@ -147,18 +148,18 @@ inline void Filter::concludeBlock()
     }
 }
 
-inline std::vector<FilterModels> Filter::availableModels()
+inline std::vector<FilterModel> Filter::availableModels()
 {
-    return {FilterModels::VemberClassic, FilterModels::VemberAllPass, FilterModels::VemberLadder,
-            FilterModels::OBXD_2Pole,    FilterModels::OBXD_4Pole,    FilterModels::OBXD_XPander,
-            FilterModels::K35,           FilterModels::DiodeLadder,   FilterModels::VintageLadder,
-            FilterModels::CutoffWarp,    FilterModels::ResonanceWarp, FilterModels::CytomicSVF,
-            FilterModels::TriPole,       FilterModels::Comb,          FilterModels::SampleAndHold};
+    return {FilterModel::VemberClassic, FilterModel::VemberAllpass, FilterModel::VemberLadder,
+            FilterModel::OBXD_2Pole,    FilterModel::OBXD_4Pole,    FilterModel::OBXD_Xpander,
+            FilterModel::K35,           FilterModel::DiodeLadder,   FilterModel::VintageLadder,
+            FilterModel::CutoffWarp,    FilterModel::ResonanceWarp, FilterModel::CytomicSVF,
+            FilterModel::TriPole,       FilterModel::Comb,          FilterModel::SampleAndHold};
 }
 
-inline size_t Filter::requiredDelayLinesSizes(FilterModels model, const ModelConfig &k)
+inline size_t Filter::requiredDelayLinesSizes(FilterModel model, const ModelConfig &k)
 {
-    if (model == FilterModels::Comb)
+    if (model == FilterModel::Comb)
         return sst::filters::utilities::MAX_FB_COMB + sst::filters::utilities::SincTable::FIRipol_N;
     return 0;
 }

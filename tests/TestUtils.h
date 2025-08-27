@@ -187,7 +187,7 @@ inline void runTest(const TestConfig &testConfig)
     runTestProvider<NonStaticTuningProvider>(testConfig, tp.get());
 };
 
-inline void runTest(sst::filtersplusplus::FilterModels model,
+inline void runTest(sst::filtersplusplus::FilterModel model,
                     sst::filtersplusplus::ModelConfig config, float cutoff, float res,
                     std::array<float, numTestFreqs> answer)
 {

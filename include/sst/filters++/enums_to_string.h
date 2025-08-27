@@ -21,208 +21,214 @@
 
 namespace sst::filtersplusplus
 {
-inline std::string toString(const FilterModels &f)
+inline std::string toString(const FilterModel &f)
 {
     switch (f)
     {
-    case FilterModels::Off:
+    case FilterModel::Off:
         return "Off";
-    case FilterModels::VemberClassic:
+    case FilterModel::VemberClassic:
         return "Vember Classic";
-    case FilterModels::VemberAllPass:
+    case FilterModel::VemberAllpass:
         return "Vember Allpass";
-    case FilterModels::VemberLadder:
+    case FilterModel::VemberLadder:
         return "Vember Ladder";
 
-    case FilterModels::CytomicSVF:
-        return "Cytomic SVF";
+    case FilterModel::CytomicSVF:
+        return "Fast SVF";
 
-    case FilterModels::K35:
+    case FilterModel::K35:
         return "K35";
-    case FilterModels::DiodeLadder:
+    case FilterModel::DiodeLadder:
         return "Diode Ladder";
 
-    case FilterModels::VintageLadder:
+    case FilterModel::VintageLadder:
         return "Vintage Ladder";
 
-    case FilterModels::CutoffWarp:
+    case FilterModel::CutoffWarp:
         return "Cutoff Warp";
-    case FilterModels::ResonanceWarp:
+    case FilterModel::ResonanceWarp:
         return "Resonance Warp";
 
-    case FilterModels::OBXD_4Pole:
-        return "OB-Xd 24 dB";
-    case FilterModels::OBXD_2Pole:
-        return "OB-Xd 12 dB";
-    case FilterModels::OBXD_XPander:
-        return "OB-Xd XPander";
+    case FilterModel::OBXD_2Pole:
+        return "OB-Xd 2-pole";
+    case FilterModel::OBXD_4Pole:
+        return "OB-Xd 4-pole";
+    case FilterModel::OBXD_Xpander:
+        return "OB-Xd Xpander";
 
-    case FilterModels::TriPole:
-        return "Tri-Pole";
-    case FilterModels::Comb:
+    case FilterModel::TriPole:
+        return "Tri-pole";
+    case FilterModel::Comb:
         return "Comb";
-    case FilterModels::SampleAndHold:
+    case FilterModel::SampleAndHold:
         return "Sample & Hold";
     };
     return "MODEL_ERROR";
 }
 
-inline std::string toString(const PassTypes &p)
+inline std::string toString(const Passband &p)
 {
     switch (p)
     {
-    case PassTypes::UNSUPPORTED:
+    case Passband::UNSUPPORTED:
         return "UNSUPPORTED";
 
-    case PassTypes::LP:
+    case Passband::LP:
         return "Lowpass";
-    case PassTypes::HP:
+    case Passband::HP:
         return "Highpass";
-    case PassTypes::BP:
+    case Passband::BP:
         return "Bandpass";
-    case PassTypes::Notch:
+    case Passband::Notch:
         return "Notch";
-    case PassTypes::Peak:
+    case Passband::Peak:
         return "Peak";
-    case PassTypes::AllPass:
+    case Passband::Allpass:
         return "Allpass";
-    case PassTypes::LowShelf:
+    case Passband::LowShelf:
         return "Low Shelf";
-    case PassTypes::Bell:
+    case Passband::Bell:
         return "Bell";
-    case PassTypes::HighShelf:
+    case Passband::HighShelf:
         return "High Shelf";
-
-    case PassTypes::Phaser:
+    case Passband::Phaser:
         return "Phaser";
-    case PassTypes::HPAndLP:
-        return "HP + LP";
-    case PassTypes::NotchAndLP:
-        return "Notch + LP";
-    case PassTypes::PhaserAndLP:
-        return "Phaser + LP";
+    case Passband::NotchAndLP:
+        return "Notch+LP";
+    case Passband::PhaserAndLP:
+        return "Phaser+LP";
     }
     return "PASSTYPE_ERROR";
 }
 
-inline std::string toString(const SlopeLevels &s)
+inline std::string toString(const Slope &s)
 {
     switch (s)
     {
-    case SlopeLevels::UNSUPPORTED:
+    case Slope::UNSUPPORTED:
         return "UNSUPPORTED";
 
-    case SlopeLevels::Slope_6db:
+    case Slope::Slope_6dB:
         return "6 dB";
-    case SlopeLevels::Slope_12db:
+    case Slope::Slope_12dB:
         return "12 dB";
-    case SlopeLevels::Slope_18db:
+    case Slope::Slope_18dB:
         return "18 dB";
-    case SlopeLevels::Slope_24db:
+    case Slope::Slope_24dB:
         return "24 dB";
 
-    case SlopeLevels::Slope_1Stage:
+    case Slope::Slope_6dB12dB:
+        return "6 dB/12 dB";
+    case Slope::Slope_6dB18dB:
+        return "6 dB/18 dB";
+    case Slope::Slope_12dB6dB:
+        return "12 dB/6 dB";
+    case Slope::Slope_18dB6dB:
+        return "18 dB/6 dB";
+
+    case Slope::Slope_1Stage:
         return "1 Stage";
-    case SlopeLevels::Slope_2Stage:
+    case Slope::Slope_2Stage:
         return "2 Stages";
-    case SlopeLevels::Slope_3Stage:
+    case Slope::Slope_3Stage:
         return "3 Stages";
-    case SlopeLevels::Slope_4Stage:
+    case Slope::Slope_4Stage:
         return "4 Stages";
 
-    case SlopeLevels::Slope_Morph:
+    case Slope::Slope_Morph:
         return "Morph";
 
-    case SlopeLevels::Comb_Negative_100:
+    case Slope::Comb_Negative_100:
         return "Negative Feedback, Mix 100%";
-    case SlopeLevels::Comb_Negative_50:
+    case Slope::Comb_Negative_50:
         return "Negative Feedback, Mix 50%";
-    case SlopeLevels::Comb_Positive_50:
+    case Slope::Comb_Positive_50:
         return "Postive Feedback, Mix 50%";
-    case SlopeLevels::Comb_Positive_100:
+    case Slope::Comb_Positive_100:
         return "Positive Feedback, Mix 100%";
-    case SlopeLevels::Comb_Bipolar_ContinuousMix:
+    case Slope::Comb_Bipolar_ContinuousMix:
         return "Bipolar, Variable Mix";
-    case SlopeLevels::Comb_Positive_ContinuousMix:
+    case Slope::Comb_Positive_ContinuousMix:
         return "Positive Feedback, Variable Mix";
-    case SlopeLevels::Comb_Negative_ContinuousMix:
+    case Slope::Comb_Negative_ContinuousMix:
         return "Negative Feedback, Variable Mix";
     }
     return "SLOPELEVELS_ERROR";
 }
 
-inline std::string toString(const DriveTypes &d)
+inline std::string toString(const DriveMode &d)
 {
     switch (d)
     {
-    case DriveTypes::UNSUPPORTED:
+    case DriveMode::UNSUPPORTED:
         return "UNSUPPORTED";
 
-    case DriveTypes::Standard:
+    case DriveMode::Standard:
         return "Standard";
-    case DriveTypes::Clean:
+    case DriveMode::Clean:
         return "Clean";
-    case DriveTypes::Driven:
+    case DriveMode::Driven:
         return "Driven";
-    case DriveTypes::NotchMild:
+    case DriveMode::NotchMild:
         return "Mild";
 
-    case DriveTypes::K35_None:
+    case DriveMode::K35_None:
         return "None";
-    case DriveTypes::K35_Mild:
+    case DriveMode::K35_Mild:
         return "Mild";
-    case DriveTypes::K35_Moderate:
+    case DriveMode::K35_Moderate:
         return "Moderate";
-    case DriveTypes::K35_Heavy:
+    case DriveMode::K35_Heavy:
         return "Heavy";
-    case DriveTypes::K35_Extreme:
+    case DriveMode::K35_Extreme:
         return "Extreme";
-    case DriveTypes::K35_Continuous:
+    case DriveMode::K35_Continuous:
         return "Continuous";
 
     // For the Cutoff/Resonance Warp
-    case DriveTypes::Tanh:
+    case DriveMode::Tanh:
         return "tanh";
-    case DriveTypes::SoftClip:
+    case DriveMode::SoftClip:
         return "Soft Clip";
-    case DriveTypes::OJD:
+    case DriveMode::OJD:
         return "OJD";
 
-    case DriveTypes::Pushed:
+    case DriveMode::Pushed:
         return "Pushed";
     }
     return "DRIVETYPES_ERROR";
 }
 
-inline std::string toString(const SubModelTypes &s)
+inline std::string toString(const FilterSubModel &s)
 {
     switch (s)
     {
-    case SubModelTypes::UNSUPPORTED:
+    case FilterSubModel::UNSUPPORTED:
         return "UNSUPPORTED";
 
     // For OB-Xd
-    case SubModelTypes::BrokenOBXD4Pole24:
+    case FilterSubModel::BrokenOBXD4Pole24:
         return "24 dB (Legacy)";
 
     // For Vintage Ladder
-    case SubModelTypes::RungeKutta:
+    case FilterSubModel::RungeKutta:
         return "Runge-Kutta";
-    case SubModelTypes::RungeKuttaCompensated:
+    case FilterSubModel::RungeKuttaCompensated:
         return "Runge-Kutta Compensated";
-    case SubModelTypes::Huov:
+    case FilterSubModel::Huov:
         return "Huovilainen";
-    case SubModelTypes::HuovCompensated:
+    case FilterSubModel::HuovCompensated:
         return "Huovilainen Compensated";
 
     // For Tri-Pole
-    case SubModelTypes::LowLowLow:
+    case FilterSubModel::LowLowLow:
         return "Low/Low/Low";
-    case SubModelTypes::LowHighLow:
+    case FilterSubModel::LowHighLow:
         return "Low/High/Low";
-    case SubModelTypes::HighLowHigh:
+    case FilterSubModel::HighLowHigh:
         return "High/Low/High";
-    case SubModelTypes::HighHighHigh:
+    case FilterSubModel::HighHighHigh:
         return "High/High/High";
     }
     return "SUBMODEL_ERROR";

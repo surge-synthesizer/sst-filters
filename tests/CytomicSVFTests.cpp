@@ -58,9 +58,9 @@ std::vector<std::pair<float, float>> rmsCurve(int mode, double cutoffFreq, doubl
 
 TEST_CASE("Cytomic SVF")
 {
-    SECTION("Low Pass")
+    SECTION("Lowpass")
     {
-        auto curve = rmsCurve(sst::filters::CytomicSVF::Mode::LP, 440.0);
+        auto curve = rmsCurve((int)sst::filters::CytomicSVF::Mode::Lowpass, 440.0);
         float lastRMS = curve[0].second;
         for (auto [f, out] : curve)
         {
@@ -75,9 +75,9 @@ TEST_CASE("Cytomic SVF")
         }
     }
 
-    SECTION("High Pass")
+    SECTION("Highpass")
     {
-        auto curve = rmsCurve(sst::filters::CytomicSVF::Mode::HP, 440.0);
+        auto curve = rmsCurve((int)sst::filters::CytomicSVF::Mode::Highpass, 440.0);
         float lastRMS = curve[0].second;
         for (auto [f, out] : curve)
         {
@@ -98,13 +98,14 @@ TEST_CASE("Cytomic SVF Response Curves")
     REQUIRE(true);
 #define MAKE_GNUPLOT 0
 
-    for (int modei = (int)sst::filters::CytomicSVF::Mode::LP;
-         modei <= (int)sst::filters::CytomicSVF::Mode::HIGH_SHELF; ++modei)
+    for (int modei = (int)sst::filters::CytomicSVF::Mode::Lowpass;
+         modei <= (int)sst::filters::CytomicSVF::Mode::HighShelf; ++modei)
     {
         auto mode = (sst::filters::CytomicSVF::Mode)modei;
+
         for (auto res = 0.0; res <= 1.0; res += 0.25)
         {
-            DYNAMIC_SECTION("Mode: " << mode << ", Res: " << res)
+            DYNAMIC_SECTION("Mode: " << (int)mode << ", Res: " << res)
             {
                 res = std::clamp(res, 0., 0.999999);
 
@@ -152,8 +153,8 @@ TEST_CASE("Cytomic SVF Response Curves")
                         diff += std::abs(out[idx][i] - outBrute[idx][i]);
                     }
 
-                    if (mode == sst::filters::CytomicSVF::LOW_SHELF ||
-                        mode == sst::filters::CytomicSVF::HIGH_SHELF)
+                    if (mode == sst::filters::CytomicSVF::Mode::LowShelf ||
+                        mode == sst::filters::CytomicSVF::Mode::HighShelf)
                     {
                         // Thr shelf is a bit frequency nudged
                         REQUIRE(diff / nPts < 0.02);
@@ -186,7 +187,7 @@ TEST_CASE("Cytomic SVF Response Curves")
     }
 }
 
-TEST_CASE("Cytomic SVF QuadFilter Test")
+TEST_CASE("Cytomic SVF Quad Filter Test")
 {
     using namespace TestUtils;
     namespace sfpp = sst::filtersplusplus;
@@ -199,21 +200,21 @@ TEST_CASE("Cytomic SVF QuadFilter Test")
         {-2.52717f, -0.639164f, 2.90231f, -0.742297f, -2.99382f},
         {-2.99243f, -3.0779f, -3.15685f, -3.02565f, -3.01241f},
     };
-    runTest({FilterType::fut_cytomicsvf, FilterSubType::st_cytomic_lp, ans[0]});
-    runTest(sfpp::FilterModels::CytomicSVF, sfpp::PassTypes::LP, 0, 0.5, ans[0]);
+    runTest({FilterType::fut_cytomic_svf, FilterSubType::st_cytomic_lp, ans[0]});
+    runTest(sfpp::FilterModel::CytomicSVF, sfpp::Passband::LP, 0, 0.5, ans[0]);
 
-    runTest({FilterType::fut_cytomicsvf, FilterSubType::st_cytomic_hp, ans[1]});
-    runTest(sfpp::FilterModels::CytomicSVF, sfpp::PassTypes::HP, 0, 0.5, ans[1]);
+    runTest({FilterType::fut_cytomic_svf, FilterSubType::st_cytomic_hp, ans[1]});
+    runTest(sfpp::FilterModel::CytomicSVF, sfpp::Passband::HP, 0, 0.5, ans[1]);
 
-    runTest({FilterType::fut_cytomicsvf, FilterSubType::st_cytomic_bp, ans[2]});
-    runTest(sfpp::FilterModels::CytomicSVF, sfpp::PassTypes::BP, 0, 0.5, ans[2]);
+    runTest({FilterType::fut_cytomic_svf, FilterSubType::st_cytomic_bp, ans[2]});
+    runTest(sfpp::FilterModel::CytomicSVF, sfpp::Passband::BP, 0, 0.5, ans[2]);
 
-    runTest({FilterType::fut_cytomicsvf, FilterSubType::st_cytomic_notch, ans[3]});
-    runTest(sfpp::FilterModels::CytomicSVF, sfpp::PassTypes::Notch, 0, 0.5, ans[3]);
+    runTest({FilterType::fut_cytomic_svf, FilterSubType::st_cytomic_notch, ans[3]});
+    runTest(sfpp::FilterModel::CytomicSVF, sfpp::Passband::Notch, 0, 0.5, ans[3]);
 
-    runTest({FilterType::fut_cytomicsvf, FilterSubType::st_cytomic_peak, ans[4]});
-    runTest(sfpp::FilterModels::CytomicSVF, sfpp::PassTypes::Peak, 0, 0.5, ans[4]);
+    runTest({FilterType::fut_cytomic_svf, FilterSubType::st_cytomic_peak, ans[4]});
+    runTest(sfpp::FilterModel::CytomicSVF, sfpp::Passband::Peak, 0, 0.5, ans[4]);
 
-    runTest({FilterType::fut_cytomicsvf, FilterSubType::st_cytomic_all, ans[5]});
-    runTest(sfpp::FilterModels::CytomicSVF, sfpp::PassTypes::AllPass, 0, 0.5, ans[5]);
+    runTest({FilterType::fut_cytomic_svf, FilterSubType::st_cytomic_allpass, ans[5]});
+    runTest(sfpp::FilterModel::CytomicSVF, sfpp::Passband::Allpass, 0, 0.5, ans[5]);
 }
