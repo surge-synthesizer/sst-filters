@@ -86,7 +86,7 @@ void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, float freq, fl
         break;
     case st_cytomic_notch:
         cm->C[Coeff::m0] = 1.0;
-        cm->C[Coeff::m1] = 1 - k;
+        cm->C[Coeff::m1] = -k;
         cm->C[Coeff::m2] = 0;
         break;
     case st_cytomic_peak:
