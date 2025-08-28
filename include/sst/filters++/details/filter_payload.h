@@ -20,6 +20,7 @@
 #include <unordered_map>
 #include <iostream>
 #include <array>
+#include <optional>
 #include "sst/filters.h"
 
 #include "sst/filters++/enums.h"
@@ -127,6 +128,8 @@ struct FilterPayload
     using configMap_t = std::unordered_map<modelConfig_t, legacyType_t>;
 
     legacyType_t resolveLegacyType();
+    static std::optional<legacyType_t> resolveLegacyTypeFor(const FilterModel &,
+                                                            const ModelConfig &);
 
     modelConfig_t currentModelConfig{};
     legacyType_t currentLegacyType{};
@@ -157,25 +160,42 @@ namespace sst::filtersplusplus::details
 {
 inline FilterPayload::legacyType_t FilterPayload::resolveLegacyType()
 {
-
     currentModelConfig = modelConfig_t{passType, slopeLevel, driveType, subModelType};
+    auto res = resolveLegacyTypeFor(filterModel, currentModelConfig);
+    if (res.has_value())
+    {
+        currentLegacyType = *res;
+        valid = true;
+    }
+
+    else
+    {
+        valid = false;
+        currentLegacyType = legacyType_t{sst::filters::FilterType::fut_none,
+                                         sst::filters::FilterSubType::st_Standard};
+    }
+
+    return currentLegacyType;
+}
+
+inline std::optional<FilterPayload::legacyType_t>
+FilterPayload::resolveLegacyTypeFor(const FilterModel &fm, const ModelConfig &mc)
+{
 
 #define FILTER_MODEL_CASE(model, ns)                                                               \
     case model:                                                                                    \
     {                                                                                              \
         namespace ms = ns;                                                                         \
         const auto &s = ms::getModelConfigurations();                                              \
-        auto pos = s.find(modelConfig_t{passType, slopeLevel, driveType, subModelType});           \
+        auto pos = s.find(mc);                                                                     \
         if (pos != s.end())                                                                        \
         {                                                                                          \
-            currentLegacyType = pos->second;                                                       \
-            valid = true;                                                                          \
-            return currentLegacyType;                                                              \
+            return pos->second;                                                                    \
         }                                                                                          \
     }                                                                                              \
     break;
 
-    switch (filterModel)
+    switch (fm)
     {
         FILTER_MODEL_CASE(FilterModel::VemberLadder, models::vemberladder);
         FILTER_MODEL_CASE(FilterModel::VemberAllpass, models::vemberallpass);
@@ -196,13 +216,9 @@ inline FilterPayload::legacyType_t FilterPayload::resolveLegacyType()
         // remove this
         break;
     }
-
 #undef FILTER_MODEL_CASE
 
-    valid = false;
-    currentLegacyType =
-        legacyType_t{sst::filters::FilterType::fut_none, sst::filters::FilterSubType::st_Standard};
-    return currentLegacyType;
+    return std::nullopt;
 }
 
 inline std::vector<ModelConfig> FilterPayload::availableModelConfigurations(FilterModel m,

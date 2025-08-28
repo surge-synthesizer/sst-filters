@@ -16,6 +16,7 @@
 #define INCLUDE_EXTRAS_SST_FILTERS_FILTERPLOTTER_H
 
 #include <sst/filters.h>
+#include <sst/filters++.h>
 
 // This header must be used inside a JUCE environment
 #include <juce_dsp/juce_dsp.h>
@@ -46,6 +47,20 @@ class FilterPlotter
     {
         return plotFilterMagnitudeResponse(filterType, filterSubType, pitch, res, 0.0f, 0.0f, 0.0f,
                                            params);
+    }
+
+    std::pair<std::vector<float>, std::vector<float>>
+    plotFilterMagnitudeResponse(sst::filtersplusplus::FilterModel model,
+                                sst::filtersplusplus::ModelConfig config, float pitch, float res,
+                                float extra1, float extra2, float extra3,
+                                const FilterPlotParameters &params = {})
+    {
+        auto lt = sst::filtersplusplus::Filter::getLegacyTypeFor(model, config);
+        if (lt.has_value())
+            return plotFilterMagnitudeResponse(lt->first, lt->second, pitch, res, extra1, extra2,
+                                               extra3, params);
+
+        return {};
     }
 
     std::pair<std::vector<float>, std::vector<float>>
