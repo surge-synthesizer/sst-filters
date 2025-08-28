@@ -101,7 +101,7 @@ struct FilterPayload
 
     static std::vector<ModelConfig> availableModelConfigurations(FilterModel m, bool sort = false);
 
-    FilterModel filterModel{FilterModel::Off};
+    FilterModel filterModel{FilterModel::None};
     Passband passType{Passband::UNSUPPORTED};
     Slope slopeLevel{Slope::UNSUPPORTED};
     DriveMode driveType{DriveMode::UNSUPPORTED};

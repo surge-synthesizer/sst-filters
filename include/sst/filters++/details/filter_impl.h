@@ -25,7 +25,7 @@ inline SIMD_M128 offFun(sst::filters::QuadFilterUnitState *__restrict, SIMD_M128
 inline bool Filter::prepareInstance()
 {
     reset();
-    if (payload.filterModel == FilterModel::Off)
+    if (payload.filterModel == FilterModel::None)
     {
         payload.func = offFun;
         payload.valid = true;
@@ -150,11 +150,11 @@ inline void Filter::concludeBlock()
 
 inline std::vector<FilterModel> Filter::availableModels()
 {
-    return {FilterModel::VemberClassic, FilterModel::VemberLadder,  FilterModel::OBXD_2Pole,
-            FilterModel::OBXD_4Pole,    FilterModel::OBXD_Xpander,  FilterModel::K35,
-            FilterModel::DiodeLadder,   FilterModel::VintageLadder, FilterModel::CutoffWarp,
-            FilterModel::ResonanceWarp, FilterModel::CytomicSVF,    FilterModel::TriPole,
-            FilterModel::Comb,          FilterModel::SampleAndHold};
+    return {FilterModel::None,       FilterModel::VemberClassic, FilterModel::VemberLadder,
+            FilterModel::OBXD_2Pole, FilterModel::OBXD_4Pole,    FilterModel::OBXD_Xpander,
+            FilterModel::K35,        FilterModel::DiodeLadder,   FilterModel::VintageLadder,
+            FilterModel::CutoffWarp, FilterModel::ResonanceWarp, FilterModel::CytomicSVF,
+            FilterModel::TriPole,    FilterModel::Comb,          FilterModel::SampleAndHold};
 }
 
 inline size_t Filter::requiredDelayLinesSizes(FilterModel model, const ModelConfig &k)
