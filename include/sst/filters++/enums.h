@@ -28,7 +28,6 @@ enum struct FilterModel : uint32_t
     Off = 0,
 
     VemberClassic = 0x10,
-    VemberAllpass = 0x15,
     VemberLadder = 0x18,
 
     CytomicSVF = 0x20,

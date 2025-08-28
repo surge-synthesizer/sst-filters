@@ -214,7 +214,7 @@ TEST_CASE("Basic Filters")
         runTest({FilterType::fut_apf,
                  FilterSubType{},
                  {-4.0896f, -4.12088f, -4.06745f, -3.19854f, -3.01547f}});
-        runTest(sfpp::FilterModel::VemberAllpass, {sfpp::Passband::Allpass}, 0, 0.5,
+        runTest(sfpp::FilterModel::VemberClassic, {sfpp::Passband::Allpass}, 0, 0.5,
                 {-4.0896f, -4.12088f, -4.06745f, -3.19854f, -3.01547f});
     }
 
