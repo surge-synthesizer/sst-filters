@@ -44,6 +44,16 @@ class FilterPlotter
                                 sst::filters::FilterSubType filterSubType, float pitch, float res,
                                 const FilterPlotParameters &params = {})
     {
+        return plotFilterMagnitudeResponse(filterType, filterSubType, pitch, res, 0.0f, 0.0f, 0.0f,
+                                           params);
+    }
+
+    std::pair<std::vector<float>, std::vector<float>>
+    plotFilterMagnitudeResponse(sst::filters::FilterType filterType,
+                                sst::filters::FilterSubType filterSubType, float pitch, float res,
+                                float extra1, float extra2, float extra3,
+                                const FilterPlotParameters &params = {})
+    {
         // set up input sweep
         std::vector<float> sweepBuffer(fftSize, 0.0f);
         generateLogSweep(sweepBuffer.data(), fftSize, params);
@@ -60,7 +70,8 @@ class FilterPlotter
 
         sst::filters::FilterCoefficientMaker coefMaker;
         coefMaker.setSampleRateAndBlockSize(params.sampleRate, 512);
-        coefMaker.MakeCoeffs(pitch, res, filterType, filterSubType, nullptr, false);
+        coefMaker.MakeCoeffs(pitch, res, filterType, filterSubType, nullptr, false, extra1, extra2,
+                             extra3);
         coefMaker.updateState(filterState);
 
         // process filter
