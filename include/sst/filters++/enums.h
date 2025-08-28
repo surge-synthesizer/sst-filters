@@ -25,7 +25,7 @@ namespace sst::filtersplusplus
 // I'm also generally trying to keep the enum values below 0xFF but nothing will break if you don't
 enum struct FilterModel : uint32_t
 {
-    Off = 0,
+    None = 0,
 
     VemberClassic = 0x10,
     VemberLadder = 0x18,

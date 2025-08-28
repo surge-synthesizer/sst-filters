@@ -25,8 +25,8 @@ inline std::string toString(const FilterModel &f)
 {
     switch (f)
     {
-    case FilterModel::Off:
-        return "Off";
+    case FilterModel::None:
+        return "None";
     case FilterModel::VemberClassic:
         return "Vember Classic";
     case FilterModel::VemberLadder:

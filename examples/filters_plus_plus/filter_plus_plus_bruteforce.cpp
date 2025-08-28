@@ -146,18 +146,27 @@ int main(int, char **)
     std::getline(std::cin, inl);
     int idx2 = std::stoi(inl);
     auto model = modls[idx2 - 1];
-    std::cout << "\n\nConfigurations of " << sfpp::toString(model) << "\n\n";
-    idx = 0;
+
+    sfpp::ModelConfig cfg;
     auto cf = sfpp::Filter::availableModelConfigurations(model, true);
-    for (auto &c : cf)
+    if (cf.empty())
     {
-        std::cout << idx + 1 << "   - " << c.toString() << "\n";
-        idx++;
+        cfg = {};
     }
-    std::cout << "\nfilt> ";
-    std::getline(std::cin, inl);
-    idx2 = std::stoi(inl);
-    auto cfg = cf[idx2 - 1];
+    else
+    {
+        std::cout << "\n\nConfigurations of " << sfpp::toString(model) << "\n\n";
+        idx = 0;
+        for (auto &c : cf)
+        {
+            std::cout << idx + 1 << "   - " << c.toString() << "\n";
+            idx++;
+        }
+        std::cout << "\nfilt> ";
+        std::getline(std::cin, inl);
+        idx2 = std::stoi(inl);
+        cfg = cf[idx2 - 1];
+    }
 
     std::cout << "\n\nMethod\n\n";
     std::cout << "1 - co=440, sweep resonance\n"
