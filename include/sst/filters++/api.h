@@ -18,6 +18,7 @@
 
 #include <vector>
 #include <cmath>
+#include <optional>
 
 #include "sst/basic-blocks/simd/setup.h"
 
@@ -290,6 +291,15 @@ struct Filter
      * Resets the filter registers; leaves the rest of the state intact
      */
     void reset() { payload.reset(); }
+
+    /**
+     * This API connects us to the legacy enum types for a given model
+     */
+    using legacyType_t = std::pair<sst::filters::FilterType, sst::filters::FilterSubType>;
+    static std::optional<legacyType_t> getLegacyTypeFor(const FilterModel &m, const ModelConfig &c)
+    {
+        return details::FilterPayload::resolveLegacyTypeFor(m, c);
+    }
 
   protected:
     details::FilterPayload payload;
