@@ -142,7 +142,6 @@ struct FilterPayload
 
 #include "../models/VemberClassic.h"
 #include "../models/VemberLadder.h"
-#include "../models/VemberAllpass.h"
 #include "../models/K35.h"
 #include "../models/VintageLadder.h"
 #include "../models/CutoffWarp.h"
@@ -198,7 +197,6 @@ FilterPayload::resolveLegacyTypeFor(const FilterModel &fm, const ModelConfig &mc
     switch (fm)
     {
         FILTER_MODEL_CASE(FilterModel::VemberLadder, models::vemberladder);
-        FILTER_MODEL_CASE(FilterModel::VemberAllpass, models::vemberallpass);
         FILTER_MODEL_CASE(FilterModel::K35, models::k35);
         FILTER_MODEL_CASE(FilterModel::VemberClassic, models::vemberclassic);
         FILTER_MODEL_CASE(FilterModel::VintageLadder, models::vintageladder);
@@ -241,7 +239,6 @@ inline std::vector<ModelConfig> FilterPayload::availableModelConfigurations(Filt
     switch (m)
     {
         FILTER_MODEL_CASE(FilterModel::VemberLadder, models::vemberladder);
-        FILTER_MODEL_CASE(FilterModel::VemberAllpass, models::vemberallpass);
         FILTER_MODEL_CASE(FilterModel::K35, models::k35);
         FILTER_MODEL_CASE(FilterModel::VemberClassic, models::vemberclassic);
         FILTER_MODEL_CASE(FilterModel::VintageLadder, models::vintageladder);

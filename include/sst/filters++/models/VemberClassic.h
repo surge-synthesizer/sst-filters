@@ -74,6 +74,8 @@ inline const details::FilterPayload::configMap_t &getModelConfigurations()
         {{Passband::Notch, Slope::Slope_24dB, DriveMode::NotchMild},
          {sft::FilterType::fut_notch24, sft::FilterSubType::st_NotchMild}},
 
+        {{Passband::Allpass}, {sft::FilterType::fut_apf, sft::FilterSubType::st_Standard}},
+
     };
     return configs;
 }

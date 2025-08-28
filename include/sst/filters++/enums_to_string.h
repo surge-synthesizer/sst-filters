@@ -29,8 +29,6 @@ inline std::string toString(const FilterModel &f)
         return "Off";
     case FilterModel::VemberClassic:
         return "Vember Classic";
-    case FilterModel::VemberAllpass:
-        return "Vember Allpass";
     case FilterModel::VemberLadder:
         return "Vember Ladder";
 

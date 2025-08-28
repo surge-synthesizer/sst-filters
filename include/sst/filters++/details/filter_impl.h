@@ -150,11 +150,11 @@ inline void Filter::concludeBlock()
 
 inline std::vector<FilterModel> Filter::availableModels()
 {
-    return {FilterModel::VemberClassic, FilterModel::VemberAllpass, FilterModel::VemberLadder,
-            FilterModel::OBXD_2Pole,    FilterModel::OBXD_4Pole,    FilterModel::OBXD_Xpander,
-            FilterModel::K35,           FilterModel::DiodeLadder,   FilterModel::VintageLadder,
-            FilterModel::CutoffWarp,    FilterModel::ResonanceWarp, FilterModel::CytomicSVF,
-            FilterModel::TriPole,       FilterModel::Comb,          FilterModel::SampleAndHold};
+    return {FilterModel::VemberClassic, FilterModel::VemberLadder,  FilterModel::OBXD_2Pole,
+            FilterModel::OBXD_4Pole,    FilterModel::OBXD_Xpander,  FilterModel::K35,
+            FilterModel::DiodeLadder,   FilterModel::VintageLadder, FilterModel::CutoffWarp,
+            FilterModel::ResonanceWarp, FilterModel::CytomicSVF,    FilterModel::TriPole,
+            FilterModel::Comb,          FilterModel::SampleAndHold};
 }
 
 inline size_t Filter::requiredDelayLinesSizes(FilterModel model, const ModelConfig &k)
