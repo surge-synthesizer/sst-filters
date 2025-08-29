@@ -82,7 +82,7 @@ const auto gainAdjustment4Pole = SIMD_MM(set1_ps)(0.6f);
 template <typename TuningProvider>
 inline void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, Poles p, float freq,
                              float reso, int sub, float sampleRateInv, TuningProvider *provider,
-                             bool continuousMorph = false, float morphPole = 0.f)
+                             bool continuousMorph = false, float morphPole01 = 0.f)
 {
     float lC[n_cm_coeffs]{};
     float rcrate = sqrt(44000.0f * sampleRateInv);
@@ -131,7 +131,7 @@ inline void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, Poles p
         lC[R24] = 3.5f * reso;
         if (continuousMorph)
         {
-            auto fsub = morphPole;
+            auto fsub = std::clamp(morphPole01, 0.f, 1.f) * 3.0;
             lC[pole_mix] = 1.f - (float)(fsub / 3.f);
             lC[pole_mix_inv_int] = (float)(int)(3.f - (float)fsub);
         }
