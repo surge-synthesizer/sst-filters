@@ -59,7 +59,11 @@ inline int Filter::coefficientsExtraCount(FilterModel model, const ModelConfig &
     case FilterModel::OBXD_4Pole:
         return config.st == Slope::Slope_Morph ? 1 : 0;
     case FilterModel::Comb:
-        return config.st == Slope::Comb_Bipolar_ContinuousMix ? 1 : 0;
+        if (config.st == Slope::Comb_Bipolar_ContinuousMix ||
+            config.st == Slope::Comb_Positive_ContinuousMix ||
+            config.st == Slope::Comb_Negative_ContinuousMix)
+            return 1;
+        return 0;
     case FilterModel::K35:
         return config.dt == DriveMode::K35_Continuous ? 1 : 0;
     case FilterModel::CytomicSVF:
