@@ -134,7 +134,7 @@ inline void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, Poles p
         if (continuousMorph)
         {
             auto fsub = std::clamp(morphPole01, 0.f, 1.f) * 3.0;
-            // OK so 3 -> all Y4, 2 -> all T3, 1 all Y2, 1 all Y0
+            // OK so 3 -> all Y4, 2 -> all Y3, 1 all Y2, 1 all Y1
             if (fsub < 1)
             {
                 lC[y4mix] = 0;

@@ -43,6 +43,8 @@ void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, float freq, fl
                       int subtype, float sampleRate, float sampleRateInv, TuningProvider *provider,
                       float bellShelfAmp)
 {
+    float lC[n_cm_coeffs]{};
+
     auto ufr = 440 * FilterCoefficientMaker<TuningProvider>::provider_note_to_pitch_ignoring_tuning(
                          provider, freq);
     auto conorm = std::clamp(ufr * sampleRateInv, 0.f, 0.499f); // stable until nyquist
@@ -62,68 +64,70 @@ void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, float freq, fl
     }
 
     auto gk = g + k;
-    cm->C[Coeff::a1] = 1.0 / (1 + g * gk);
-    cm->C[Coeff::a2] = g * cm->C[Coeff::a1];
-    cm->C[Coeff::a3] = g * cm->C[Coeff::a2];
+    lC[Coeff::a1] = 1.0 / (1 + g * gk);
+    lC[Coeff::a2] = g * lC[Coeff::a1];
+    lC[Coeff::a3] = g * lC[Coeff::a2];
 
     switch (subtype)
     {
     case st_cytomic_lp:
         // The lowpass opt below hardcodes these so we can skip this assignment
-        // cm->C[Coeff::m0] = 0.0;
-        // cm->C[Coeff::m1] = 0.0;
-        // cm->C[Coeff::m2] = 1.0;
+        // lC[Coeff::m0] = 0.0;
+        // lC[Coeff::m1] = 0.0;
+        // lC[Coeff::m2] = 1.0;
         break;
     case st_cytomic_bp:
-        cm->C[Coeff::m0] = 0.0;
-        cm->C[Coeff::m1] = 1.0;
-        cm->C[Coeff::m2] = 0.0;
+        lC[Coeff::m0] = 0.0;
+        lC[Coeff::m1] = 1.0;
+        lC[Coeff::m2] = 0.0;
         break;
     case st_cytomic_hp:
-        cm->C[Coeff::m0] = 1.0;
-        cm->C[Coeff::m1] = -k;
-        cm->C[Coeff::m2] = -1;
+        lC[Coeff::m0] = 1.0;
+        lC[Coeff::m1] = -k;
+        lC[Coeff::m2] = -1;
         break;
     case st_cytomic_notch:
-        cm->C[Coeff::m0] = 1.0;
-        cm->C[Coeff::m1] = -k;
-        cm->C[Coeff::m2] = 0;
+        lC[Coeff::m0] = 1.0;
+        lC[Coeff::m1] = -k;
+        lC[Coeff::m2] = 0;
         break;
     case st_cytomic_peak:
-        cm->C[Coeff::m0] = 1.0;
-        cm->C[Coeff::m1] = -k;
-        cm->C[Coeff::m2] = -2;
+        lC[Coeff::m0] = 1.0;
+        lC[Coeff::m1] = -k;
+        lC[Coeff::m2] = -2;
         break;
     case st_cytomic_allpass:
-        cm->C[Coeff::m0] = 1.0;
-        cm->C[Coeff::m1] = -2 * k;
-        cm->C[Coeff::m2] = 0;
+        lC[Coeff::m0] = 1.0;
+        lC[Coeff::m1] = -2 * k;
+        lC[Coeff::m2] = 0;
         break;
     case st_cytomic_bell:
     {
         auto A = std::clamp(bellShelfAmp, 0.001f, 0.999f);
-        cm->C[Coeff::m0] = 1.0;
-        cm->C[Coeff::m1] = k * (A * A - 1);
-        cm->C[Coeff::m2] = 0;
+        lC[Coeff::m0] = 1.0;
+        lC[Coeff::m1] = k * (A * A - 1);
+        lC[Coeff::m2] = 0;
     }
     break;
     case st_cytomic_lowshelf:
     {
         auto A = std::clamp(bellShelfAmp, 0.001f, 0.999f);
-        cm->C[Coeff::m0] = 1.0;
-        cm->C[Coeff::m1] = k * (A - 1);
-        cm->C[Coeff::m2] = A * A - 1;
+        lC[Coeff::m0] = 1.0;
+        lC[Coeff::m1] = k * (A - 1);
+        lC[Coeff::m2] = A * A - 1;
     }
     break;
     case st_cytomic_highshelf:
     {
         auto A = std::clamp(bellShelfAmp, 0.001f, 0.999f);
-        cm->C[Coeff::m0] = A * A;
-        cm->C[Coeff::m1] = A * k * (1 - A);
-        cm->C[Coeff::m2] = 1 - A * A;
+        lC[Coeff::m0] = A * A;
+        lC[Coeff::m1] = A * k * (1 - A);
+        lC[Coeff::m2] = 1 - A * A;
     }
     break;
     }
+
+    cm->FromDirect(lC);
 }
 
 #define ADD(a, b) SIMD_MM(add_ps)(a, b)
