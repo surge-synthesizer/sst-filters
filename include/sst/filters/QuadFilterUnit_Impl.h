@@ -588,7 +588,7 @@ inline SIMD_M128 SNHquad(QuadFilterUnitState *__restrict f, SIMD_M128 in)
     return f->R[1];
 }
 
-template <int COMB_SIZE> // COMB_SIZE must be a power of 2
+template <int COMB_SIZE, bool morph> // COMB_SIZE must be a power of 2
 SIMD_M128 COMBquad_SSE2(QuadFilterUnitState *__restrict f, SIMD_M128 in)
 {
     static_assert(utilities::SincTable::FIRipol_M ==
@@ -598,6 +598,12 @@ SIMD_M128 COMBquad_SSE2(QuadFilterUnitState *__restrict f, SIMD_M128 in)
 
     f->C[0] = SIMD_MM(add_ps)(f->C[0], f->dC[0]);
     f->C[1] = SIMD_MM(add_ps)(f->C[1], f->dC[1]);
+
+    if (morph)
+    {
+        f->C[2] = SIMD_MM(add_ps)(f->C[2], f->dC[2]);
+        f->C[3] = SIMD_MM(add_ps)(f->C[3], f->dC[3]);
+    }
 
     auto a = SIMD_MM(mul_ps)(f->C[0], m256);
     SIMD_M128I e = SIMD_MM(cvtps_epi32)(a);
@@ -785,11 +791,19 @@ inline FilterUnitQFPtr GetCompensatedQFPtrFilterUnit(FilterType type, FilterSubT
     case fut_comb_neg:
         if (subtype & static_cast<int>(QFUSubtypeMasks::EXTENDED_COMB))
         {
-            return COMBquad_SSE2<utilities::MAX_FB_COMB_EXTENDED>;
+            if (subtype == st_comb_continuous_neg || subtype == st_comb_continuous_pos ||
+                subtype == st_comb_continuous_posneg)
+                return COMBquad_SSE2<utilities::MAX_FB_COMB_EXTENDED, true>;
+            else
+                return COMBquad_SSE2<utilities::MAX_FB_COMB_EXTENDED, false>;
         }
         else
         {
-            return COMBquad_SSE2<utilities::MAX_FB_COMB>;
+            if (subtype == st_comb_continuous_neg || subtype == st_comb_continuous_pos ||
+                subtype == st_comb_continuous_posneg)
+                return COMBquad_SSE2<utilities::MAX_FB_COMB, true>;
+            else
+                return COMBquad_SSE2<utilities::MAX_FB_COMB, false>;
         }
     case fut_vintageladder:
         switch (subtype)
