@@ -116,6 +116,8 @@ struct FilterPayload
     void reset()
     {
         std::fill(qfuState.R, &qfuState.R[sst::filters::n_filter_registers], SIMD_MM(setzero_ps)());
+        for (auto &c : makers)
+            c.Reset();
     }
 
     sst::filters::FilterUnitQFPtr func{nullptr};

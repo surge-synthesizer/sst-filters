@@ -47,10 +47,12 @@ enum Obxd24dBCoeff
     g24,
     R24,
     rcor24,
-    rcor24inv,        // if this isn't last before mix, update 4 pole eval
-    pole_mix,         // mm
-    pole_mix_inv_int, // mmch
-    pole_mix_scaled,  // mmt
+    rcor24inv, // if this isn't last before mix, update 4 pole eval
+    lastNonMorph = rcor24inv,
+    y1mix, // These are only used in the morph case
+    y2mix,
+    y3mix,
+    y4mix,
     n_obxd24_coeff
 };
 
@@ -132,15 +134,38 @@ inline void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, Poles p
         if (continuousMorph)
         {
             auto fsub = std::clamp(morphPole01, 0.f, 1.f) * 3.0;
-            lC[pole_mix] = 1.f - (float)(fsub / 3.f);
-            lC[pole_mix_inv_int] = (float)(int)(3.f - (float)fsub);
+            // OK so 3 -> all Y4, 2 -> all T3, 1 all Y2, 1 all Y0
+            if (fsub < 1)
+            {
+                lC[y4mix] = 0;
+                lC[y3mix] = 0;
+                lC[y2mix] = fsub;
+                lC[y1mix] = 1 - fsub;
+            }
+            else if (fsub < 2)
+            {
+                auto lsub = fsub - 1;
+                lC[y4mix] = 0;
+                lC[y3mix] = lsub;
+                lC[y2mix] = 1 - lsub;
+                lC[y1mix] = 0;
+            }
+            else if (fsub < 3)
+            {
+                auto lsub = fsub - 2;
+                lC[y4mix] = lsub;
+                lC[y3mix] = 1 - lsub;
+                lC[y2mix] = 0;
+                lC[y1mix] = 0;
+            }
+            else
+            {
+                lC[y4mix] = 1;
+                lC[y3mix] = 0;
+                lC[y2mix] = 0;
+                lC[y1mix] = 0;
+            }
         }
-        else
-        {
-            lC[pole_mix] = 1.f - ((float)sub / 3.f);
-            lC[pole_mix_inv_int] = (float)(int)(3.f - (float)sub);
-        }
-        lC[pole_mix_scaled] = (lC[pole_mix] * 3) - lC[pole_mix_inv_int];
     }
 
     cm->FromDirect(lC);
@@ -296,7 +321,7 @@ inline SIMD_M128 process_4_pole(QuadFilterUnitState *__restrict f, SIMD_M128 sam
     else
     {
         // don't need the pole mix evolved
-        for (int i = 0; i <= rcor24inv; i++)
+        for (int i = 0; i <= lastNonMorph; i++)
         {
             f->C[i] = SIMD_MM(add_ps)(f->C[i], f->dC[i]);
         }
@@ -344,8 +369,6 @@ inline SIMD_M128 process_4_pole(QuadFilterUnitState *__restrict f, SIMD_M128 sam
 
     SIMD_M128 mc;
 
-    auto zero_mask = SIMD_MM(cmpeq_ps)(f->C[pole_mix_inv_int], zero);
-    SIMD_M128 zero_val;
     // 6dB is 3, 12 2, 18 1, 24 zero
     if constexpr (fpm == FourPoleMode::LP6)
     {
@@ -449,26 +472,11 @@ inline SIMD_M128 process_4_pole(QuadFilterUnitState *__restrict f, SIMD_M128 sam
     }
     else if constexpr (fpm == FourPoleMode::MORPH)
     {
-        auto zero_val =
-            SIMD_MM(add_ps)(SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(one, f->C[pole_mix_scaled]), y4),
-                            SIMD_MM(mul_ps)(f->C[pole_mix_scaled], y3));
-
-        auto one_mask = SIMD_MM(cmpeq_ps)(f->C[pole_mix_inv_int], one);
-        auto one_val =
-            SIMD_MM(add_ps)(SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(one, f->C[pole_mix_scaled]), y3),
-                            SIMD_MM(mul_ps)(f->C[pole_mix_scaled], y2));
-
-        auto two_mask = SIMD_MM(cmpeq_ps)(f->C[pole_mix_inv_int], two);
-        auto two_val =
-            SIMD_MM(add_ps)(SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(one, f->C[pole_mix_scaled]), y2),
-                            SIMD_MM(mul_ps)(f->C[pole_mix_scaled], y1));
-
-        auto three_mask = SIMD_MM(cmpeq_ps)(f->C[pole_mix_inv_int], three);
-        auto three_val = y1;
-        mc = SIMD_MM(add_ps)(SIMD_MM(and_ps)(zero_mask, zero_val),
-                             SIMD_MM(and_ps)(one_mask, one_val));
-        mc = SIMD_MM(add_ps)(mc, SIMD_MM(add_ps)(SIMD_MM(and_ps)(two_mask, two_val),
-                                                 SIMD_MM(and_ps)(three_mask, three_val)));
+        auto t1 = SIMD_MM(mul_ps)(f->C[y1mix], y1);
+        auto t2 = SIMD_MM(mul_ps)(f->C[y2mix], y2);
+        auto t3 = SIMD_MM(mul_ps)(f->C[y3mix], y3);
+        auto t4 = SIMD_MM(mul_ps)(f->C[y4mix], y4);
+        mc = SIMD_MM(add_ps)(t1, SIMD_MM(add_ps)(t2, SIMD_MM(add_ps)(t3, t4)));
     }
 
     // half volume compensation
