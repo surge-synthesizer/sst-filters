@@ -22,6 +22,8 @@
 
 #include "stb_image_write.h"
 #include <vector>
+#include <optional>
+#include <cassert>
 
 #include "sst/filters++.h"
 
