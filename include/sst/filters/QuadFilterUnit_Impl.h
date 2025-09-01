@@ -599,7 +599,7 @@ SIMD_M128 COMBquad_SSE2(QuadFilterUnitState *__restrict f, SIMD_M128 in)
     f->C[0] = SIMD_MM(add_ps)(f->C[0], f->dC[0]);
     f->C[1] = SIMD_MM(add_ps)(f->C[1], f->dC[1]);
 
-    if (morph)
+    if constexpr (morph)
     {
         f->C[2] = SIMD_MM(add_ps)(f->C[2], f->dC[2]);
         f->C[3] = SIMD_MM(add_ps)(f->C[3], f->dC[3]);

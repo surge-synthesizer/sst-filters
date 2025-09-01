@@ -105,8 +105,8 @@ inline void Filter::copyCoefficientsFromVoiceToVoice(int from, int to)
     for (int i = 0; i < sst::filters::n_cm_coeffs; ++i)
     {
         payload.makers[to].C[i] = payload.makers[from].C[i];
-        payload.makers[to].tC[i] = payload.makers[from].dC[i];
-        payload.makers[to].tC[i] = payload.makers[from].dC[i];
+        payload.makers[to].tC[i] = payload.makers[from].tC[i];
+        payload.makers[to].dC[i] = payload.makers[from].dC[i];
     }
 }
 
