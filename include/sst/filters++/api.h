@@ -164,6 +164,14 @@ struct Filter
     [[nodiscard]] static int coefficientsExtraCount(FilterModel model, const ModelConfig &c);
 
     /**
+     * Extra arguments are normalized to either be 0..1 (like pole mixing on a 4 pole filter)
+     * or -1..1 (like shelf cut/boost on a low shelf). But you need to know which is which!
+     * This returns true for bipolar (-1..1) and false for unipolar (0..1)
+     */
+    [[nodiscard]] static bool coefficientsExtraIsBipolar(FilterModel model, const ModelConfig &c,
+                                                         int coeff);
+
+    /**
      * Get a list of the available models supported by the API
      */
     static std::vector<FilterModel> availableModels();

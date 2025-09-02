@@ -81,6 +81,30 @@ inline int Filter::coefficientsExtraCount(FilterModel model, const ModelConfig &
     return 0;
 }
 
+inline bool Filter::coefficientsExtraIsBipolar(FilterModel model, const ModelConfig &config,
+                                               int coeff)
+{
+    switch (model)
+    {
+    case FilterModel::Comb:
+        if (config.st == Slope::Comb_Bipolar_ContinuousMix)
+            return true;
+        break;
+    case FilterModel::CytomicSVF:
+    {
+        if (config.pt == Passband::Bell || config.pt == Passband::LowShelf ||
+            config.pt == Passband::HighShelf)
+        {
+            return true;
+        }
+        break;
+    }
+    default:
+        return false;
+    }
+    return false;
+}
+
 inline void Filter::makeCoefficients(int voice, float cutoff, float resonance, float extra,
                                      float extra2, float extra3)
 {
