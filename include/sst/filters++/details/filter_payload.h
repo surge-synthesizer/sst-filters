@@ -125,6 +125,25 @@ struct FilterPayload
         }
     }
 
+    void resetVoice(int ch)
+    {
+        float m1 alignas(16)[4], m2 alignas(16)[4];
+        for (int i = 0; i < 4; ++i)
+        {
+            m1[i] = 0;
+            m2[i] = (i == ch ? 1 : 0);
+        }
+        auto mask = SIMD_MM(cmpeq_ps)(SIMD_MM(load_ps)(m1), SIMD_MM(load_ps)(m2));
+
+        for (int i = 0; i < sst::filters::n_filter_registers; i++)
+        {
+            qfuState.R[i] = SIMD_MM(and_ps)(qfuState.R[i], mask);
+        }
+
+        makers[ch].Reset();
+        makers[ch].updateState(qfuState, ch);
+    }
+
     sst::filters::FilterUnitQFPtr func{nullptr};
     sst::filters::QuadFilterUnitState qfuState;
     std::array<sst::filters::FilterCoefficientMaker<>, 4>
