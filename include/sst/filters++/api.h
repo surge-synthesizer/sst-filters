@@ -301,6 +301,11 @@ struct Filter
     void reset() { payload.reset(); }
 
     /**
+     * Resets the filter registers for a single voice; leaves the rest of the state intact
+     */
+    void resetVoice(int ch) { payload.resetVoice(ch); }
+
+    /**
      * This API connects us to the legacy enum types for a given model
      */
     using legacyType_t = std::pair<sst::filters::FilterType, sst::filters::FilterSubType>;
