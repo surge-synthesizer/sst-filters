@@ -10,6 +10,7 @@ if (MSVC)
     target_compile_definitions(${PROJECT_NAME}
             INTERFACE
             _USE_MATH_DEFINES=1 # So that we can have M_PI on MSVC
+            /Zc:__cplusplus
     )
 endif ()
 
