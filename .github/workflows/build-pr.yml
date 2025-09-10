@@ -70,7 +70,7 @@ jobs:
   
 
   build_test_docker:
-    name: Build - Docker Ubuntu 20
+    name: Test - Docker Ubuntu 20
     runs-on: ubuntu-latest
 
     steps:
@@ -88,7 +88,7 @@ jobs:
           cmakeArgs: -DCMAKE_BUILD_TYPE=Release -DSST_FILTERS_BUILD_TESTS=TRUE
           target: sst-filters-tests
 
-      - name: Show Build
+      - name: Run Test
         run: |
           ls -l build/tests
           ./build/tests/sst-filters-tests
