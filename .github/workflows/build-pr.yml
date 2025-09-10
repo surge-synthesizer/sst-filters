@@ -66,3 +66,32 @@ jobs:
         run: |
           ls ${{ matrix.testExe }}
           ${{ matrix.testExe }}
+  
+  
+
+  build_test_docker:
+    name: Test - Docker Ubuntu 20
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Build in Docker
+        uses: surge-synthesizer/sst-githubactions/cmake-in-docker@main
+        with:
+          image: ghcr.io/surge-synthesizer/sst-dockerimages/ubuntu20_gcc11:main
+          username: ${{ github.actor }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          cmakeArgs: -DCMAKE_BUILD_TYPE=Release -DSST_FILTERS_BUILD_TESTS=TRUE
+          target: sst-filters-tests
+
+      - name: Run Test
+        run: |
+          ls -l build/tests
+          ./build/tests/sst-filters-tests
+
+
+
