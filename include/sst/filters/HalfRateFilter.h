@@ -158,6 +158,7 @@ class alignas(16) HalfRateFilter
             oldout = SIMD_MM(shuffle_ps)(o[k], o[k], SIMD_MM_SHUFFLE(3, 3, 1, 1));
         }
     }
+
     void process_block_D2(float *floatL, float *floatR, int nsamples, float *outL = 0,
                           float *outR = 0) // process in-place. the new block will be half the size
     {
@@ -382,8 +383,9 @@ class alignas(16) HalfRateFilter
         }
     }
 
-    void process_block_U2(float *floatL_in, float *floatR_in, float *floatL, float *floatR,
-                          int nsamples)
+    template <bool factorOfTwo>
+    void process_block_U2_impl(float *floatL_in, float *floatR_in, float *floatL, float *floatR,
+                               int nsamples)
     {
         auto *L = (SIMD_M128 *)floatL;
         auto *R = (SIMD_M128 *)floatR;
@@ -464,14 +466,16 @@ class alignas(16) HalfRateFilter
             //	oldout=filter_b.process(input);
 
             auto vL = SIMD_MM(add_ss)(o[k], oldout);
-            vL = SIMD_MM(mul_ss)(vL, half);
+            if (factorOfTwo)
+                vL = SIMD_MM(mul_ss)(vL, half);
             SIMD_MM(store_ss)(&fL[k], vL);
 
             faR = SIMD_MM(movehl_ps)(faR, o[k]);
             fbR = SIMD_MM(movehl_ps)(fbR, oldout);
 
             auto vR = SIMD_MM(add_ss)(faR, fbR);
-            vR = SIMD_MM(mul_ss)(vR, half);
+            if (factorOfTwo)
+                vR = SIMD_MM(mul_ss)(vR, half);
             SIMD_MM(store_ss)(&fR[k], vR);
 
             oldout = SIMD_MM(shuffle_ps)(o[k], o[k], SIMD_MM_SHUFFLE(3, 3, 1, 1));
@@ -491,6 +495,147 @@ class alignas(16) HalfRateFilter
         fL[k] = (out_a + oldout_f) * 0.5f;
         oldout_f = out_b;
         }		*/
+    }
+
+    /**
+     * The original surge half rate filter when upsampling cut amplitude by 2.
+     * Dont know why. But its annoying. So provide that to not break clients and
+     * provide one which doesnt (the _fullscale) in case you dont want that
+     */
+    void process_block_U2(float *floatL_in, float *floatR_in, float *floatL, float *floatR,
+                          int nsamples)
+    {
+        return process_block_U2_impl<true>(floatL_in, floatR_in, floatL, floatR, nsamples);
+    }
+
+    void process_block_U2_fullscale(float *floatL_in, float *floatR_in, float *floatL,
+                                    float *floatR, int nsamples)
+    {
+        return process_block_U2_impl<false>(floatL_in, floatR_in, floatL, floatR, nsamples);
+    }
+
+    void process_sample_U2(float L, float R, float Lout[2], float Rout[2])
+    {
+        // o0 is L L R R
+        auto o0 = SIMD_MM(set_ps)(R, R, L, L); // I so hate that this is backwards
+        auto o1 = SIMD_MM(setzero_ps)();
+
+        // process filters
+        for (auto j = 0U; j < M; j++)
+        {
+            auto tx0 = vx0[j];
+            auto tx1 = vx1[j];
+            auto tx2 = vx2[j];
+            auto ty0 = vy0[j];
+            auto ty1 = vy1[j];
+            auto ty2 = vy2[j];
+            auto ta = va[j];
+
+            // shuffle inputs
+            tx2 = tx1;
+            tx1 = tx0;
+            tx0 = o0;
+            // shuffle outputs
+            ty2 = ty1;
+            ty1 = ty0;
+            // allpass filter 1
+            ty0 = SIMD_MM(add_ps)(tx2, SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(tx0, ty2), ta));
+            o0 = ty0;
+
+            // shuffle inputs
+            tx2 = tx1;
+            tx1 = tx0;
+            tx0 = o1;
+            // shuffle outputs
+            ty2 = ty1;
+            ty1 = ty0;
+            // allpass filter 1
+            ty0 = SIMD_MM(add_ps)(tx2, SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(tx0, ty2), ta));
+            o1 = ty0;
+
+            vx0[j] = tx0;
+            vx1[j] = tx1;
+            vx2[j] = tx2;
+            vy0[j] = ty0;
+            vy1[j] = ty1;
+            vy2[j] = ty2;
+        }
+
+        float *fL = (float *)Lout;
+        float *fR = (float *)Rout;
+        auto faR = SIMD_MM(setzero_ps)();
+        auto fbR = SIMD_MM(setzero_ps)();
+
+        SIMD_M128 o[2]{o0, o1};
+        for (int k = 0; k < 2; ++k)
+        {
+            //	const double output=(filter_a.process(input)+oldout)*0.5;
+            //	oldout=filter_b.process(input);
+
+            auto vL = SIMD_MM(add_ss)(o[k], oldout);
+            SIMD_MM(store_ss)(&fL[k], vL);
+
+            faR = SIMD_MM(movehl_ps)(faR, o[k]);
+            fbR = SIMD_MM(movehl_ps)(fbR, oldout);
+
+            auto vR = SIMD_MM(add_ss)(faR, fbR);
+            SIMD_MM(store_ss)(&fR[k], vR);
+
+            oldout = SIMD_MM(shuffle_ps)(o[k], o[k], SIMD_MM_SHUFFLE(3, 3, 1, 1));
+        }
+    }
+
+    void process_sample_D2(float L[2], float R[2], float &outL,
+                           float &outR) // process in-place. the new block will be half the size
+    {
+        SIMD_M128 oS[2];
+        oS[0] = SIMD_MM(set_ps)(R[0], R[0], L[0], L[0]);
+        oS[1] = SIMD_MM(set_ps)(R[1], R[1], L[1], L[1]);
+
+        for (auto j = 0U; j < M; j++)
+        {
+            auto tx0 = vx0[j];
+            auto tx1 = vx1[j];
+            auto tx2 = vx2[j];
+            auto ty0 = vy0[j];
+            auto ty1 = vy1[j];
+            auto ty2 = vy2[j];
+            auto ta = va[j];
+
+            // shuffle inputs
+            tx2 = tx1;
+            tx1 = tx0;
+            tx0 = oS[0];
+            // shuffle outputs
+            ty2 = ty1;
+            ty1 = ty0;
+            // allpass filter 1
+            ty0 = SIMD_MM(add_ps)(tx2, SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(tx0, ty2), ta));
+            oS[0] = ty0;
+
+            // shuffle inputs
+            tx2 = tx1;
+            tx1 = tx0;
+            tx0 = oS[1];
+            // shuffle outputs
+            ty2 = ty1;
+            ty1 = ty0;
+            // allpass filter 1
+            ty0 = SIMD_MM(add_ps)(tx2, SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(tx0, ty2), ta));
+            oS[1] = ty0;
+
+            vx0[j] = tx0;
+            vx1[j] = tx1;
+            vx2[j] = tx2;
+            vy0[j] = ty0;
+            vy1[j] = ty1;
+            vy2[j] = ty2;
+        }
+
+        float res alignas(16)[4];
+        SIMD_MM(store_ps)(res, oS[1]);
+        outL = res[0];
+        outR = res[2];
     }
 
     void load_coefficients()
