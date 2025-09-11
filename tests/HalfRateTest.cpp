@@ -160,3 +160,63 @@ TEST_CASE("Half Rate Filter")
         }
     }
 }
+
+TEST_CASE("Half Rate a sample at a time")
+{
+    SECTION("Basic Works")
+    {
+        sst::filters::HalfRate::HalfRateFilter hrfU(6, true);
+        sst::filters::HalfRate::HalfRateFilter hrfSU(6, true);
+
+        sst::filters::HalfRate::HalfRateFilter hrfD(6, true);
+        sst::filters::HalfRate::HalfRateFilter hrfSD(6, true);
+
+        auto dph = 440.0 / 48000;
+
+        static constexpr size_t blockSize{8};
+        static constexpr size_t nPoints{256 * blockSize};
+        float LupBW[nPoints << 1], LdnBW[nPoints], Lin[nPoints];
+        float RupBW[nPoints << 1], RdnBW[nPoints], Rin[nPoints];
+        for (int i = 0; i < nPoints; i += blockSize)
+        {
+            float Lloc[blockSize], Rloc[blockSize];
+            for (int k = 0; k < blockSize; ++k)
+            {
+                auto idx = i + k;
+                Lloc[k] = std::sin(dph * idx * 2.0 * M_PI);
+                Rloc[k] = std::cos(2.0 * dph * idx * 2.0 * M_PI);
+                Lin[idx] = Lloc[k];
+                Rin[idx] = Rloc[k];
+            }
+            hrfU.process_block_U2_fullscale(Lloc, Rloc, &LupBW[2 * i], &RupBW[2 * i],
+                                            2 * blockSize);
+            hrfD.process_block_D2(&LupBW[2 * i], &RupBW[2 * i], 2 * blockSize, &LdnBW[i],
+                                  &RdnBW[i]);
+        }
+
+        float Lup[2], Rup[2];
+
+        for (int i = 0; i < nPoints; ++i)
+        {
+            float Lsm = std::sin(dph * i * 2.0 * M_PI);
+            float Rsm = std::cos(2.0 * dph * i * 2.0 * M_PI);
+            float Ldn{0.f}, Rdn{0.f};
+
+            hrfSU.process_sample_U2(Lsm, Rsm, Lup, Rup);
+            hrfSD.process_sample_D2(Lup, Rup, Ldn, Rdn);
+
+            INFO("Testing at " << i);
+            REQUIRE(Lsm == Lin[i]);
+            REQUIRE(Rsm == Rin[i]);
+            REQUIRE(Lup[0] == LupBW[i * 2]);
+            REQUIRE(Lup[1] == LupBW[i * 2 + 1]);
+            REQUIRE(Rup[0] == RupBW[i * 2]);
+            REQUIRE(Rup[1] == RupBW[i * 2 + 1]);
+            // Why a margni here? The shuffles to do it block wise slightly
+            // re-order the extraction of the elements in the block version whic
+            // gives a smidge of floating point noise
+            REQUIRE(Ldn == Approx(LdnBW[i]).margin(1e-6));
+            REQUIRE(Rdn == Approx(RdnBW[i]).margin(1e-6));
+        }
+    }
+}
