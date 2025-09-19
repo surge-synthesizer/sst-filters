@@ -47,7 +47,7 @@ TEST_CASE("Cutoff Warp")
             for (auto d : {sfpp::DriveMode::Warp_1Stage, sfpp::DriveMode::Warp_2Stage,
                            sfpp::DriveMode::Warp_3Stage, sfpp::DriveMode::Warp_4Stage})
             {
-                runTest(sfpp::FilterModel::ResonanceWarp, {sfpp::Passband::LP, d, sm}, 0, 0.5,
+                runTest(sfpp::FilterModel::CutoffWarp, {sfpp::Passband::LP, d, sm}, 0, 0.5,
                         RMSs[idx]);
                 idx++;
             }
@@ -83,7 +83,7 @@ TEST_CASE("Cutoff Warp")
             for (auto d : {sfpp::DriveMode::Warp_1Stage, sfpp::DriveMode::Warp_2Stage,
                            sfpp::DriveMode::Warp_3Stage, sfpp::DriveMode::Warp_4Stage})
             {
-                runTest(sfpp::FilterModel::ResonanceWarp, {sfpp::Passband::HP, d, sm}, 0, 0.5,
+                runTest(sfpp::FilterModel::CutoffWarp, {sfpp::Passband::HP, d, sm}, 0, 0.5,
                         RMSs[idx]);
                 idx++;
             }
@@ -119,7 +119,7 @@ TEST_CASE("Cutoff Warp")
             for (auto d : {sfpp::DriveMode::Warp_1Stage, sfpp::DriveMode::Warp_2Stage,
                            sfpp::DriveMode::Warp_3Stage, sfpp::DriveMode::Warp_4Stage})
             {
-                runTest(sfpp::FilterModel::ResonanceWarp, {sfpp::Passband::Notch, d, sm}, 0, 0.5,
+                runTest(sfpp::FilterModel::CutoffWarp, {sfpp::Passband::Notch, d, sm}, 0, 0.5,
                         RMSs[idx]);
                 idx++;
             }
@@ -155,7 +155,7 @@ TEST_CASE("Cutoff Warp")
             for (auto d : {sfpp::DriveMode::Warp_1Stage, sfpp::DriveMode::Warp_2Stage,
                            sfpp::DriveMode::Warp_3Stage, sfpp::DriveMode::Warp_4Stage})
             {
-                runTest(sfpp::FilterModel::ResonanceWarp, {sfpp::Passband::BP, d, sm}, 0, 0.5,
+                runTest(sfpp::FilterModel::CutoffWarp, {sfpp::Passband::BP, d, sm}, 0, 0.5,
                         RMSs[idx]);
                 idx++;
             }
@@ -191,7 +191,7 @@ TEST_CASE("Cutoff Warp")
             for (auto d : {sfpp::DriveMode::Warp_1Stage, sfpp::DriveMode::Warp_2Stage,
                            sfpp::DriveMode::Warp_3Stage, sfpp::DriveMode::Warp_4Stage})
             {
-                runTest(sfpp::FilterModel::ResonanceWarp, {sfpp::Passband::Allpass, d, sm}, 0, 0.5,
+                runTest(sfpp::FilterModel::CutoffWarp, {sfpp::Passband::Allpass, d, sm}, 0, 0.5,
                         RMSs[idx]);
                 idx++;
             }
