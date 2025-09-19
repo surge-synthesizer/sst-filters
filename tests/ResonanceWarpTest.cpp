@@ -38,12 +38,12 @@ TEST_CASE("Resonance Warp")
 
         namespace sfpp = sst::filtersplusplus;
         int idx{0};
-        for (auto d : {sfpp::DriveMode::Tanh, sfpp::DriveMode::SoftClip})
+        for (auto sm : {sfpp::FilterSubModel::Tanh, sfpp::FilterSubModel::SoftClip})
         {
-            for (auto s : {sfpp::Slope::Slope_1Stage, sfpp::Slope::Slope_2Stage,
-                           sfpp::Slope::Slope_3Stage, sfpp::Slope::Slope_4Stage})
+            for (auto d : {sfpp::DriveMode::Warp_1Stage, sfpp::DriveMode::Warp_2Stage,
+                           sfpp::DriveMode::Warp_3Stage, sfpp::DriveMode::Warp_4Stage})
             {
-                runTest(sfpp::FilterModel::ResonanceWarp, {sfpp::Passband::LP, s, d}, 0, 0.5,
+                runTest(sfpp::FilterModel::ResonanceWarp, {sfpp::Passband::BP, d, sm}, 0, 0.5,
                         RMSs[idx]);
                 idx++;
             }
@@ -69,12 +69,12 @@ TEST_CASE("Resonance Warp")
 
         namespace sfpp = sst::filtersplusplus;
         int idx{0};
-        for (auto d : {sfpp::DriveMode::Tanh, sfpp::DriveMode::SoftClip})
+        for (auto sm : {sfpp::FilterSubModel::Tanh, sfpp::FilterSubModel::SoftClip})
         {
-            for (auto s : {sfpp::Slope::Slope_1Stage, sfpp::Slope::Slope_2Stage,
-                           sfpp::Slope::Slope_3Stage, sfpp::Slope::Slope_4Stage})
+            for (auto d : {sfpp::DriveMode::Warp_1Stage, sfpp::DriveMode::Warp_2Stage,
+                           sfpp::DriveMode::Warp_3Stage, sfpp::DriveMode::Warp_4Stage})
             {
-                runTest(sfpp::FilterModel::ResonanceWarp, {sfpp::Passband::HP, s, d}, 0, 0.5,
+                runTest(sfpp::FilterModel::ResonanceWarp, {sfpp::Passband::BP, d, sm}, 0, 0.5,
                         RMSs[idx]);
                 idx++;
             }
@@ -100,12 +100,12 @@ TEST_CASE("Resonance Warp")
 
         namespace sfpp = sst::filtersplusplus;
         int idx{0};
-        for (auto d : {sfpp::DriveMode::Tanh, sfpp::DriveMode::SoftClip})
+        for (auto sm : {sfpp::FilterSubModel::Tanh, sfpp::FilterSubModel::SoftClip})
         {
-            for (auto s : {sfpp::Slope::Slope_1Stage, sfpp::Slope::Slope_2Stage,
-                           sfpp::Slope::Slope_3Stage, sfpp::Slope::Slope_4Stage})
+            for (auto d : {sfpp::DriveMode::Warp_1Stage, sfpp::DriveMode::Warp_2Stage,
+                           sfpp::DriveMode::Warp_3Stage, sfpp::DriveMode::Warp_4Stage})
             {
-                runTest(sfpp::FilterModel::ResonanceWarp, {sfpp::Passband::Notch, s, d}, 0, 0.5,
+                runTest(sfpp::FilterModel::ResonanceWarp, {sfpp::Passband::BP, d, sm}, 0, 0.5,
                         RMSs[idx]);
                 idx++;
             }
@@ -131,12 +131,12 @@ TEST_CASE("Resonance Warp")
 
         namespace sfpp = sst::filtersplusplus;
         int idx{0};
-        for (auto d : {sfpp::DriveMode::Tanh, sfpp::DriveMode::SoftClip})
+        for (auto sm : {sfpp::FilterSubModel::Tanh, sfpp::FilterSubModel::SoftClip})
         {
-            for (auto s : {sfpp::Slope::Slope_1Stage, sfpp::Slope::Slope_2Stage,
-                           sfpp::Slope::Slope_3Stage, sfpp::Slope::Slope_4Stage})
+            for (auto d : {sfpp::DriveMode::Warp_1Stage, sfpp::DriveMode::Warp_2Stage,
+                           sfpp::DriveMode::Warp_3Stage, sfpp::DriveMode::Warp_4Stage})
             {
-                runTest(sfpp::FilterModel::ResonanceWarp, {sfpp::Passband::BP, s, d}, 0, 0.5,
+                runTest(sfpp::FilterModel::ResonanceWarp, {sfpp::Passband::BP, d, sm}, 0, 0.5,
                         RMSs[idx]);
                 idx++;
             }
@@ -162,12 +162,12 @@ TEST_CASE("Resonance Warp")
 
         namespace sfpp = sst::filtersplusplus;
         int idx{0};
-        for (auto d : {sfpp::DriveMode::Tanh, sfpp::DriveMode::SoftClip})
+        for (auto sm : {sfpp::FilterSubModel::Tanh, sfpp::FilterSubModel::SoftClip})
         {
-            for (auto s : {sfpp::Slope::Slope_1Stage, sfpp::Slope::Slope_2Stage,
-                           sfpp::Slope::Slope_3Stage, sfpp::Slope::Slope_4Stage})
+            for (auto d : {sfpp::DriveMode::Warp_1Stage, sfpp::DriveMode::Warp_2Stage,
+                           sfpp::DriveMode::Warp_3Stage, sfpp::DriveMode::Warp_4Stage})
             {
-                runTest(sfpp::FilterModel::ResonanceWarp, {sfpp::Passband::Allpass, s, d}, 0, 0.5,
+                runTest(sfpp::FilterModel::ResonanceWarp, {sfpp::Passband::BP, d, sm}, 0, 0.5,
                         RMSs[idx]);
                 idx++;
             }
