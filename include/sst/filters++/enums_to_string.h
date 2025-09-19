@@ -96,6 +96,16 @@ inline std::string toString(const Passband &p)
         return "Notch+LP";
     case Passband::PhaserAndLP:
         return "Phaser+LP";
+
+        // For Tri-Pole
+    case Passband::LowLowLow:
+        return "Low/Low/Low";
+    case Passband::LowHighLow:
+        return "Low/High/Low";
+    case Passband::HighLowHigh:
+        return "High/Low/High";
+    case Passband::HighHighHigh:
+        return "High/High/High";
     }
     return "PASSTYPE_ERROR";
 }
@@ -184,13 +194,14 @@ inline std::string toString(const DriveMode &d)
     case DriveMode::K35_Continuous:
         return "Continuous";
 
-    // For the Cutoff/Resonance Warp
-    case DriveMode::Tanh:
-        return "tanh";
-    case DriveMode::SoftClip:
-        return "Soft Clip";
-    case DriveMode::OJD:
-        return "OJD";
+    case DriveMode::Warp_1Stage:
+        return "1 Stage";
+    case DriveMode::Warp_2Stage:
+        return "2 Stage";
+    case DriveMode::Warp_3Stage:
+        return "3 Stage";
+    case DriveMode::Warp_4Stage:
+        return "4 Stage";
 
     case DriveMode::Pushed:
         return "Pushed";
@@ -220,14 +231,20 @@ inline std::string toString(const FilterSubModel &s)
         return "Huovilainen Compensated";
 
     // For Tri-Pole
-    case FilterSubModel::LowLowLow:
-        return "Low/Low/Low";
-    case FilterSubModel::LowHighLow:
-        return "Low/High/Low";
-    case FilterSubModel::HighLowHigh:
-        return "High/Low/High";
-    case FilterSubModel::HighHighHigh:
-        return "High/High/High";
+    case FilterSubModel::First_output:
+        return "First";
+    case FilterSubModel::Second_output:
+        return "Second";
+    case FilterSubModel::Third_output:
+        return "Third";
+
+    // For Cutoff/Resonance Warp
+    case FilterSubModel::Tanh:
+        return "tanh";
+    case FilterSubModel::SoftClip:
+        return "Soft Clip";
+    case FilterSubModel::OJD:
+        return "OJD";
     }
     return "SUBMODEL_ERROR";
 }

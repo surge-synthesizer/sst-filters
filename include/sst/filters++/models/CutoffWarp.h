@@ -36,15 +36,15 @@ inline const details::FilterPayload::configMap_t &getModelConfigurations()
                                {Passband::Notch, sft::FilterType::fut_cutoffwarp_n},
                                {Passband::Allpass, sft::FilterType::fut_cutoffwarp_ap}})
         {
-            for (auto [dt, off] : {std::make_pair(DriveMode::Tanh, 0),
-                                   {DriveMode::SoftClip, 4},
-                                   {DriveMode::OJD, 8}})
+            for (auto [sm, off] : {std::make_pair(FilterSubModel::Tanh, 0),
+                                   {FilterSubModel::SoftClip, 4},
+                                   {FilterSubModel::OJD, 8}})
             {
                 auto idx{0};
-                for (auto sl : {Slope::Slope_1Stage, Slope::Slope_2Stage, Slope::Slope_3Stage,
-                                Slope::Slope_4Stage})
+                for (auto dt : {DriveMode::Warp_1Stage, DriveMode::Warp_2Stage,
+                                DriveMode::Warp_3Stage, DriveMode::Warp_4Stage})
                 {
-                    auto key = details::FilterPayload::modelConfig_t{pt, sl, dt};
+                    auto key = details::FilterPayload::modelConfig_t{pt, dt, sm};
                     auto fv =
                         (uint32_t)sst::filters::FilterSubType::st_cutoffwarp_tanh1 + off + idx;
                     ;
