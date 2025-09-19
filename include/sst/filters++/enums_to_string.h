@@ -135,7 +135,6 @@ inline std::string toString(const Slope &s)
     case Slope::Slope_18dB6dB:
         return "18 dB/6 dB";
 
-
     case Slope::Slope_Morph:
         return "Morph";
 
