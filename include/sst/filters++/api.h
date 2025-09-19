@@ -209,6 +209,13 @@ struct Filter
                           float extra2 = 0.f, float extra3 = 0.f);
 
     /**
+     * If you want to optimize by only computing coefficients when they actually change,
+     * you will need to call this instead of the above before prepareBlock(),
+     * else bad things happen.
+     */
+    void freezeCoefficientsFor(int voice);
+
+    /**
      * If you want two voices to share coefficients - so a stereo pair with the same cutoff
      * and resonance for instance - it is usually faster to copy coefficients from voice A to voice
      * B that it is to compute them twice. The voices retain independent registers of course, so

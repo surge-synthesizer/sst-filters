@@ -95,11 +95,6 @@ enum struct Slope : uint32_t
     Slope_12dB6dB = 0x13,
     Slope_18dB6dB = 0x19,
 
-    Slope_1Stage = 0x30,
-    Slope_2Stage = 0x31,
-    Slope_3Stage = 0x32,
-    Slope_4Stage = 0x33,
-
     Slope_Morph = 0x40,
 
     Comb_Negative_ContinuousMix = 0x50,

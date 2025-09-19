@@ -124,6 +124,15 @@ inline void Filter::makeCoefficients(int voice, float cutoff, float resonance, f
     }
 }
 
+inline void Filter::freezeCoefficientsFor(int voice)
+{
+    for (int i = 0; i < sst::filters::n_cm_coeffs; ++i)
+    {
+        payload.makers[voice].C[i] = payload.makers[voice].tC[i];
+        payload.makers[voice].dC[i] = 0;
+    }
+}
+
 inline void Filter::copyCoefficientsFromVoiceToVoice(int from, int to)
 {
     for (int i = 0; i < sst::filters::n_cm_coeffs; ++i)
