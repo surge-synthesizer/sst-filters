@@ -41,10 +41,10 @@ inline const details::FilterPayload::configMap_t &getModelConfigurations()
                                    {DriveMode::OJD, 8}})
             {
                 auto idx{0};
-                for (auto sl : {Slope::Slope_1Stage, Slope::Slope_2Stage, Slope::Slope_3Stage,
-                                Slope::Slope_4Stage})
+                for (auto sm : {FilterSubModel::Warp_1Stage, FilterSubModel::Warp_2Stage,
+                                FilterSubModel::Warp_3Stage, FilterSubModel::Warp_4Stage})
                 {
-                    auto key = details::FilterPayload::modelConfig_t{pt, sl, dt};
+                    auto key = details::FilterPayload::modelConfig_t{pt, dt, sm};
                     auto fv =
                         (uint32_t)sst::filters::FilterSubType::st_cutoffwarp_tanh1 + off + idx;
                     ;

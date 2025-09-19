@@ -17,6 +17,7 @@
 #define INCLUDE_SST_FILTERS_PLUS_PLUS_MODELS_TRIPOLE_H
 
 #include "sst/filters.h"
+#include "sst/filters++/enums.h"
 
 #include <unordered_set>
 
@@ -26,32 +27,32 @@ inline const details::FilterPayload::configMap_t &getModelConfigurations()
 {
     namespace sft = sst::filters;
     static details::FilterPayload::configMap_t configs{
-        {{Slope::Slope_1Stage, FilterSubModel::LowLowLow},
+        {{Passband::LowLowLow, FilterSubModel::First_output},
          {sft::FilterType::fut_tripole, sft::FilterSubType::st_tripole_LLL1}},
-        {{Slope::Slope_2Stage, FilterSubModel::LowLowLow},
+        {{Passband::LowLowLow, FilterSubModel::Second_output},
          {sft::FilterType::fut_tripole, sft::FilterSubType::st_tripole_LLL2}},
-        {{Slope::Slope_3Stage, FilterSubModel::LowLowLow},
+        {{Passband::LowLowLow, FilterSubModel::Third_output},
          {sft::FilterType::fut_tripole, sft::FilterSubType::st_tripole_LLL3}},
 
-        {{Slope::Slope_1Stage, FilterSubModel::LowHighLow},
+        {{Passband::LowHighLow, FilterSubModel::First_output},
          {sft::FilterType::fut_tripole, sft::FilterSubType::st_tripole_LHL1}},
-        {{Slope::Slope_2Stage, FilterSubModel::LowHighLow},
+        {{Passband::LowHighLow, FilterSubModel::Second_output},
          {sft::FilterType::fut_tripole, sft::FilterSubType::st_tripole_LHL2}},
-        {{Slope::Slope_3Stage, FilterSubModel::LowHighLow},
+        {{Passband::LowHighLow, FilterSubModel::Third_output},
          {sft::FilterType::fut_tripole, sft::FilterSubType::st_tripole_LHL3}},
 
-        {{Slope::Slope_1Stage, FilterSubModel::HighLowHigh},
+        {{Passband::HighLowHigh, FilterSubModel::First_output},
          {sft::FilterType::fut_tripole, sft::FilterSubType::st_tripole_HLH1}},
-        {{Slope::Slope_2Stage, FilterSubModel::HighLowHigh},
+        {{Passband::HighLowHigh, FilterSubModel::Second_output},
          {sft::FilterType::fut_tripole, sft::FilterSubType::st_tripole_HLH2}},
-        {{Slope::Slope_3Stage, FilterSubModel::HighLowHigh},
+        {{Passband::HighLowHigh, FilterSubModel::Third_output},
          {sft::FilterType::fut_tripole, sft::FilterSubType::st_tripole_HLH3}},
 
-        {{Slope::Slope_1Stage, FilterSubModel::HighHighHigh},
+        {{Passband::HighHighHigh, FilterSubModel::First_output},
          {sft::FilterType::fut_tripole, sft::FilterSubType::st_tripole_HHH1}},
-        {{Slope::Slope_2Stage, FilterSubModel::HighHighHigh},
+        {{Passband::HighHighHigh, FilterSubModel::Second_output},
          {sft::FilterType::fut_tripole, sft::FilterSubType::st_tripole_HHH2}},
-        {{Slope::Slope_3Stage, FilterSubModel::HighHighHigh},
+        {{Passband::HighHighHigh, FilterSubModel::Third_output},
          {sft::FilterType::fut_tripole, sft::FilterSubType::st_tripole_HHH3}},
 
     };

@@ -32,6 +32,7 @@ struct ModelConfig
     ModelConfig(Passband p, DriveMode d) : pt(p), dt(d) {}
     ModelConfig(Passband p, Slope s) : pt(p), st(s) {}
     ModelConfig(Passband p, FilterSubModel m) : pt(p), mt(m) {}
+    ModelConfig(Passband p, DriveMode d, FilterSubModel m) : pt(p), dt(d), mt(m) {}
     ModelConfig(Passband p, Slope s, FilterSubModel m) : pt(p), st(s), mt(m) {}
     ModelConfig(Slope s, FilterSubModel m) : st(s), mt(m) {}
 

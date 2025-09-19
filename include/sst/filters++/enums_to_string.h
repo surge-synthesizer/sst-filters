@@ -96,6 +96,16 @@ inline std::string toString(const Passband &p)
         return "Notch+LP";
     case Passband::PhaserAndLP:
         return "Phaser+LP";
+
+        // For Tri-Pole
+    case Passband::LowLowLow:
+        return "Low/Low/Low";
+    case Passband::LowHighLow:
+        return "Low/High/Low";
+    case Passband::HighLowHigh:
+        return "High/Low/High";
+    case Passband::HighHighHigh:
+        return "High/High/High";
     }
     return "PASSTYPE_ERROR";
 }
@@ -124,15 +134,6 @@ inline std::string toString(const Slope &s)
         return "12 dB/6 dB";
     case Slope::Slope_18dB6dB:
         return "18 dB/6 dB";
-
-    case Slope::Slope_1Stage:
-        return "1 Stage";
-    case Slope::Slope_2Stage:
-        return "2 Stages";
-    case Slope::Slope_3Stage:
-        return "3 Stages";
-    case Slope::Slope_4Stage:
-        return "4 Stages";
 
     case Slope::Slope_Morph:
         return "Morph";
@@ -184,7 +185,7 @@ inline std::string toString(const DriveMode &d)
     case DriveMode::K35_Continuous:
         return "Continuous";
 
-    // For the Cutoff/Resonance Warp
+        // For Cutoff/Resonance Warp
     case DriveMode::Tanh:
         return "tanh";
     case DriveMode::SoftClip:
@@ -220,14 +221,22 @@ inline std::string toString(const FilterSubModel &s)
         return "Huovilainen Compensated";
 
     // For Tri-Pole
-    case FilterSubModel::LowLowLow:
-        return "Low/Low/Low";
-    case FilterSubModel::LowHighLow:
-        return "Low/High/Low";
-    case FilterSubModel::HighLowHigh:
-        return "High/Low/High";
-    case FilterSubModel::HighHighHigh:
-        return "High/High/High";
+    case FilterSubModel::First_output:
+        return "First";
+    case FilterSubModel::Second_output:
+        return "Second";
+    case FilterSubModel::Third_output:
+        return "Third";
+
+        // For Cutoff/Resonance Warp
+    case FilterSubModel::Warp_1Stage:
+        return "1 Stage";
+    case FilterSubModel::Warp_2Stage:
+        return "2 Stage";
+    case FilterSubModel::Warp_3Stage:
+        return "3 Stage";
+    case FilterSubModel::Warp_4Stage:
+        return "4 Stage";
     }
     return "SUBMODEL_ERROR";
 }

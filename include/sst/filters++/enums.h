@@ -69,7 +69,13 @@ enum struct Passband : uint32_t
     Phaser = 0x80,
 
     NotchAndLP = 0x92,
-    PhaserAndLP = 0x94
+    PhaserAndLP = 0x94,
+
+    // For Tri-pole
+    LowLowLow = 0x30 + 0b000,
+    LowHighLow = 0x30 + 0b010,
+    HighLowHigh = 0x30 + 0b101,
+    HighHighHigh = 0x30 + 0b111
 };
 
 std::string toString(const Passband &p);
@@ -88,11 +94,6 @@ enum struct Slope : uint32_t
     Slope_6dB18dB = 0x08,
     Slope_12dB6dB = 0x13,
     Slope_18dB6dB = 0x19,
-
-    Slope_1Stage = 0x30,
-    Slope_2Stage = 0x31,
-    Slope_3Stage = 0x32,
-    Slope_4Stage = 0x33,
 
     Slope_Morph = 0x40,
 
@@ -123,12 +124,13 @@ enum struct DriveMode : uint32_t
     K35_Extreme = 0x38,
     K35_Continuous = 0x39,
 
+    Pushed = 0x50,
+
     // For the res and cutoff warp circuits
     Tanh = 0x40,
     SoftClip = 0x42,
     OJD = 0x44,
 
-    Pushed = 0x50
 };
 
 std::string toString(const DriveMode &d);
@@ -146,11 +148,16 @@ enum struct FilterSubModel : uint32_t
     Huov = 0x24,
     HuovCompensated = 0x26,
 
-    // For Tri-pole
-    LowLowLow = 0x30 + 0b000,
-    LowHighLow = 0x30 + 0b010,
-    HighLowHigh = 0x30 + 0b101,
-    HighHighHigh = 0x30 + 0b111
+    // For Tripole
+    First_output = 0x31,
+    Second_output = 0x32,
+    Third_output = 0x33,
+
+    // For the res and cutoff warp circuits
+    Warp_1Stage = 0x60,
+    Warp_2Stage = 0x61,
+    Warp_3Stage = 0x62,
+    Warp_4Stage = 0x63,
 };
 
 std::string toString(const FilterSubModel &s);
