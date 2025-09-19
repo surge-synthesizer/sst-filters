@@ -41,11 +41,10 @@ TEST_CASE("Cutoff Warp")
 
         namespace sfpp = sst::filtersplusplus;
         int idx{0};
-        for (auto sm : {sfpp::FilterSubModel::Tanh, sfpp::FilterSubModel::SoftClip,
-                        sfpp::FilterSubModel::OJD})
+        for (auto d : {sfpp::DriveMode::Tanh, sfpp::DriveMode::SoftClip, sfpp::DriveMode::OJD})
         {
-            for (auto d : {sfpp::DriveMode::Warp_1Stage, sfpp::DriveMode::Warp_2Stage,
-                           sfpp::DriveMode::Warp_3Stage, sfpp::DriveMode::Warp_4Stage})
+            for (auto sm : {sfpp::FilterSubModel::Warp_1Stage, sfpp::FilterSubModel::Warp_2Stage,
+                            sfpp::FilterSubModel::Warp_3Stage, sfpp::FilterSubModel::Warp_4Stage})
             {
                 runTest(sfpp::FilterModel::CutoffWarp, {sfpp::Passband::LP, d, sm}, 0, 0.5,
                         RMSs[idx]);
@@ -77,11 +76,10 @@ TEST_CASE("Cutoff Warp")
 
         namespace sfpp = sst::filtersplusplus;
         int idx{0};
-        for (auto sm : {sfpp::FilterSubModel::Tanh, sfpp::FilterSubModel::SoftClip,
-                        sfpp::FilterSubModel::OJD})
+        for (auto d : {sfpp::DriveMode::Tanh, sfpp::DriveMode::SoftClip, sfpp::DriveMode::OJD})
         {
-            for (auto d : {sfpp::DriveMode::Warp_1Stage, sfpp::DriveMode::Warp_2Stage,
-                           sfpp::DriveMode::Warp_3Stage, sfpp::DriveMode::Warp_4Stage})
+            for (auto sm : {sfpp::FilterSubModel::Warp_1Stage, sfpp::FilterSubModel::Warp_2Stage,
+                            sfpp::FilterSubModel::Warp_3Stage, sfpp::FilterSubModel::Warp_4Stage})
             {
                 runTest(sfpp::FilterModel::CutoffWarp, {sfpp::Passband::HP, d, sm}, 0, 0.5,
                         RMSs[idx]);
@@ -113,11 +111,10 @@ TEST_CASE("Cutoff Warp")
 
         namespace sfpp = sst::filtersplusplus;
         int idx{0};
-        for (auto sm : {sfpp::FilterSubModel::Tanh, sfpp::FilterSubModel::SoftClip,
-                        sfpp::FilterSubModel::OJD})
+        for (auto d : {sfpp::DriveMode::Tanh, sfpp::DriveMode::SoftClip, sfpp::DriveMode::OJD})
         {
-            for (auto d : {sfpp::DriveMode::Warp_1Stage, sfpp::DriveMode::Warp_2Stage,
-                           sfpp::DriveMode::Warp_3Stage, sfpp::DriveMode::Warp_4Stage})
+            for (auto sm : {sfpp::FilterSubModel::Warp_1Stage, sfpp::FilterSubModel::Warp_2Stage,
+                            sfpp::FilterSubModel::Warp_3Stage, sfpp::FilterSubModel::Warp_4Stage})
             {
                 runTest(sfpp::FilterModel::CutoffWarp, {sfpp::Passband::Notch, d, sm}, 0, 0.5,
                         RMSs[idx]);
@@ -149,11 +146,10 @@ TEST_CASE("Cutoff Warp")
 
         namespace sfpp = sst::filtersplusplus;
         int idx{0};
-        for (auto sm : {sfpp::FilterSubModel::Tanh, sfpp::FilterSubModel::SoftClip,
-                        sfpp::FilterSubModel::OJD})
+        for (auto d : {sfpp::DriveMode::Tanh, sfpp::DriveMode::SoftClip, sfpp::DriveMode::OJD})
         {
-            for (auto d : {sfpp::DriveMode::Warp_1Stage, sfpp::DriveMode::Warp_2Stage,
-                           sfpp::DriveMode::Warp_3Stage, sfpp::DriveMode::Warp_4Stage})
+            for (auto sm : {sfpp::FilterSubModel::Warp_1Stage, sfpp::FilterSubModel::Warp_2Stage,
+                            sfpp::FilterSubModel::Warp_3Stage, sfpp::FilterSubModel::Warp_4Stage})
             {
                 runTest(sfpp::FilterModel::CutoffWarp, {sfpp::Passband::BP, d, sm}, 0, 0.5,
                         RMSs[idx]);
@@ -185,11 +181,10 @@ TEST_CASE("Cutoff Warp")
 
         namespace sfpp = sst::filtersplusplus;
         int idx{0};
-        for (auto sm : {sfpp::FilterSubModel::Tanh, sfpp::FilterSubModel::SoftClip,
-                        sfpp::FilterSubModel::OJD})
+        for (auto d : {sfpp::DriveMode::Tanh, sfpp::DriveMode::SoftClip, sfpp::DriveMode::OJD})
         {
-            for (auto d : {sfpp::DriveMode::Warp_1Stage, sfpp::DriveMode::Warp_2Stage,
-                           sfpp::DriveMode::Warp_3Stage, sfpp::DriveMode::Warp_4Stage})
+            for (auto sm : {sfpp::FilterSubModel::Warp_1Stage, sfpp::FilterSubModel::Warp_2Stage,
+                            sfpp::FilterSubModel::Warp_3Stage, sfpp::FilterSubModel::Warp_4Stage})
             {
                 runTest(sfpp::FilterModel::CutoffWarp, {sfpp::Passband::Allpass, d, sm}, 0, 0.5,
                         RMSs[idx]);

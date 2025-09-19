@@ -135,14 +135,6 @@ inline std::string toString(const Slope &s)
     case Slope::Slope_18dB6dB:
         return "18 dB/6 dB";
 
-    case Slope::Slope_1Stage:
-        return "1 Stage";
-    case Slope::Slope_2Stage:
-        return "2 Stages";
-    case Slope::Slope_3Stage:
-        return "3 Stages";
-    case Slope::Slope_4Stage:
-        return "4 Stages";
 
     case Slope::Slope_Morph:
         return "Morph";
@@ -194,14 +186,13 @@ inline std::string toString(const DriveMode &d)
     case DriveMode::K35_Continuous:
         return "Continuous";
 
-    case DriveMode::Warp_1Stage:
-        return "1 Stage";
-    case DriveMode::Warp_2Stage:
-        return "2 Stage";
-    case DriveMode::Warp_3Stage:
-        return "3 Stage";
-    case DriveMode::Warp_4Stage:
-        return "4 Stage";
+        // For Cutoff/Resonance Warp
+    case DriveMode::Tanh:
+        return "tanh";
+    case DriveMode::SoftClip:
+        return "Soft Clip";
+    case DriveMode::OJD:
+        return "OJD";
 
     case DriveMode::Pushed:
         return "Pushed";
@@ -238,13 +229,15 @@ inline std::string toString(const FilterSubModel &s)
     case FilterSubModel::Third_output:
         return "Third";
 
-    // For Cutoff/Resonance Warp
-    case FilterSubModel::Tanh:
-        return "tanh";
-    case FilterSubModel::SoftClip:
-        return "Soft Clip";
-    case FilterSubModel::OJD:
-        return "OJD";
+        // For Cutoff/Resonance Warp
+    case FilterSubModel::Warp_1Stage:
+        return "1 Stage";
+    case FilterSubModel::Warp_2Stage:
+        return "2 Stage";
+    case FilterSubModel::Warp_3Stage:
+        return "3 Stage";
+    case FilterSubModel::Warp_4Stage:
+        return "4 Stage";
     }
     return "SUBMODEL_ERROR";
 }

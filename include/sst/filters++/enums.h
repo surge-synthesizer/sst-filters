@@ -132,10 +132,10 @@ enum struct DriveMode : uint32_t
     Pushed = 0x50,
 
     // For the res and cutoff warp circuits
-    Warp_1Stage = 0x60,
-    Warp_2Stage = 0x61,
-    Warp_3Stage = 0x62,
-    Warp_4Stage = 0x63,
+    Tanh = 0x40,
+    SoftClip = 0x42,
+    OJD = 0x44,
+
 };
 
 std::string toString(const DriveMode &d);
@@ -159,9 +159,10 @@ enum struct FilterSubModel : uint32_t
     Third_output = 0x33,
 
     // For the res and cutoff warp circuits
-    Tanh = 0x40,
-    SoftClip = 0x42,
-    OJD = 0x44,
+    Warp_1Stage = 0x60,
+    Warp_2Stage = 0x61,
+    Warp_3Stage = 0x62,
+    Warp_4Stage = 0x63,
 };
 
 std::string toString(const FilterSubModel &s);
