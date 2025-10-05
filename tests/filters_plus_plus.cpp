@@ -221,3 +221,90 @@ TEST_CASE("FiltersPlusPlus API Consistency")
         }
     }
 }
+
+TEST_CASE("Configuration Selector")
+{
+    namespace sfpp = sst::filtersplusplus;
+
+    SECTION("sfpp::get<enum> works")
+    {
+        auto cf = sfpp::Filter::availableModelConfigurations(sfpp::FilterModel::CutoffWarp);
+        auto m = cf[0];
+        REQUIRE(sfpp::get<sfpp::Passband>(m) == m.pt);
+        REQUIRE(sfpp::get<sfpp::Slope>(m) == m.st);
+        REQUIRE(sfpp::get<sfpp::DriveMode>(m) == m.dt);
+        REQUIRE(sfpp::get<sfpp::FilterSubModel>(m) == m.mt);
+    }
+
+    SECTION("Get passbands for a few things")
+    {
+        auto pbv = sfpp::potentialValuesFor<sfpp::Passband>(sfpp::FilterModel::VemberClassic);
+        REQUIRE(pbv.size() == 5);
+
+        auto sbv = sfpp::potentialValuesFor<sfpp::Slope>(sfpp::FilterModel::VemberClassic);
+        REQUIRE(sbv.size() == 2);
+
+        auto sobv = sfpp::potentialValuesFor<sfpp::Slope>(sfpp::FilterModel::OBXD_4Pole);
+        REQUIRE(sobv.size() == 5);
+    }
+
+    SECTION("Model is valid (full)")
+    {
+        auto fm = sfpp::FilterModel::CutoffWarp;
+        auto cf = sfpp::Filter::availableModelConfigurations(fm);
+        for (auto c : cf)
+            REQUIRE(sfpp::isModelConfigValid(fm, c));
+
+        for (auto c : cf)
+        {
+            c.pt = sst::filtersplusplus::Passband::NotchAndLP;
+            REQUIRE(!sfpp::isModelConfigValid(fm, c));
+        }
+    }
+
+    SECTION("Model is valid (partial)")
+    {
+        auto fm = sfpp::FilterModel::CutoffWarp;
+        auto cf = sfpp::Filter::availableModelConfigurations(fm);
+        auto tmc = cf[0];
+        REQUIRE(sfpp::isPartialConfigValid(fm, sfpp::Passband::LP));
+        REQUIRE(!sfpp::isPartialConfigValid(fm, sfpp::Passband::LowShelf));
+
+        REQUIRE(sfpp::isPartialConfigValid(fm, sfpp::Passband::LP, sfpp::Slope::UNSUPPORTED));
+        REQUIRE(
+            !sfpp::isPartialConfigValid(fm, sfpp::Passband::LowShelf, sfpp::Slope::UNSUPPORTED));
+        REQUIRE(!sfpp::isPartialConfigValid(fm, sfpp::Passband::LP, sfpp::Slope::Slope_6dB));
+
+        REQUIRE(sfpp::isPartialConfigValid(fm, sfpp::Passband::LP, sfpp::Slope::UNSUPPORTED,
+                                           sfpp::DriveMode::OJD));
+        REQUIRE(!sfpp::isPartialConfigValid(fm, sfpp::Passband::LowShelf, sfpp::Slope::UNSUPPORTED,
+                                            sfpp::DriveMode::OJD));
+        REQUIRE(!sfpp::isPartialConfigValid(fm, sfpp::Passband::LP, sfpp::Slope::UNSUPPORTED,
+                                            sfpp::DriveMode::K35_Continuous));
+        REQUIRE(!sfpp::isPartialConfigValid(fm, sfpp::Passband::LP, sfpp::Slope::Slope_6dB,
+                                            sfpp::DriveMode::K35_Continuous));
+    }
+
+    SECTION("Partial Configs with nothing configed")
+    {
+        auto fm = sfpp::FilterModel::VemberClassic;
+
+        REQUIRE(sfpp::valuesAndValidityForPartialConfig<sfpp::Passband>(fm).size() ==
+                sfpp::potentialValuesFor<sfpp::Passband>(fm).size());
+
+        // OK so lets compare LP and Allpass
+        auto lpSlpes = sfpp::valuesAndValidityForPartialConfig<sfpp::Slope>(fm, sfpp::Passband::LP);
+        auto apSlpes =
+            sfpp::valuesAndValidityForPartialConfig<sfpp::Slope>(fm, sfpp::Passband::Allpass);
+
+        for (auto [l, v] : lpSlpes)
+        {
+            std::cout << sfpp::toString(l) << " " << v << std::endl;
+        }
+
+        for (auto [l, v] : apSlpes)
+        {
+            std::cout << sfpp::toString(l) << " " << v << std::endl;
+        }
+    }
+}

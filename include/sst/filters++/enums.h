@@ -162,5 +162,13 @@ enum struct FilterSubModel : uint32_t
 
 std::string toString(const FilterSubModel &s);
 
+template <typename T>
+concept is_modelconfig_enum = std::is_same_v<T, Passband> || std::is_same_v<T, Slope> ||
+                              std::is_same_v<T, DriveMode> || std::is_same_v<T, FilterSubModel>;
+
+template <typename T, typename Q>
+concept is_distinct_modelconfig_enum =
+    is_modelconfig_enum<Q> && is_modelconfig_enum<T> && !std::is_same_v<T, Q>;
+
 } // namespace sst::filtersplusplus
 #endif // ENUMS_H

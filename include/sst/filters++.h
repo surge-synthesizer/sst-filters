@@ -17,4 +17,6 @@
 #define INCLUDE_SST_FILTERS_PLUS_PLUS_H
 
 #include "filters++/api.h"
+#include "filters++/configuration_selector.h"
+
 #endif // FILTERS_H
