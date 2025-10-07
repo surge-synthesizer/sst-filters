@@ -69,6 +69,18 @@ struct ModelConfig
     }
 };
 
+template <is_modelconfig_enum T> static T get(const ModelConfig &mc);
+template <> inline Passband get<Passband>(const ModelConfig &mc) { return mc.pt; }
+template <> inline Slope get<Slope>(const ModelConfig &mc) { return mc.st; }
+template <> inline DriveMode get<DriveMode>(const ModelConfig &mc) { return mc.dt; }
+template <> inline FilterSubModel get<FilterSubModel>(const ModelConfig &mc) { return mc.mt; }
+
+template <is_modelconfig_enum T> static void set(ModelConfig &mc, const T &t);
+template <> inline void set<Passband>(ModelConfig &mc, const Passband &t) { mc.pt = t; }
+template <> inline void set<Slope>(ModelConfig &mc, const Slope &t) { mc.st = t; }
+template <> inline void set<DriveMode>(ModelConfig &mc, const DriveMode &t) { mc.dt = t; }
+template <> inline void set<FilterSubModel>(ModelConfig &mc, const FilterSubModel &t) { mc.mt = t; }
+
 inline bool operator==(const ModelConfig &lhs, const ModelConfig &rhs) noexcept
 {
     return lhs.pt == rhs.pt && lhs.st == rhs.st && lhs.dt == rhs.dt && lhs.mt == rhs.mt;
