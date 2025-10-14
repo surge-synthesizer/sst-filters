@@ -268,6 +268,22 @@ const int fut_subcount[num_filter_types] = {
     15  // fit_obxd_xpander
 };
 
+/*
+ * Subtypes are integers below 16 - maybe one day go as high as 32. So we have space in the
+ * int for more information, and we mask on higher bits to allow us to
+ * programmatically change features we don't expose to users, in things like
+ * FX. So far this is only used to extend the COMB time in the combulator.
+ *
+ * These should obviously be distinct per type but can overlap in values otherwise
+ *
+ * Try and use above 2^16
+ */
+enum QFUSubtypeMasks : int32_t
+{
+    UNMASK_SUBTYPE = (1 << 8) - 1,
+    EXTENDED_COMB = 1 << 9
+};
+
 /** Sub-types for each filter are defined here */
 enum FilterSubType
 {
@@ -341,9 +357,19 @@ enum FilterSubType
     st_obxd2pole_pushed = 1,
 
     // Comb is special. Its the same CME and 0123 and 50/100/50/100 but for pos neg so
+    st_comb_pos_50 = 0,
+    st_comb_pos_100 = 1,
+    st_comb_neg_50 = 2,
+    st_comb_neg_100 = 3,
     st_comb_continuous_pos = 4,    // this works with pos
     st_comb_continuous_neg = 5,    // this works with pos
     st_comb_continuous_posneg = 6, // this works with pos
+
+    // Add these to the enum so that asan doesn't complain when we cast them basically
+    st_comb_pos_50_ext = st_comb_pos_50 | QFUSubtypeMasks::EXTENDED_COMB,
+    st_comb_pos_100_ext = st_comb_pos_100 | QFUSubtypeMasks::EXTENDED_COMB,
+    st_comb_neg_50_ext = st_comb_neg_50 | QFUSubtypeMasks::EXTENDED_COMB,
+    st_comb_neg_100_ext = st_comb_neg_100 | QFUSubtypeMasks::EXTENDED_COMB,
 
     // Legacy fixes for BP12 misconfiguration
     st_bp12_LegacyDriven = 3,
