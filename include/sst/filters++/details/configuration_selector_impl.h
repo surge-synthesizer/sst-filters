@@ -95,7 +95,8 @@ inline ModelConfig closestValidModelTo(const sst::filtersplusplus::FilterModel &
 }
 
 template <is_modelconfig_enum T>
-inline std::vector<T> potentialValuesFor(const sst::filtersplusplus::FilterModel &fm, bool returnUnsupportedIfEmpty)
+inline std::vector<T> potentialValuesFor(const sst::filtersplusplus::FilterModel &fm,
+                                         bool returnUnsupportedIfEmpty)
 {
     std::set<T> vals;
     auto cf = Filter::availableModelConfigurations(fm, true);

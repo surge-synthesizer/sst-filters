@@ -73,7 +73,8 @@ ModelConfig closestValidModelTo(const FilterModel &fm, const ModelConfig &mc);
  * would give you all the slopes that any configuration
  * of the model would use.
  */
-template <is_modelconfig_enum T> std::vector<T> potentialValuesFor(const FilterModel &fm, bool returnUnsupportedIfEmpty = false);
+template <is_modelconfig_enum T>
+std::vector<T> potentialValuesFor(const FilterModel &fm, bool returnUnsupportedIfEmpty = false);
 
 /**
  * If a model doesn't use a particular dimension at all
