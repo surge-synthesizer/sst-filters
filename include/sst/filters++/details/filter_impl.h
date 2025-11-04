@@ -39,15 +39,16 @@ inline bool Filter::prepareInstance()
 
     payload.func = GetQFPtrFilterUnit(ft, st);
 
-    // technically we should also check active here
-    assert((requiredDelayLinesSizes(getFilterModel(), getModelConfiguration()) == 0) ||
-           payload.externalDelayLines[0] != nullptr);
-    assert((requiredDelayLinesSizes(getFilterModel(), getModelConfiguration()) == 0) ||
-           payload.externalDelayLines[1] != nullptr);
-    assert((requiredDelayLinesSizes(getFilterModel(), getModelConfiguration()) == 0) ||
-           payload.externalDelayLines[2] != nullptr);
-    assert((requiredDelayLinesSizes(getFilterModel(), getModelConfiguration()) == 0) ||
-           payload.externalDelayLines[3] != nullptr);
+    if (requiredDelayLinesSizes(getFilterModel(), getModelConfiguration()) != 0)
+    {
+        for (int i = 0; i < 4; ++i)
+        {
+            if (payload.active[i])
+            {
+                assert(payload.externalDelayLines[i] != nullptr);
+            }
+        }
+    }
 
     return payload.func != nullptr;
 }
