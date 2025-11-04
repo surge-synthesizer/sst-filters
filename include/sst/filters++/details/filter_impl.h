@@ -39,15 +39,14 @@ inline bool Filter::prepareInstance()
 
     payload.func = GetQFPtrFilterUnit(ft, st);
 
-    // technically we should also check active here
-    assert((requiredDelayLinesSizes(getFilterModel(), getModelConfiguration()) == 0) ||
-           payload.externalDelayLines[0] != nullptr);
-    assert((requiredDelayLinesSizes(getFilterModel(), getModelConfiguration()) == 0) ||
-           payload.externalDelayLines[1] != nullptr);
-    assert((requiredDelayLinesSizes(getFilterModel(), getModelConfiguration()) == 0) ||
-           payload.externalDelayLines[2] != nullptr);
-    assert((requiredDelayLinesSizes(getFilterModel(), getModelConfiguration()) == 0) ||
-           payload.externalDelayLines[3] != nullptr);
+    assert(requiredDelayLinesSizes(getFilterModel(), getModelConfiguration()) == 0 ||
+           payload.active[0] == 0 || payload.externalDelayLines[0] != nullptr);
+    assert(requiredDelayLinesSizes(getFilterModel(), getModelConfiguration()) == 0 ||
+           payload.active[1] == 0 || payload.externalDelayLines[1] != nullptr);
+    assert(requiredDelayLinesSizes(getFilterModel(), getModelConfiguration()) == 0 ||
+           payload.active[2] == 0 || payload.externalDelayLines[2] != nullptr);
+    assert(requiredDelayLinesSizes(getFilterModel(), getModelConfiguration()) == 0 ||
+           payload.active[3] == 0 || payload.externalDelayLines[3] != nullptr);
 
     return payload.func != nullptr;
 }
