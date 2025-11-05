@@ -41,7 +41,7 @@ struct Reg
 template <typename TuningProvider>
 void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, float freq, float res,
                       int subtype, float sampleRate, float sampleRateInv, TuningProvider *provider,
-                      float bellShelfAmpPM1)
+                      float bellShelfAmp)
 {
     float lC[n_cm_coeffs]{};
 
@@ -57,7 +57,6 @@ void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, float freq, fl
     auto g = sst::basic_blocks::dsp::fasttan(M_PI * conorm);
     auto k = 2.0 - 2 * res;
 
-    auto bellShelfAmp = bellShelfAmpPM1 + 1; // since the input is bipolar -1..1
     if (subtype == st_cytomic_bell)
     {
         bellShelfAmp = std::max(bellShelfAmp, 0.001f);
@@ -104,26 +103,24 @@ void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, float freq, fl
         break;
     case st_cytomic_bell:
     {
-        auto A = std::clamp(bellShelfAmp, 0.001f, 1.999f);
+        // auto A = bellShelfAmp;
         lC[Coeff::m0] = 1.0;
-        lC[Coeff::m1] = k * (A * A - 1);
+        lC[Coeff::m1] = k * (bellShelfAmp * bellShelfAmp - 1);
         lC[Coeff::m2] = 0;
     }
     break;
     case st_cytomic_lowshelf:
     {
-        auto A = std::clamp(bellShelfAmp, 0.001f, 1.999f);
         lC[Coeff::m0] = 1.0;
-        lC[Coeff::m1] = k * (A - 1);
-        lC[Coeff::m2] = A * A - 1;
+        lC[Coeff::m1] = k * (bellShelfAmp - 1);
+        lC[Coeff::m2] = bellShelfAmp * bellShelfAmp - 1;
     }
     break;
     case st_cytomic_highshelf:
     {
-        auto A = std::clamp(bellShelfAmp, 0.001f, 1.999f);
-        lC[Coeff::m0] = A * A;
-        lC[Coeff::m1] = A * k * (1 - A);
-        lC[Coeff::m2] = 1 - A * A;
+        lC[Coeff::m0] = bellShelfAmp * bellShelfAmp;
+        lC[Coeff::m1] = bellShelfAmp * k * (1 - bellShelfAmp);
+        lC[Coeff::m2] = 1 - bellShelfAmp * bellShelfAmp;
     }
     break;
     }
