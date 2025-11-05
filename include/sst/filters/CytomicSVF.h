@@ -181,26 +181,24 @@ struct CytomicSVF
             break;
         case Mode::Bell:
         {
-            auto A = bellShelfSSE;
+            // auto A = bellShelfSSE;
             m0 = oneSSE;
-            m1 = MUL(k, SUB(MUL(A, A), oneSSE));
+            m1 = MUL(k, SUB(MUL(bellShelfSSE, bellShelfSSE), oneSSE));
             m2 = SIMD_MM(setzero_ps)();
         }
         break;
         case Mode::LowShelf:
         {
-            auto A = bellShelfSSE;
             m0 = oneSSE;
-            m1 = MUL(k, SUB(A, oneSSE));
-            m2 = SUB(MUL(A, A), oneSSE);
+            m1 = MUL(k, SUB(bellShelfSSE, oneSSE));
+            m2 = SUB(MUL(bellShelfSSE, bellShelfSSE), oneSSE);
         }
         break;
         case Mode::HighShelf:
         {
-            auto A = bellShelfSSE;
-            m0 = MUL(A, A);
-            m1 = MUL(MUL(k, SUB(oneSSE, A)), A);
-            m2 = SUB(oneSSE, MUL(A, A));
+            m0 = MUL(bellShelfSSE, bellShelfSSE);
+            m1 = MUL(MUL(k, SUB(oneSSE, bellShelfSSE)), bellShelfSSE);
+            m2 = SUB(oneSSE, MUL(bellShelfSSE, bellShelfSSE));
         }
         break;
         default:
