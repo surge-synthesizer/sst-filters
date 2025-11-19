@@ -28,7 +28,6 @@
 
 #include <algorithm>
 
-
 #if defined(__SSE2__) || defined(_M_AMD64) || defined(_M_X64) ||                                   \
     (defined(_M_IX86_FP) && _M_IX86_FP >= 2)
 #include <emmintrin.h>
@@ -60,7 +59,7 @@ namespace sst::filters
 struct CytomicTilt
 {
     SIMD_M128 ic1eqLo{SIMD_MM(setzero_ps)()}, ic2eqLo{SIMD_MM(setzero_ps)()},
-              ic1eqHi{SIMD_MM(setzero_ps)()}, ic2eqHi{SIMD_MM(setzero_ps)()};
+        ic1eqHi{SIMD_MM(setzero_ps)()}, ic2eqHi{SIMD_MM(setzero_ps)()};
 
     SIMD_M128 g, k, gk, a1, a2, a3, m0Lo, m1Lo, m2Lo, m0Hi, m1Hi, m2Hi;
 
@@ -98,7 +97,7 @@ struct CytomicTilt
         m0Lo = oneSSE;
         m1Lo = MUL(k, SUB(invA, oneSSE));
         m2Lo = SUB(MUL(invA, invA), oneSSE);
-        
+
         m0Hi = MUL(A, A);
         m1Hi = MUL(MUL(k, SUB(oneSSE, A)), A);
         m2Hi = SUB(oneSSE, m0Hi);
