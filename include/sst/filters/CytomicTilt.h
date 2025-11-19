@@ -78,7 +78,7 @@ struct CytomicTilt
      * but our dbToLin tables/functions assume dB/20
      * so for the last arg pass in dBToLinear(dB * .5f);
      */
-    void setCoeff(float freq, float res, float srInv, float dB = 1.f)
+    void setCoeff(float freq, float res, float srInv, float amp = 1.f)
     {
         auto conorm = std::clamp(freq * srInv, 0.f, 0.499f);
         res = std::clamp(res, 0.f, 0.98f);
@@ -90,7 +90,6 @@ struct CytomicTilt
         a2 = MUL(g, a1);
         a3 = MUL(g, a2);
 
-        auto amp = std::pow(10, dB / 40);
         auto A = SETALL(amp);
         auto invA = DIV(oneSSE, A);
 
