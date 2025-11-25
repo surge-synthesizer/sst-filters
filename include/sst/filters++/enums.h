@@ -148,6 +148,8 @@ enum struct FilterSubModel : uint32_t
     RungeKuttaCompensated = 0x22,
     Huov = 0x24,
     HuovCompensated = 0x26,
+    Huov2010 = 0x27,
+    HuovCompensated2010 = 0x28,
 
     // For Tripole
     First_output = 0x31,

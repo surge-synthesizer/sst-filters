@@ -240,7 +240,7 @@ const int fut_subcount[num_filter_types] = {
     2,  // fut_notch12
     2,  // fut_comb_pos (excluding morph)
     0,  // fut_SNH
-    4,  // fut_vintageladder
+    6,  // fut_vintageladder
     2,  // fut_obxd_2pole
     5,  // fut_obxd_4pole (excluding morph)
     5,  // fut_k35_lp
@@ -322,6 +322,8 @@ enum FilterSubType
     st_vintage_type1_compensated = 1, /**< and with bass compensation */
     st_vintage_type2 = 2,             /**< Vintage Ladder - Huovilean Model */
     st_vintage_type2_compensated = 3, /**< and with bass compensation */
+    st_vintage_type3 = 4,             /**< Vintage Ladder - Huovilean 2010 Model */
+    st_vintage_type3_compensated = 5, /**< and with bass compensation */
 
     st_resonancewarp_tanh1 = 0,     /**< Resonance Warp - 1 Stage tanh */
     st_resonancewarp_tanh2 = 1,     /**< Resonance Warp - 2 Stages tanh */

@@ -808,16 +808,19 @@ inline FilterUnitQFPtr GetCompensatedQFPtrFilterUnit(FilterType type, FilterSubT
     case fut_vintageladder:
         switch (subtype)
         {
-        case 0:
-        case 1:
+        case st_vintage_type1:
+        case st_vintage_type1_compensated:
             if constexpr (Compensated)
                 // Scale up by 6dB = 1.994 amplitudes
                 return ScaleQFPtr<1994, VintageLadder::RK::process>;
             else
                 return VintageLadder::RK::process;
-        case 2:
-        case 3:
+        case st_vintage_type2:
+        case st_vintage_type2_compensated:
             return VintageLadder::Huov::process;
+        case st_vintage_type3:
+        case st_vintage_type3_compensated:
+            return VintageLadder::Huov2010::process;
         default:
             break;
         }

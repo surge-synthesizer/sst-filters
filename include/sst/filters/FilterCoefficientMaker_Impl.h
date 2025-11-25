@@ -294,6 +294,12 @@ void FilterCoefficientMaker<TuningProvider>::MakeCoeffs(float Freq, float Reso, 
                                                   SubType == st_vintage_type2_compensated,
                                                   providerI);
             break;
+        case st_vintage_type3:
+        case st_vintage_type3_compensated:
+            VintageLadder::Huov2010::makeCoefficients(this, Freq, Reso, sampleRate, sampleRateInv,
+                                                  SubType == st_vintage_type3_compensated,
+                                                  providerI);
+            break;
         default:
             // SOFTWARE ERROR
             break;
