@@ -182,6 +182,8 @@ const char fut_vintageladder_subtypes[6][32] = {
     "Type 1 Compensated",
     "Type 2",
     "Type 2 Compensated",
+    "Type 3",
+    "Type 3 Compensated"
 };
 
 const char fut_obxd_2p_subtypes[2][32] = {"Standard", "Pushed"};
