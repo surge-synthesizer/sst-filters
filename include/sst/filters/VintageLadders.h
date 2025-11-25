@@ -496,22 +496,23 @@ inline SIMD_M128 onePole(int idx, QuadFilterUnitState *__restrict f, SIMD_M128 i
 
 inline SIMD_M128 process(QuadFilterUnitState *__restrict f, SIMD_M128 in)
 {
+    static constexpr float dr{1.0};
+    static const SIMD_M128 inDrive(F(dr)), outDrive(F(1.0/dr));
     auto zm1 = f->R[h_delayLine];
-    auto gaincomp = A(zm1, M(f->C[h_gcomp], in));
+    auto gaincomp = A(zm1, M(f->C[h_gcomp], M(inDrive, in)));
     auto fb = M(f->C[h_gres], gaincomp);
     auto n1 = nonlin(S(in, fb));
     auto s1 = onePole(0, f, n1);
     auto s2 = onePole(1, f,s1);
     auto s3 = onePole(2, f, s2);
     auto s4 = onePole(3, f,s3);
-    auto res = s4;
-    f->R[h_delayLine] = res;
+    f->R[h_delayLine] = s4;
 
     for (int k = 0; k < n_hcoeffs; ++k)
     {
         f->C[k] = SIMD_MM(add_ps)(f->C[k], f->dC[k]);
     }
-    return s4;
+    return M(outDrive, s4);
 }
 
 
