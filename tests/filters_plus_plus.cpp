@@ -224,7 +224,6 @@ TEST_CASE("FiltersPlusPlus API Consistency")
 
     SECTION("Frozen coefficients same as computing every block, including on change")
     {
-        int BS = 16;
         auto mkf = []() {
             namespace sfpp = sst::filtersplusplus;
 
@@ -234,7 +233,7 @@ TEST_CASE("FiltersPlusPlus API Consistency")
             filter.setSlope(sfpp::Slope::Slope_24dB);
             filter.setDriveMode(sfpp::DriveMode::Standard);
 
-            filter.setSampleRateAndBlockSize(48000, BS);
+            filter.setSampleRateAndBlockSize(48000, 16);
             REQUIRE(filter.prepareInstance());
             return filter;
         };
@@ -249,7 +248,7 @@ TEST_CASE("FiltersPlusPlus API Consistency")
             // increase an octave after half the samples
             auto pitch = (std::floor(i / 500) * 12);
 
-            if (i % BS == 0)
+            if (i % 16 == 0)
             {
                 f1.makeCoefficients(0, pitch, 0.5f);
                 if (i == 0)
@@ -276,7 +275,7 @@ TEST_CASE("FiltersPlusPlus API Consistency")
 
             REQUIRE(memcmp(&outOne, &outTwo, sizeof(float)) == 0);
 
-            if (i % BS == BS - 1)
+            if (i % BS == 16 - 1)
             {
                 f1.concludeBlock();
                 f2.concludeBlock();
