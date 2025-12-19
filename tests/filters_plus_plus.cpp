@@ -241,7 +241,8 @@ TEST_CASE("FiltersPlusPlus API Consistency")
         auto f2 = mkf();
         double ph{0};
         auto dph = 440.0 / 48000.0;
-        auto pitch = 0.f for (int i = 0; i < 1024; ++i)
+        auto pitch = 0.f;
+        for (int i = 0; i < 1024; ++i)
         {
             if (i % 16 == 0)
             {
