@@ -832,6 +832,7 @@ void FilterCoefficientMaker<TuningProvider>::Coeff_SNH(float freq, float reso, i
 template <typename TuningProvider>
 void FilterCoefficientMaker<TuningProvider>::FromDirect(const float (&N)[n_cm_coeffs])
 {
+    memcpy(fromDirectLast, N, sizeof(float) * n_cm_coeffs);
     if (FirstRun)
     {
         memset(dC, 0, sizeof(float) * n_cm_coeffs);

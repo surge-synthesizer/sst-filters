@@ -19,8 +19,7 @@ class FiltersPluginEditor::SubTypeComboBoxParameterAttachment : private juce::Co
   public:
     SubTypeComboBoxParameterAttachment(juce::RangedAudioParameter &param, juce::ComboBox &c,
                                        juce::UndoManager *um = nullptr)
-        : comboBox(c), attachment(
-                           param, [this](float f) { setValue(f); }, um)
+        : comboBox(c), attachment(param, [this](float f) { setValue(f); }, um)
     {
         sendInitialUpdate();
         comboBox.addListener(this);

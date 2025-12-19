@@ -84,6 +84,15 @@ template <typename TuningProvider = detail::BasicTuningProvider> class FilterCoe
     /** "Target" filter coefficients */
     float tC[n_cm_coeffs]{};
 
+    /** Last 'N' value used in fromdirect
+     * You would think this would be target (and ultimately it is) but the
+     * original usage calculated and applied these over and over and target was
+     * and still is the low pass filtered value. So this is that value and if you
+     * know that the register calculation is unchanged you can just apply it again
+     * in FromDirect (like Filters++::freezeCoefficients does)
+     */
+    float fromDirectLast[n_cm_coeffs]{};
+
     static float provider_note_to_pitch(TuningProvider *provider, float note);
     static float provider_note_to_pitch_ignoring_tuning(TuningProvider *provider, float note);
     static float provider_note_to_pitch_inv_ignoring_tuning(TuningProvider *provider, float note);
