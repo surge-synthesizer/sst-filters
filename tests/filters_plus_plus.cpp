@@ -271,8 +271,8 @@ TEST_CASE("FiltersPlusPlus API Consistency")
             INFO("Iteration " << i << " ph=" << ph);
 
             auto saw = ph * 2 - 1;
-            auto outOne = f1.processSample(saw));
-            auto outTwo = f2.processSample(saw));
+            auto outOne = f1.processMonoSample(saw));
+            auto outTwo = f2.processMonoSample(saw));
 
             REQUIRE(memcmp(&outOne, &outTwo, sizeof(float)) == 0);
 
