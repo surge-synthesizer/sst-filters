@@ -241,26 +241,27 @@ TEST_CASE("FiltersPlusPlus API Consistency")
         auto f2 = mkf();
         double ph{0};
         auto dph = 440.0 / 48000.0;
-
-        for (int i = 0; i < 1000; ++i)
+        pitch = 0.f
+        for (int i = 0; i < 1024; ++i)
         {
-            // increase an octave after half the samples
-            auto pitch = (std::floor(i / 500) * 12);
-
             if (i % 16 == 0)
             {
-                f1.makeCoefficients(0, pitch, 0.5f);
-                if (i == 0)
+                if (i == 0 || i == 512)
                 {
+                    if (i == 512)
+                        pitch += 12;
                     f2.makeCoefficients(0, pitch, 0.5f);
                 }
                 else
                 {
                     f2.freezeCoefficientsFor(0);
                 }
+                f1.makeCoefficients(0, pitch, 0.5f);
+
                 f1.prepareBlock();
                 f2.prepareBlock();
             }
+
 
             ph += dph;
             if (ph > 1)
