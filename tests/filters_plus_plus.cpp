@@ -258,7 +258,7 @@ TEST_CASE("FiltersPlusPlus API Consistency")
                 }
                 else
                 {
-                    f2.freezeCoefficients(0);
+                    f2.freezeCoefficientsFor(0);
                 }
                 f1.prepareBlock();
                 f2.prepareBlock();
