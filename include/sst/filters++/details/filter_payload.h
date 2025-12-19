@@ -109,6 +109,8 @@ struct FilterPayload
 
     double sampleRate{1.}, sampleRateInv{1.};
     size_t blockSize{0};
+    static constexpr float smoothInv{1.f / filters::smooth};
+    std::array<int, 4> blocksLeftToSmooth{0, 0, 0, 0};
 
     std::array<uint32_t, 4> active{0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF};
 
