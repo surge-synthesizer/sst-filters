@@ -274,7 +274,7 @@ TEST_CASE("FiltersPlusPlus API Consistency")
 
             REQUIRE(memcmp(&outOne, &outTwo, sizeof(float)) == 0);
 
-            if (i % BS == 16 - 1)
+            if (i % 16 == 16 - 1)
             {
                 f1.concludeBlock();
                 f2.concludeBlock();
