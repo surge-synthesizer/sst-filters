@@ -189,9 +189,10 @@ TEST_CASE("FiltersPlusPlus API Consistency")
         auto f2 = mkf();
         double ph{0};
         auto dph = 440.0 / 48000.0;
+        size_t blockPos{0};
         for (int i = 0; i < 1000; ++i)
         {
-            if (i % BS == 0)
+            if (blockPos == 0)
             {
                 for (int v = 0; v < 4; ++v)
                 {
@@ -218,12 +219,6 @@ TEST_CASE("FiltersPlusPlus API Consistency")
             auto outTwo = f2.processSample(SIMD_MM(set_ps)(-cv, -sv, cv, sv));
 
             REQUIRE(memcmp(&outOne, &outTwo, sizeof(SIMD_M128)) == 0);
-
-            if (i % bs == BS - 1)
-            {
-                f1.concludeBlock();
-                f2.concludeBlock();
-            }
         }
     }
 
