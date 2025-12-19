@@ -170,7 +170,6 @@ TEST_CASE("FiltersPlusPlus API Consistency")
 
     SECTION("Constant coefficients give same result as recalculating")
     {
-        int BS = 16;
         auto mkf = []() {
             namespace sfpp = sst::filtersplusplus;
 
@@ -180,7 +179,7 @@ TEST_CASE("FiltersPlusPlus API Consistency")
             filter.setSlope(sfpp::Slope::Slope_24dB);
             filter.setDriveMode(sfpp::DriveMode::Standard);
 
-            filter.setSampleRateAndBlockSize(48000, BS);
+            filter.setSampleRateAndBlockSize(48000, 16);
             REQUIRE(filter.prepareInstance());
             return filter;
         };
