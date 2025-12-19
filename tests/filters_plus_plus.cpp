@@ -168,8 +168,9 @@ TEST_CASE("FiltersPlusPlus API Consistency")
         }
     }
 
-    SECTION("Constant coefficients work")
+    SECTION("Constant coefficients give same result as recalculating")
     {
+        int BS = 16;
         auto mkf = []() {
             namespace sfpp = sst::filtersplusplus;
 
@@ -179,7 +180,7 @@ TEST_CASE("FiltersPlusPlus API Consistency")
             filter.setSlope(sfpp::Slope::Slope_24dB);
             filter.setDriveMode(sfpp::DriveMode::Standard);
 
-            filter.setSampleRateAndBlockSize(48000, 16);
+            filter.setSampleRateAndBlockSize(48000, BS);
             REQUIRE(filter.prepareInstance());
             return filter;
         };
@@ -188,10 +189,9 @@ TEST_CASE("FiltersPlusPlus API Consistency")
         auto f2 = mkf();
         double ph{0};
         auto dph = 440.0 / 48000.0;
-        size_t blockPos{0};
         for (int i = 0; i < 1000; ++i)
         {
-            if (blockPos == 0)
+            if (i % BS == 0)
             {
                 for (int v = 0; v < 4; ++v)
                 {
@@ -218,6 +218,74 @@ TEST_CASE("FiltersPlusPlus API Consistency")
             auto outTwo = f2.processSample(SIMD_MM(set_ps)(-cv, -sv, cv, sv));
 
             REQUIRE(memcmp(&outOne, &outTwo, sizeof(SIMD_M128)) == 0);
+
+            if (i % bs == BS - 1)
+            {
+                f1.concludeBlock();
+                f2.concludeBlock();
+            }
+        }
+    }
+
+    SECTION("Frozen coefficients same as computing every block, including on change")
+    {
+        int BS = 16;
+        auto mkf = []() {
+            namespace sfpp = sst::filtersplusplus;
+
+            auto filter = sfpp::Filter();
+            filter.setFilterModel(sfpp::FilterModel::VemberClassic);
+            filter.setPassband(sfpp::Passband::LP);
+            filter.setSlope(sfpp::Slope::Slope_24dB);
+            filter.setDriveMode(sfpp::DriveMode::Standard);
+
+            filter.setSampleRateAndBlockSize(48000, BS);
+            REQUIRE(filter.prepareInstance());
+            return filter;
+        };
+
+        auto f1 = mkf();
+        auto f2 = mkf();
+        double ph{0};
+        auto dph = 440.0 / 48000.0;
+
+        for (int i = 0; i < 1000; ++i)
+        {
+            // increase an octave after half the samples
+            auto pitch = (std::floor(i / 500) * 12);
+
+            if (i % BS == 0)
+            {
+                f1.makeCoefficients(0, pitch, 0.5f);
+                if (i == 0)
+                {
+                    f2.makeCoefficients(0, pitch, 0.5f);
+                }
+                else
+                {
+                    f2.freezeCoefficients(0);
+                }
+                f1.prepareBlock();
+                f2.prepareBlock();
+            }
+
+            ph += dph;
+            if (ph > 1)
+                ph -= 1;
+
+            INFO("Iteration " << i << " ph=" << ph);
+
+            auto saw = ph * 2 - 1;
+            auto outOne = f1.processSample(saw));
+            auto outTwo = f2.processSample(saw));
+
+            REQUIRE(memcmp(&outOne, &outTwo, sizeof(float)) == 0);
+
+            if (i % BS == BS - 1)
+            {
+                f1.concludeBlock();
+                f2.concludeBlock();
+            }
         }
     }
 }

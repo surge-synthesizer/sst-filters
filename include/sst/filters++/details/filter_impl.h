@@ -20,6 +20,7 @@
 
 namespace sst::filtersplusplus
 {
+static constexpr float smooth{.2f};
 inline SIMD_M128 offFun(sst::filters::QuadFilterUnitState *__restrict, SIMD_M128 in) { return in; }
 
 inline bool Filter::prepareInstance()
@@ -109,6 +110,7 @@ inline void Filter::makeCoefficients(int voice, float cutoff, float resonance, f
 {
     assert(payload.valid);
     auto [type, subtype] = payload.currentLegacyType;
+    payload.blocksLeftToSmooth[voice] = static_cast<int>(details::FilterPayload::smoothInv);
 
     // We may have models which don't use the QuadFilterUnitState in the future, so...
     switch (payload.filterModel)
@@ -125,10 +127,17 @@ inline void Filter::makeCoefficients(int voice, float cutoff, float resonance, f
 
 inline void Filter::freezeCoefficientsFor(int voice)
 {
-    for (int i = 0; i < sst::filters::n_cm_coeffs; ++i)
+    if (payload.blocksLeftToSmooth[voice] <= 0)
     {
-        payload.makers[voice].C[i] = payload.makers[voice].tC[i];
-        payload.makers[voice].dC[i] = 0;
+        for (int i = 0; i < sst::filters::n_cm_coeffs; ++i)
+        {
+            payload.makers[voice].C[i] = payload.makers[voice].tC[i];
+            payload.makers[voice].dC[i] = 0;
+        }
+    }
+    else
+    {
+        payload.blocksLeftToSmooth[voice]--;
     }
 }
 
