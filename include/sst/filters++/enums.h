@@ -49,7 +49,7 @@ enum struct FilterModel : uint32_t
     SampleAndHold = 0x85
 };
 
-constexpr const char* toCharPtr(const FilterModel &f);
+constexpr const char *toCharPtr(const FilterModel &f);
 std::string toString(const FilterModel &f);
 
 enum struct Passband : uint32_t

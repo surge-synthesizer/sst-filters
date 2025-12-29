@@ -65,10 +65,7 @@ inline constexpr const char *toCharPtr(const FilterModel &f)
     return "MODEL_ERROR";
 }
 
-inline std::string toString(const FilterModel &f)
-{
-    return toCharPtr(f);
-}
+inline std::string toString(const FilterModel &f) { return toCharPtr(f); }
 
 inline std::string toString(const Passband &p)
 {
