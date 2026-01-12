@@ -34,13 +34,10 @@ inline const details::FilterPayload::configMap_t &getModelConfigurations()
          {sft::FilterType::fut_vintageladder, sft::FilterSubType::st_vintage_type2}},
         {{Passband::LP, FilterSubModel::HuovCompensated},
          {sft::FilterType::fut_vintageladder, sft::FilterSubType::st_vintage_type2_compensated}},
-#ifdef SST_USE_HUOV_2010
         {{Passband::LP, FilterSubModel::Huov2010},
          {sft::FilterType::fut_vintageladder, sft::FilterSubType::st_vintage_type3}},
         {{Passband::LP, FilterSubModel::HuovCompensated2010},
          {sft::FilterType::fut_vintageladder, sft::FilterSubType::st_vintage_type3_compensated}},
-#endif
-
     };
     return configs;
 }
