@@ -226,21 +226,17 @@ const char fut_obxd_xpander_subtypes[15][32] = {"LP1", "LP2",     "LP3",     "LP
 
 /** The number of sub-types for each filter type */
 const int fut_subcount[num_filter_types] = {
-    0, // fut_none
-    3, // fut_lp12
-    3, // fut_lp24
-    4, // fut_lpmoog
-    3, // fut_hp12
-    3, // fut_hp24
-    5, // fut_bp12
-    2, // fut_notch12
-    2, // fut_comb_pos (excluding morph)
-    0, // fut_SNH
-#if SST_USE_HUOV_2010
-    6, // fut_vintageladder
-#else
-    4,
-#endif
+    0,  // fut_none
+    3,  // fut_lp12
+    3,  // fut_lp24
+    4,  // fut_lpmoog
+    3,  // fut_hp12
+    3,  // fut_hp24
+    5,  // fut_bp12
+    2,  // fut_notch12
+    2,  // fut_comb_pos (excluding morph)
+    0,  // fut_SNH
+    6,  // fut_vintageladder
     2,  // fut_obxd_2pole
     5,  // fut_obxd_4pole (excluding morph)
     5,  // fut_k35_lp

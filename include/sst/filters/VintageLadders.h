@@ -457,7 +457,8 @@ inline void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, float f
     float lC[n_cm_coeffs]{};
     auto cutoff = VintageLadder::Common::clampedFrequency(freq, sampleRate, provider);
     auto omega = 2.0 * M_PI * cutoff * sampleRateInv;
-    lC[h_gres] = 4 * reso * (1.0029 + omega * (0.0526 + omega * (-0.0926 + 0.0218 * omega)));
+    auto ureso = std::clamp(reso, 0.0f, 1.0f);
+    lC[h_gres] = 4.5 * ureso * (1.0029 + omega * (0.0526 + omega * (-0.0926 + 0.0218 * omega)));
     lC[h_gonepole] = omega * (0.9892 + omega * (-0.4342 + omega * (0.1381 - 0.0202 * omega)));
     lC[h_gcomp] = applyGainCompensation ? -0.5f : 0.0f;
     cm->FromDirect(lC);
@@ -493,12 +494,12 @@ inline SIMD_M128 onePole(int idx, QuadFilterUnitState *__restrict f, SIMD_M128 i
 
 inline SIMD_M128 process(QuadFilterUnitState *__restrict f, SIMD_M128 in)
 {
-    static constexpr float dr{1.0};
-    static const SIMD_M128 inDrive(F(dr)), outDrive(F(1.0 / dr));
+    static constexpr float driveFactor{4.0};
+    static const SIMD_M128 inDrive(F(driveFactor)), outDrive(F(0.5 / driveFactor));
     auto zm1 = f->R[h_delayLine];
     auto gaincomp = A(zm1, M(f->C[h_gcomp], M(inDrive, in)));
     auto fb = M(f->C[h_gres], gaincomp);
-    auto n1 = nonlin(S(in, fb));
+    auto n1 = nonlin(S(M(inDrive, in), fb));
     auto s1 = onePole(0, f, n1);
     auto s2 = onePole(1, f, s1);
     auto s3 = onePole(2, f, s2);
