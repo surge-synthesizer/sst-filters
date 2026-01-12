@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 set(FPEXE filter_plus_plus_bruteforce)
 add_executable(${FPEXE}
@@ -27,5 +27,13 @@ if (APPLE)
     target_compile_definitions(${FPEXE} PRIVATE MAC_FILE)
 elseif (WIN32)
     target_compile_definitions(${FPEXE} PRIVATE WIN_FILE)
+endif()
+
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU" AND (NOT (CMAKE_CXX_COMPILER_FRONTEND_VARIANT MATCHES "MSVC")))
+    if ("${CMAKE_CXX_STANDARD}" GREATER_EQUAL 20)
+        message(STATUS "clap-wrapper: Turning off char8_t c++20 changes")
+        target_compile_options(${FPEXE} PRIVATE -fno-char8_t)
+        target_compile_options(${FPDUMP} PRIVATE -fno-char8_t)
+    endif()
 endif()
 # others are the fallthrough. this is just for files

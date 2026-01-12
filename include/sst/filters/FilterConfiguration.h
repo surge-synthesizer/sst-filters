@@ -178,11 +178,7 @@ const char fut_ldr_subtypes[4][32] = {
 };
 
 const char fut_vintageladder_subtypes[6][32] = {
-    "Type 1",
-    "Type 1 Compensated",
-    "Type 2",
-    "Type 2 Compensated",
-};
+    "Type 1", "Type 1 Compensated", "Type 2", "Type 2 Compensated", "Type 3", "Type 3 Compensated"};
 
 const char fut_obxd_2p_subtypes[2][32] = {"Standard", "Pushed"};
 
@@ -230,17 +226,21 @@ const char fut_obxd_xpander_subtypes[15][32] = {"LP1", "LP2",     "LP3",     "LP
 
 /** The number of sub-types for each filter type */
 const int fut_subcount[num_filter_types] = {
-    0,  // fut_none
-    3,  // fut_lp12
-    3,  // fut_lp24
-    4,  // fut_lpmoog
-    3,  // fut_hp12
-    3,  // fut_hp24
-    5,  // fut_bp12
-    2,  // fut_notch12
-    2,  // fut_comb_pos (excluding morph)
-    0,  // fut_SNH
-    4,  // fut_vintageladder
+    0, // fut_none
+    3, // fut_lp12
+    3, // fut_lp24
+    4, // fut_lpmoog
+    3, // fut_hp12
+    3, // fut_hp24
+    5, // fut_bp12
+    2, // fut_notch12
+    2, // fut_comb_pos (excluding morph)
+    0, // fut_SNH
+#if SST_USE_HUOV_2010
+    6, // fut_vintageladder
+#else
+    4,
+#endif
     2,  // fut_obxd_2pole
     5,  // fut_obxd_4pole (excluding morph)
     5,  // fut_k35_lp
@@ -322,6 +322,8 @@ enum FilterSubType
     st_vintage_type1_compensated = 1, /**< and with bass compensation */
     st_vintage_type2 = 2,             /**< Vintage Ladder - Huovilean Model */
     st_vintage_type2_compensated = 3, /**< and with bass compensation */
+    st_vintage_type3 = 4,             /**< Vintage Ladder - Huovilean 2010 Model */
+    st_vintage_type3_compensated = 5, /**< and with bass compensation */
 
     st_resonancewarp_tanh1 = 0,     /**< Resonance Warp - 1 Stage tanh */
     st_resonancewarp_tanh2 = 1,     /**< Resonance Warp - 2 Stages tanh */

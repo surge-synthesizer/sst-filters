@@ -221,6 +221,10 @@ inline std::string toString(const FilterSubModel &s)
         return "Huovilainen";
     case FilterSubModel::HuovCompensated:
         return "Huovilainen Compensated";
+    case FilterSubModel::Huov2010:
+        return "Huovilainen 2010";
+    case FilterSubModel::HuovCompensated2010:
+        return "Huovilainen Compensated 2010";
 
     // For Tri-Pole
     case FilterSubModel::First_output:

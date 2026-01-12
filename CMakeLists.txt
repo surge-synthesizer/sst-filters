@@ -3,8 +3,15 @@ project(sst-filters VERSION 0.5 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 
+option(SST_FILTERS_HAS_HUOV_2010 "Include the fast vintage ladder Huov2010 model" OFF)
+
 add_library(${PROJECT_NAME} INTERFACE)
 target_include_directories(${PROJECT_NAME} INTERFACE include)
+
+if (${SST_FILTERS_HAS_HUOV_2010})
+    message(STATUS "Including vintage ladder huov 2010 model")
+    target_compile_definitions(${PROJECT_NAME} INTERFACE SST_USE_HUOV_2010=1)
+endif()
 
 if (MSVC)
     target_compile_definitions(${PROJECT_NAME}
