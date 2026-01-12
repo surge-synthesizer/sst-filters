@@ -449,7 +449,6 @@ enum reg
     h_delayLine = 9
 };
 
-
 template <typename TuningProvider>
 inline void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, float freq, float reso,
                              float sampleRate, float sampleRateInv, bool applyGainCompensation,
@@ -458,7 +457,7 @@ inline void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, float f
     float lC[n_cm_coeffs]{};
     auto cutoff = VintageLadder::Common::clampedFrequency(freq, sampleRate, provider);
     auto omega = 2.0 * M_PI * cutoff * sampleRateInv;
-    lC[h_gres] = 4 * reso * (1.0029 + omega * ( 0.0526 + omega * ( -0.0926 + 0.0218 * omega)));
+    lC[h_gres] = 4 * reso * (1.0029 + omega * (0.0526 + omega * (-0.0926 + 0.0218 * omega)));
     lC[h_gonepole] = omega * (0.9892 + omega * (-0.4342 + omega * (0.1381 - 0.0202 * omega)));
     lC[h_gcomp] = applyGainCompensation ? -0.5f : 0.0f;
     cm->FromDirect(lC);
@@ -469,17 +468,16 @@ inline void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, float f
 #define A(a, b) SIMD_MM(add_ps)(a, b)
 #define S(a, b) SIMD_MM(sub_ps)(a, b)
 
-
 inline SIMD_M128 nonlin(SIMD_M128 in)
 {
     static constexpr float sc{70.f};
-    static const SIMD_M128 th(F(1.0/sc)), ith(F(sc));
+    static const SIMD_M128 th(F(1.0 / sc)), ith(F(sc));
     return M(ith, sst::basic_blocks::dsp::fasttanhSSEclamped(M(in, th)));
 }
 
 inline SIMD_M128 onePole(int idx, QuadFilterUnitState *__restrict f, SIMD_M128 in)
 {
-    static const SIMD_M128 zdf{F(0.3/1.3)}, idf{F(1.0/1.3)};
+    static const SIMD_M128 zdf{F(0.3 / 1.3)}, idf{F(1.0 / 1.3)};
     auto zd = f->R[h_onepole_in + idx];
     f->R[h_onepole_in + idx] = in;
 
@@ -493,19 +491,18 @@ inline SIMD_M128 onePole(int idx, QuadFilterUnitState *__restrict f, SIMD_M128 i
     return n3;
 }
 
-
 inline SIMD_M128 process(QuadFilterUnitState *__restrict f, SIMD_M128 in)
 {
     static constexpr float dr{1.0};
-    static const SIMD_M128 inDrive(F(dr)), outDrive(F(1.0/dr));
+    static const SIMD_M128 inDrive(F(dr)), outDrive(F(1.0 / dr));
     auto zm1 = f->R[h_delayLine];
     auto gaincomp = A(zm1, M(f->C[h_gcomp], M(inDrive, in)));
     auto fb = M(f->C[h_gres], gaincomp);
     auto n1 = nonlin(S(in, fb));
     auto s1 = onePole(0, f, n1);
-    auto s2 = onePole(1, f,s1);
+    auto s2 = onePole(1, f, s1);
     auto s3 = onePole(2, f, s2);
-    auto s4 = onePole(3, f,s3);
+    auto s4 = onePole(3, f, s3);
     f->R[h_delayLine] = s4;
 
     for (int k = 0; k < n_hcoeffs; ++k)
@@ -515,13 +512,11 @@ inline SIMD_M128 process(QuadFilterUnitState *__restrict f, SIMD_M128 in)
     return M(outDrive, s4);
 }
 
-
-
 #undef F
 #undef M
 #undef A
 #undef S
-}
+} // namespace Huov2010
 } // namespace sst::filters::VintageLadder
 
 #endif // SST_FILTERS_VINTAGELADDERS_H
