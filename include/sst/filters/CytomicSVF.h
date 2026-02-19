@@ -140,6 +140,27 @@ struct CytomicSVF
         setCoeffPostGK(mode, bellShelfAmp);
     }
 
+    // quad version for use in the shepard phaser. Somewhat simplified to save a couple cycles
+    // but easy to expand to match the mono/stereo versions if we ever want to.
+    void setCoeffQuadBandpass(float *freq, float res, float srInv)
+    {
+        float co[4];
+        for (int i = 0; i < 4; i++)
+        {
+            co[i] = std::clamp(freq[i] * srInv, 0.f, 0.499f);
+        }
+        g = sst::basic_blocks::dsp::fasttanSSE(
+            MUL(SETALL(M_PI), SIMD_MM(set_ps)(co[3], co[2], co[1], co[0])));
+        k = SUB(twoSSE, MUL(twoSSE, SIMD_MM(set1_ps)(std::clamp(res, 0.f, 0.98f))));
+        gk = ADD(g, k);
+        a1 = DIV(oneSSE, ADD(oneSSE, MUL(g, gk)));
+        a2 = MUL(g, a1);
+        a3 = MUL(g, a2);
+        m0 = SIMD_MM(setzero_ps)();
+        m1 = oneSSE;
+        m2 = SIMD_MM(setzero_ps)();
+    }
+
     void setCoeffPostGK(Mode mode, SIMD_M128 bellShelfSSE)
     {
         gk = ADD(g, k);
@@ -225,6 +246,15 @@ struct CytomicSVF
         m2 = that.m2;
     }
 
+    static void step(CytomicSVF &that, float &V)
+    {
+        auto vin = SIMD_MM(set_ps)(0, 0, 0, V);
+        auto res = stepSSE(that, vin);
+        float r4 alignas(16)[4];
+        SIMD_MM(store_ps)(r4, res);
+        V = r4[0];
+    }
+
     static void step(CytomicSVF &that, float &L, float &R)
     {
         auto vin = SIMD_MM(set_ps)(0, 0, R, L);
@@ -233,6 +263,18 @@ struct CytomicSVF
         SIMD_MM(store_ps)(r4, res);
         L = r4[0];
         R = r4[1];
+    }
+
+    static void step(CytomicSVF &that, float &A, float &B, float &C, float &D)
+    {
+        auto vin = SIMD_MM(set_ps)(D, C, B, A);
+        auto res = stepSSE(that, vin);
+        float r4 alignas(16)[4];
+        SIMD_MM(store_ps)(r4, res);
+        A = r4[0];
+        B = r4[1];
+        C = r4[2];
+        D = r4[3];
     }
 
     static SIMD_M128 stepSSE(CytomicSVF &that, SIMD_M128 vin)
@@ -362,6 +404,52 @@ struct CytomicSVF
         m2 = m2_prior;
     }
 
+    // it's a bit annoying this is another copy but hey whatcha gonna do
+    template <int blockSize> void setCoeffForBlockQuadBandpass(float *freq, float res, float srInv)
+    {
+        SIMD_M128 a1_prior = a1;
+        SIMD_M128 a2_prior = a2;
+        SIMD_M128 a3_prior = a3;
+
+        SIMD_M128 m0_prior = m0;
+        SIMD_M128 m1_prior = m1;
+        SIMD_M128 m2_prior = m2;
+
+        setCoeffQuadBandpass(freq, res, srInv);
+
+        if (firstBlock)
+        {
+            a1_prior = a1;
+            a2_prior = a2;
+            a3_prior = a3;
+            m0_prior = m0;
+            m1_prior = m1;
+            m2_prior = m2;
+            firstBlock = false;
+        }
+
+        static constexpr float obsf = 1.f / blockSize;
+        auto obs = SETALL(obsf);
+
+        da1 = MUL(SUB(a1, a1_prior), obs);
+        a1 = a1_prior;
+
+        da2 = MUL(SUB(a2, a2_prior), obs);
+        a2 = a2_prior;
+
+        da3 = MUL(SUB(a3, a3_prior), obs);
+        a3 = a3_prior;
+
+        dm0 = MUL(SUB(m0, m0_prior), obs);
+        m0 = m0_prior;
+
+        dm1 = MUL(SUB(m1, m1_prior), obs);
+        m1 = m1_prior;
+
+        dm2 = MUL(SUB(m2, m2_prior), obs);
+        m2 = m2_prior;
+    }
+
     template <int blockSize> void retainCoeffForBlock()
     {
         da1 = SIMD_MM(setzero_ps)();
@@ -370,6 +458,17 @@ struct CytomicSVF
         dm0 = SIMD_MM(setzero_ps)();
         dm1 = SIMD_MM(setzero_ps)();
         dm2 = SIMD_MM(setzero_ps)();
+    }
+
+    void processBlockStep(float &A, float &B, float &C, float &D)
+    {
+        step(*this, A, B, C, D);
+        a1 = ADD(a1, da1);
+        a2 = ADD(a2, da2);
+        a3 = ADD(a3, da3);
+        m1 = ADD(m1, dm1);
+        m2 = ADD(m2, dm2);
+        m0 = ADD(m0, dm0);
     }
 
     void processBlockStep(float &L, float &R)
@@ -385,14 +484,26 @@ struct CytomicSVF
 
     void processBlockStep(float &L)
     {
-        float tmp{0.f};
-        step(*this, L, tmp);
+        step(*this, L);
         a1 = ADD(a1, da1);
         a2 = ADD(a2, da2);
         a3 = ADD(a3, da3);
         m1 = ADD(m1, dm1);
         m2 = ADD(m2, dm2);
         m0 = ADD(m0, dm0);
+    }
+
+    template <int blockSize>
+    void processBlockQuad(const float *const in, float *outA, float *outB, float *outC, float *outD)
+    {
+        for (int i = 0; i < blockSize; ++i)
+        {
+            outA[i] = in[i];
+            outB[i] = in[i];
+            outC[i] = in[i];
+            outD[i] = in[i];
+            processBlockStep(outA[i], outB[i], outC[i], outD[i]);
+        }
     }
 
     template <int blockSize>
