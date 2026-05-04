@@ -9,6 +9,7 @@ target_sources(sst-filters-tests
         PRIVATE
         BasicFiltersTest.cpp
         BiquadTest.cpp
+        ButterworthTest.cpp
         CutoffWarpTest.cpp
         CytomicSVFTests.cpp
         DiodeLadderTest.cpp
