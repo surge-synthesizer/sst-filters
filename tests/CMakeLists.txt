@@ -13,6 +13,7 @@ target_sources(sst-filters-tests
         CutoffWarpTest.cpp
         CytomicSVFTests.cpp
         DiodeLadderTest.cpp
+        FastTiltNoiseFilterTest.cpp
         K35FilterTest.cpp
         HalfRateTest.cpp
         OBXDFilterTest.cpp
