@@ -32,6 +32,20 @@
 #include "sst/basic-blocks/simd/setup.h"
 #include "sst/basic-blocks/mechanics/simd-ops.h"
 
+// FastTiltNoiseFilter::step uses SSE4.1 ops (alignr_epi8 from SSSE3 plus
+// other intrinsics covered by SSE4.1). On x86 with GCC/Clang those
+// intrinsics are gated on the calling function's target ISA — without
+// -msse4.1 (or higher, e.g. -mavx) GCC will refuse to inline them and
+// emit a "target specific option mismatch" error deep in tmmintrin.h.
+// Catch that here with a clear message instead. MSVC always exposes the
+// intrinsics, and on non-x86 we go through simde which is target-flag
+// independent, so the check is x86-GCC/Clang only.
+#if (defined(__GNUC__) || defined(__clang__)) && !defined(_MSC_VER) &&                             \
+    (defined(__x86_64__) || defined(__i386__)) && !defined(__SSE4_1__)
+#error                                                                                             \
+    "FastTiltNoiseFilter requires SSE4.1 on x86. Pass -msse4.1 (or higher, e.g. -mavx) on the compile line for any translation unit that includes this header."
+#endif
+
 namespace sst::filters
 {
 
