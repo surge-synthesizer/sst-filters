@@ -29,12 +29,21 @@
 #include <cmath>
 #include <cassert>
 
-#if defined(__SSE2__) || defined(_M_AMD64) || defined(_M_X64) ||                                   \
-    (defined(_M_IX86_FP) && _M_IX86_FP >= 2)
-#include <emmintrin.h>
-#else
-#define SIMDE_ENABLE_NATIVE_ALIASES
-#include "simde/x86/sse2.h"
+#include "sst/basic-blocks/simd/setup.h"
+#include "sst/basic-blocks/mechanics/simd-ops.h"
+
+// FastTiltNoiseFilter::step uses SSE4.1 ops (alignr_epi8 from SSSE3 plus
+// other intrinsics covered by SSE4.1). On x86 with GCC/Clang those
+// intrinsics are gated on the calling function's target ISA — without
+// -msse4.1 (or higher, e.g. -mavx) GCC will refuse to inline them and
+// emit a "target specific option mismatch" error deep in tmmintrin.h.
+// Catch that here with a clear message instead. MSVC always exposes the
+// intrinsics, and on non-x86 we go through simde which is target-flag
+// independent, so the check is x86-GCC/Clang only.
+#if (defined(__GNUC__) || defined(__clang__)) && !defined(_MSC_VER) &&                             \
+    (defined(__x86_64__) || defined(__i386__)) && !defined(__SSE4_1__)
+#error                                                                                             \
+    "FastTiltNoiseFilter requires SSE4.1 on x86. Pass -msse4.1 (or higher, e.g. -mavx) on the compile line for any translation unit that includes this header."
 #endif
 
 namespace sst::filters
@@ -172,7 +181,7 @@ template <typename hostClass> struct FastTiltNoiseFilter
         firstM0 = oneSSE;
         thirdM0 = MUL(thirdA, thirdA);
         secondM0 =
-            SIMD_MM(add_ps)(SIMD_MM(and_ps)(mask, thirdM0), SIMD_MM(andnot_ps)(mask, thirdM0));
+            SIMD_MM(add_ps)(SIMD_MM(and_ps)(mask, thirdM0), SIMD_MM(andnot_ps)(mask, firstM0));
 
         // m1 = k * (A - 1) for low shelf, (k * (1 - A)) * A for high
         firstM1 = MUL(kSSE, SUB(firstA, oneSSE));
@@ -189,18 +198,45 @@ template <typename hostClass> struct FastTiltNoiseFilter
 
     static void step(FastTiltNoiseFilter &that, float &vin)
     {
-        // Is there a better way to do this shuffle? I ain't found one.
-        float tQ1 alignas(16)[4];
-        float tQ2 alignas(16)[4];
-        float tQ3 alignas(16)[4];
-        SIMD_MM(store_ps)(tQ1, that.firstQueue);
-        SIMD_MM(store_ps)(tQ2, that.secondQueue);
-        SIMD_MM(store_ps)(tQ3, that.thirdQueue);
+        // Shift the 12-lane queue [firstQueue : secondQueue : thirdQueue] up
+        // by one float, drop `vin` into the new lowest lane, and let the top
+        // lane fall off. Conceptually:
+        //   new firstQueue  = { vin,           oldFirst[0..2]  }
+        //   new secondQueue = { oldFirst[3],   oldSecond[0..2] }
+        //   new thirdQueue  = { oldSecond[3],  oldThird[0..2]  }
+        //
+        // The previous version did three store_ps + three set_ps, which round-
+        // trips every lane through the stack. Here we stay register-resident.
 
-        // Shuffle the queues forwards (which looks backwards), adding in the current input
-        that.firstQueue = SIMD_MM(set_ps)(tQ1[2], tQ1[1], tQ1[0], vin);
-        that.secondQueue = SIMD_MM(set_ps)(tQ2[2], tQ2[1], tQ2[0], tQ1[3]);
-        that.thirdQueue = SIMD_MM(set_ps)(tQ3[2], tQ3[1], tQ3[0], tQ2[3]);
+        auto oldFirst = that.firstQueue;
+        auto oldSecond = that.secondQueue;
+
+        // firstQueue is special because its new lane 0 is a scalar (vin), not
+        // a lane from another vector.
+        //
+        // shuffle_ps(a, a, _MM_SHUFFLE(2,1,0,0)) lifts oldFirst's lanes up by
+        // one, duplicating lane 0 into both lane 0 and lane 1:
+        //   { oldFirst[0], oldFirst[0], oldFirst[1], oldFirst[2] }
+        // Lane 0 there is just a placeholder. move_ss then overwrites lane 0
+        // with vin (move_ss copies only the bottom float, leaving lanes 1..3).
+        auto shifted1 = SIMD_MM(shuffle_ps)(oldFirst, oldFirst, SIMD_MM_SHUFFLE(2, 1, 0, 0));
+        that.firstQueue = SIMD_MM(move_ss)(shifted1, SIMD_MM(set_ss)(vin));
+
+        // secondQueue and thirdQueue both want "shift up by one and splice in
+        // the previous queue's top lane in lane 0". That is exactly what
+        // alignr_epi8 (SSSE3) does:
+        //
+        //   alignr_epi8(hi, lo, n) treats {hi : lo} as 32 bytes, shifts right
+        //   by n bytes, and returns the low 16 bytes. With n = 12 (3 floats):
+        //     result = { lo[3], hi[0], hi[1], hi[2] }
+        //
+        // alignr_epi8 lives in the integer domain (epi8 == "extended packed
+        // int 8"), so we cast __m128 <-> __m128i around it. The casts are
+        // bitwise reinterprets and compile to nothing.
+        that.secondQueue = SIMD_MM(castsi128_ps)(SIMD_MM(alignr_epi8)(
+            SIMD_MM(castps_si128)(oldSecond), SIMD_MM(castps_si128)(oldFirst), 12));
+        that.thirdQueue = SIMD_MM(castsi128_ps)(SIMD_MM(alignr_epi8)(
+            SIMD_MM(castps_si128)(that.thirdQueue), SIMD_MM(castps_si128)(oldSecond), 12));
 
         // Time to run the filters!
 
@@ -240,10 +276,10 @@ template <typename hostClass> struct FastTiltNoiseFilter
         that.thirdQueue = ADD(MUL(that.thirdM0, that.thirdQueue),
                               ADD(MUL(that.thirdM1, thirdV1), MUL(that.thirdM2, thirdV2)));
 
-        // Return the eleventh value
-        float res alignas(16)[4];
-        SIMD_MM(store_ps)(res, that.thirdQueue);
-        vin = res[2];
+        // Return the eleventh value, which lives in lane 2 of thirdQueue.
+        // simd_float_extract<N> is a register-resident extract (shuffle +
+        // cvtss_f32 under the hood) — no stack round-trip.
+        vin = sst::basic_blocks::mechanics::simd_float_extract<2>(that.thirdQueue);
     }
 
     // And here comes the smoothed block processing.
