@@ -27,6 +27,7 @@
 #define INCLUDE_SST_FILTERS_CYTOMICSVF_H
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cassert>
 #include <complex>
@@ -140,6 +141,30 @@ struct CytomicSVF
         setCoeffPostGK(mode, bellShelfAmp);
     }
 
+    /*
+     * As above but with a distinct mode per SIMD lane. freq / res / bellShelfAmp
+     * are shared across the four lanes; only the output mixing (and the Bell k
+     * remap) varies per lane. Handy when you want, say, lowpass and highpass
+     * running in parallel off the same cutoff (see LinkwitzRiley.h).
+     */
+    void setCoeff(std::array<Mode, 4> mode, float freq, float res, float srInv,
+                  float bellShelfAmp = 1.f)
+    {
+        auto conorm = std::clamp(freq * srInv, 0.f, 0.499f); // stable until nyquist
+        res = std::clamp(res, 0.f, 0.98f);
+        bellShelfAmp = std::max(bellShelfAmp, 0.001f);
+
+        g = SETALL(sst::basic_blocks::dsp::fasttan(M_PI * conorm));
+
+        auto kbase = 2.0f - 2.f * res;
+        float kl alignas(16)[4];
+        for (int i = 0; i < 4; ++i)
+            kl[i] = (mode[i] == Mode::Bell) ? kbase / bellShelfAmp : kbase;
+        k = SIMD_MM(set_ps)(kl[3], kl[2], kl[1], kl[0]);
+
+        setCoeffPostGK(mode, SETALL(bellShelfAmp));
+    }
+
     // quad version for use in the shepard phaser. Somewhat simplified to save a couple cycles
     // but easy to expand to match the mono/stereo versions if we ever want to.
     void setCoeffQuadBandpass(float *freq, float res, float srInv)
@@ -228,6 +253,84 @@ struct CytomicSVF
             m2 = SIMD_MM(setzero_ps)();
             break;
         }
+    }
+
+    // Per-lane mode companion to the single-mode setCoeffPostGK above. g/k must
+    // already be set (k may differ per lane, e.g. the Bell remap). Only the
+    // m0/m1/m2 output mix varies between lanes; a1/a2/a3 follow from g/k as usual.
+    void setCoeffPostGK(std::array<Mode, 4> mode, SIMD_M128 bellShelfSSE)
+    {
+        gk = ADD(g, k);
+        a1 = DIV(oneSSE, ADD(oneSSE, MUL(g, gk)));
+        a2 = MUL(g, a1);
+        a3 = MUL(g, a2);
+
+        float kl alignas(16)[4], al alignas(16)[4];
+        SIMD_MM(store_ps)(kl, k);
+        SIMD_MM(store_ps)(al, bellShelfSSE);
+
+        float l0[4], l1[4], l2[4];
+        for (int i = 0; i < 4; ++i)
+        {
+            auto kv = kl[i];
+            auto A = al[i];
+            switch (mode[i])
+            {
+            case Mode::Lowpass:
+                l0[i] = 0;
+                l1[i] = 0;
+                l2[i] = 1;
+                break;
+            case Mode::Bandpass:
+                l0[i] = 0;
+                l1[i] = 1;
+                l2[i] = 0;
+                break;
+            case Mode::Highpass:
+                l0[i] = 1;
+                l1[i] = -kv;
+                l2[i] = -1;
+                break;
+            case Mode::Notch:
+                l0[i] = 1;
+                l1[i] = -kv;
+                l2[i] = 0;
+                break;
+            case Mode::Peak:
+                l0[i] = 1;
+                l1[i] = -kv;
+                l2[i] = -2;
+                break;
+            case Mode::Allpass:
+                l0[i] = 1;
+                l1[i] = -2 * kv;
+                l2[i] = 0;
+                break;
+            case Mode::Bell:
+                l0[i] = 1;
+                l1[i] = kv * (A * A - 1);
+                l2[i] = 0;
+                break;
+            case Mode::LowShelf:
+                l0[i] = 1;
+                l1[i] = kv * (A - 1);
+                l2[i] = A * A - 1;
+                break;
+            case Mode::HighShelf:
+                l0[i] = A * A;
+                l1[i] = A * kv * (1 - A);
+                l2[i] = 1 - A * A;
+                break;
+            default:
+                l0[i] = 0;
+                l1[i] = 0;
+                l2[i] = 0;
+                break;
+            }
+        }
+        m0 = SIMD_MM(set_ps)(l0[3], l0[2], l0[1], l0[0]);
+        m1 = SIMD_MM(set_ps)(l1[3], l1[2], l1[1], l1[0]);
+        m2 = SIMD_MM(set_ps)(l2[3], l2[2], l2[1], l2[0]);
     }
 
     void fetchCoeffs(const CytomicSVF &that)

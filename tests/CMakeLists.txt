@@ -15,6 +15,7 @@ target_sources(sst-filters-tests
         DiodeLadderTest.cpp
         FastTiltNoiseFilterTest.cpp
         K35FilterTest.cpp
+        LinkwitzRileyTest.cpp
         HalfRateTest.cpp
         OBXDFilterTest.cpp
         ResonanceWarpTest.cpp
