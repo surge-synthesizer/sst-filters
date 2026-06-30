@@ -32,20 +32,20 @@ jobs:
             name: mac-arm-nonative
             cmakeArgs: -DCMAKE_OSX_ARCHITECTURES=arm64 -DSST_BASIC_BLOCKS_SIMD_OMIT_NATIVE_ALIASES=TRUE
 
-          - os: windows-latest
+          - os: windows-2022
             name: win-x86
             runTest: true
             testExe:  build/tests/Release/sst-filters-tests.exe
 
-          - os: windows-latest
+          - os: windows-2022
             name: win-arm64
             cmakeArgs: -G"Visual Studio 17 2022" -A arm64 -DCMAKE_SYSTEM_VERSION=10
 
-          - os: windows-latest
+          - os: windows-2022
             name: win-arm64ec
             cmakeArgs: -G"Visual Studio 17 2022" -A arm64ec -DCMAKE_SYSTEM_VERSION=10
 
-          - os: windows-latest
+          - os: windows-2022
             name: win-arm64-non-native
             cmakeArgs: -G"Visual Studio 17 2022" -A arm64 -DCMAKE_SYSTEM_VERSION=10 -DSST_BASIC_BLOCKS_SIMD_OMIT_NATIVE_ALIASES=TRUE
 
