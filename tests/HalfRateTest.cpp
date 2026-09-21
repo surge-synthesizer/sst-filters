@@ -12,6 +12,8 @@
  * All source in sst-filters available at
  * https://github.com/surge-synthesizer/sst-filters
  */
+#include <vector>
+
 #include "sst/filters/HalfRateFilter.h"
 #include "TestUtils.h"
 
@@ -175,8 +177,10 @@ TEST_CASE("Half Rate a sample at a time")
 
         static constexpr size_t blockSize{8};
         static constexpr size_t nPoints{256 * blockSize};
-        float LupBW[nPoints << 1], LdnBW[nPoints], Lin[nPoints];
-        float RupBW[nPoints << 1], RdnBW[nPoints], Rin[nPoints];
+        // These are a touch over 64kb all told, which is more stack than some
+        // platforms give a thread, so keep them on the heap
+        std::vector<float> LupBW(nPoints << 1), LdnBW(nPoints), Lin(nPoints);
+        std::vector<float> RupBW(nPoints << 1), RdnBW(nPoints), Rin(nPoints);
         for (int i = 0; i < nPoints; i += blockSize)
         {
             float Lloc[blockSize], Rloc[blockSize];
