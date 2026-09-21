@@ -35,6 +35,19 @@ if (NOT MSVC)
     endif ()
 endif ()
 
+# A filter which parks a large buffer on the stack works fine on desktop, where
+# thread stacks run to megabytes, but breaks on platforms which are stingier -
+# emscripten has defaulted to 64kb since 3.1.27. A single comb delay line is
+# already 16kb, so warn well before four of them can fit. Warn rather than
+# error, since exact frame sizes vary by compiler and architecture.
+if (NOT MSVC)
+    include(CheckCXXCompilerFlag)
+    check_cxx_compiler_flag("-Wframe-larger-than=16384" SST_FILTERS_TESTS_SUPPORTS_WFRAME)
+    if (SST_FILTERS_TESTS_SUPPORTS_WFRAME)
+        target_compile_options(sst-filters-tests PRIVATE -Wframe-larger-than=16384)
+    endif ()
+endif ()
+
 add_custom_command(TARGET sst-filters-tests
         POST_BUILD
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
