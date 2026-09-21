@@ -38,7 +38,10 @@ struct FilterPlotParameters
 class FilterPlotter
 {
   public:
-    explicit FilterPlotter(int fftOrder = 15) : fft(fftOrder), fftSize(1 << fftOrder) {}
+    explicit FilterPlotter(int fftOrder = 15)
+        : fft(fftOrder), fftSize(1 << fftOrder), delayBuffer(4 * delayLineSize, 0.0f)
+    {
+    }
 
     std::pair<std::vector<float>, std::vector<float>>
     plotFilterMagnitudeResponse(sst::filters::FilterType filterType,
@@ -74,12 +77,10 @@ class FilterPlotter
         generateLogSweep(sweepBuffer.data(), fftSize, params);
 
         // set up filter
-        float delayBuffer[4][sst::filters::utilities::MAX_FB_COMB +
-                             sst::filters::utilities::SincTable::FIRipol_N];
         auto filterState = sst::filters::QuadFilterUnitState{};
         for (auto i = 0; i < 4; ++i)
         {
-            filterState.DB[i] = &(delayBuffer[i][0]);
+            filterState.DB[i] = delayBuffer.data() + i * delayLineSize;
         }
         auto filterUnitPtr = sst::filters::GetQFPtrFilterUnit(filterType, filterSubType);
 
@@ -197,8 +198,18 @@ class FilterPlotter
         return smoothedVec;
     }
 
+    /*
+     * Each of the four comb delay lines is a little over 16kb, so holding all four
+     * as locals costs roughly 64kb of stack. That overflows the default stack on
+     * platforms which are stingier than desktop - emscripten defaults to 64kb - so
+     * keep them in a heap buffer allocated once per plotter instead.
+     */
+    static constexpr size_t delayLineSize{sst::filters::utilities::MAX_FB_COMB +
+                                          sst::filters::utilities::SincTable::FIRipol_N};
+
     juce::dsp::FFT fft;
     const int fftSize;
+    std::vector<float> delayBuffer;
 };
 
 } // namespace filters
