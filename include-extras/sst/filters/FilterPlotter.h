@@ -77,6 +77,8 @@ class FilterPlotter
         generateLogSweep(sweepBuffer.data(), fftSize, params);
 
         // set up filter
+        std::fill(delayBuffer.begin(), delayBuffer.end(), 0.0f);
+
         auto filterState = sst::filters::QuadFilterUnitState{};
         for (auto i = 0; i < 4; ++i)
         {
