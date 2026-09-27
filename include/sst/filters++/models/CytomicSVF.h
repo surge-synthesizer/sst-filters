@@ -34,7 +34,6 @@ inline const details::FilterPayload::configMap_t &getModelConfigurations()
         {{Passband::Peak}, {sft::FilterType::fut_cytomic_svf, sft::FilterSubType::st_cytomic_peak}},
         {{Passband::Allpass},
          {sft::FilterType::fut_cytomic_svf, sft::FilterSubType::st_cytomic_allpass}},
-        {{Passband::LP}, {sft::FilterType::fut_cytomic_svf, sft::FilterSubType::st_cytomic_lp}},
         {{Passband::LowShelf},
          {sft::FilterType::fut_cytomic_svf, sft::FilterSubType::st_cytomic_lowshelf}},
         {{Passband::HighShelf},
