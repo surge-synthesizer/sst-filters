@@ -11,6 +11,7 @@ target_sources(sst-filters-tests
         BiquadTest.cpp
         ButterworthTest.cpp
         CutoffWarpTest.cpp
+        CytomicSVFCascadeTest.cpp
         CytomicSVFTests.cpp
         DiodeLadderTest.cpp
         FastTiltNoiseFilterTest.cpp

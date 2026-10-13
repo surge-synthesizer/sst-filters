@@ -106,6 +106,14 @@ static std::string subtypeLabel(int type, int subtype)
         case FilterType::fut_obxd_xpander:
             return "t/k";
             break;
+        case FilterType::fut_cytomic_cascade_lp:
+        case FilterType::fut_cytomic_cascade_hp:
+        case FilterType::fut_cytomic_cascade_bp:
+        case FilterType::fut_cytomic_cascade_n:
+        case FilterType::fut_cytomic_cascade_pk:
+        case FilterType::fut_cytomic_cascade_ap:
+            return sst::filters::fut_cytomic_cascade_subtypes[i];
+            break;
         case FilterType::num_filter_types:
             return "ERROR";
             break;
@@ -133,12 +141,14 @@ inline std::vector<std::pair<int, std::string>> filterGroupName()
     p(FilterType::fut_obxd_4pole, "Lowpass");
     p(FilterType::fut_cutoffwarp_lp, "Lowpass");
     p(FilterType::fut_resonancewarp_lp, "Lowpass");
+    p(FilterType::fut_cytomic_cascade_lp, "Lowpass");
 
     p(FilterType::fut_bp12, "Bandpass");
     p(FilterType::fut_bp24, "Bandpass");
     p(FilterType::fut_obxd_2pole_bp, "Bandpass");
     p(FilterType::fut_cutoffwarp_bp, "Bandpass");
     p(FilterType::fut_resonancewarp_bp, "Bandpass");
+    p(FilterType::fut_cytomic_cascade_bp, "Bandpass");
 
     p(FilterType::fut_hp12, "Highpass");
     p(FilterType::fut_hp24, "Highpass");
@@ -146,18 +156,22 @@ inline std::vector<std::pair<int, std::string>> filterGroupName()
     p(FilterType::fut_obxd_2pole_hp, "Highpass");
     p(FilterType::fut_cutoffwarp_hp, "Highpass");
     p(FilterType::fut_resonancewarp_hp, "Highpass");
+    p(FilterType::fut_cytomic_cascade_hp, "Highpass");
 
     p(FilterType::fut_notch12, "Notch");
     p(FilterType::fut_notch24, "Notch");
     p(FilterType::fut_obxd_2pole_n, "Notch");
     p(FilterType::fut_cutoffwarp_n, "Notch");
     p(FilterType::fut_resonancewarp_n, "Notch");
+    p(FilterType::fut_cytomic_cascade_n, "Notch");
 
     p(FilterType::fut_tripole, "Multi");
 
     p(FilterType::fut_apf, "Effect");
     p(FilterType::fut_cutoffwarp_ap, "Effect");
     p(FilterType::fut_resonancewarp_ap, "Effect");
+    p(FilterType::fut_cytomic_cascade_pk, "Effect");
+    p(FilterType::fut_cytomic_cascade_ap, "Effect");
     p(FilterType::fut_comb_pos, "Effect");
     p(FilterType::fut_comb_neg, "Effect");
     p(FilterType::fut_SNH, "Effect");

@@ -34,6 +34,8 @@ inline constexpr const char *toCharPtr(const FilterModel &f)
 
     case FilterModel::CytomicSVF:
         return "Fast SVF";
+    case FilterModel::CytomicCascade:
+        return "Cascade SVF";
 
     case FilterModel::K35:
         return "K35";
@@ -243,6 +245,9 @@ inline std::string toString(const FilterSubModel &s)
         return "3 Stage";
     case FilterSubModel::Warp_4Stage:
         return "4 Stage";
+
+    case FilterSubModel::Compensated:
+        return "Compensated";
     }
     return "SUBMODEL_ERROR";
 }
