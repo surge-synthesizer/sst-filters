@@ -389,6 +389,17 @@ void FilterCoefficientMaker<TuningProvider>::MakeCoeffs(float Freq, float Reso, 
     case fut_cytomic_svf:
         cytomic_quadform::makeCoefficients(this, Freq, Reso, SubType, sampleRate, sampleRateInv,
                                            providerI, extra);
+        break;
+
+    case fut_cytomic_cascade_lp:
+    case fut_cytomic_cascade_hp:
+    case fut_cytomic_cascade_bp:
+    case fut_cytomic_cascade_n:
+    case fut_cytomic_cascade_pk:
+    case fut_cytomic_cascade_ap:
+        cytomic_cascade_quadform::makeCoefficients(this, Freq, Reso, SubType, sampleRateInv,
+                                                   providerI);
+        break;
 
     case num_filter_types:
         // This should really be an error condition of course

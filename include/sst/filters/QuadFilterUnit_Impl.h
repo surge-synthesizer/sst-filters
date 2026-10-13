@@ -27,6 +27,7 @@
 #include "ResonanceWarp.h"
 #include "TriPoleFilter.h"
 #include "CytomicSVFQuadForm.h"
+#include "CytomicSVFCascadeQuadForm.h"
 
 namespace sst::filters
 {
@@ -1019,6 +1020,21 @@ inline FilterUnitQFPtr GetCompensatedQFPtrFilterUnit(FilterType type, FilterSubT
             return cytomic_quadform::CytomicQuad<true>;
         else
             return cytomic_quadform::CytomicQuad;
+
+    case fut_cytomic_cascade_lp:
+        return cytomic_cascade_quadform::processForSubtype<cytomic_cascade::Mode::Lowpass>(subtype);
+    case fut_cytomic_cascade_hp:
+        return cytomic_cascade_quadform::processForSubtype<cytomic_cascade::Mode::Highpass>(
+            subtype);
+    case fut_cytomic_cascade_bp:
+        return cytomic_cascade_quadform::processForSubtype<cytomic_cascade::Mode::Bandpass>(
+            subtype);
+    case fut_cytomic_cascade_n:
+        return cytomic_cascade_quadform::processForSubtype<cytomic_cascade::Mode::Notch>(subtype);
+    case fut_cytomic_cascade_pk:
+        return cytomic_cascade_quadform::processForSubtype<cytomic_cascade::Mode::Peak>(subtype);
+    case fut_cytomic_cascade_ap:
+        return cytomic_cascade_quadform::processForSubtype<cytomic_cascade::Mode::Allpass>(subtype);
 
     case fut_none:
     case num_filter_types:

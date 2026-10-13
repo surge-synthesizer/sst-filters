@@ -22,42 +22,48 @@ namespace sst::filters
 /** These are the filter types we have to choose from! */
 enum FilterType
 {
-    fut_none = 0,         /**< Off */
-    fut_lp12,             /**< Lowpass - 12 dB */
-    fut_lp24,             /**< Lowpass - 24 dB */
-    fut_lpmoog,           /**< Lowpass - Legacy Ladder */
-    fut_hp12,             /**< Highpass - 12 dB */
-    fut_hp24,             /**< Highpass - 24 dB */
-    fut_bp12,             /**< Bandpass - 12 dB */
-    fut_notch12,          /**< Notch - 12 dB */
-    fut_comb_pos,         /**< Effect - Comb + */
-    fut_SNH,              /**< Effect - Sample & Hold */
-    fut_vintageladder,    /**< Lowpass - Vintage Ladder */
-    fut_obxd_2pole_lp,    /**< Lowpass - OB-Xd 12 dB */
-    fut_obxd_4pole,       /**< Lowpass - OB-Xd 24 dB */
-    fut_k35_lp,           /**< Lowpass - K35 */
-    fut_k35_hp,           /**< Highpass - K35 */
-    fut_diode,            /**< Lowpass - Diode Ladder */
-    fut_cutoffwarp_lp,    /**< Lowpass - Cutoff Warp */
-    fut_cutoffwarp_hp,    /**< Higghpass - Cutoff Warp */
-    fut_cutoffwarp_n,     /**< Notch - Cutoff Warp */
-    fut_cutoffwarp_bp,    /**< Bandpass - Cutoff Warp */
-    fut_obxd_2pole_hp,    /**< Highpass - OB-Xd 12 dB */
-    fut_obxd_2pole_n,     /**< Notch - OB-Xd 12 dB */
-    fut_obxd_2pole_bp,    /**< Bandpass - OB-Xd 12 dB */
-    fut_bp24,             /**< Bandpass - 24 dB */
-    fut_notch24,          /**< Notch - 24 dB */
-    fut_comb_neg,         /**< Effect - Comb - */
-    fut_apf,              /**< Effect - Allpass */
-    fut_cutoffwarp_ap,    /**< Effect - Cutoff Warp Allpass */
-    fut_resonancewarp_lp, /**< Lowpass - Resonance Warp */
-    fut_resonancewarp_hp, /**< Highpass - Resonance Warp */
-    fut_resonancewarp_n,  /**< Notch - Resonance Warp */
-    fut_resonancewarp_bp, /**< Bandpass - Resonance Warp */
-    fut_resonancewarp_ap, /**< Effect - Resonance Warp Allpass */
-    fut_tripole,          /**< Multi - Tri-pole */
-    fut_cytomic_svf,      /**< Multi - Cytomic SVF */
-    fut_obxd_xpander,     /**< Multi - OB-Xd Xpander */
+    fut_none = 0,           /**< Off */
+    fut_lp12,               /**< Lowpass - 12 dB */
+    fut_lp24,               /**< Lowpass - 24 dB */
+    fut_lpmoog,             /**< Lowpass - Legacy Ladder */
+    fut_hp12,               /**< Highpass - 12 dB */
+    fut_hp24,               /**< Highpass - 24 dB */
+    fut_bp12,               /**< Bandpass - 12 dB */
+    fut_notch12,            /**< Notch - 12 dB */
+    fut_comb_pos,           /**< Effect - Comb + */
+    fut_SNH,                /**< Effect - Sample & Hold */
+    fut_vintageladder,      /**< Lowpass - Vintage Ladder */
+    fut_obxd_2pole_lp,      /**< Lowpass - OB-Xd 12 dB */
+    fut_obxd_4pole,         /**< Lowpass - OB-Xd 24 dB */
+    fut_k35_lp,             /**< Lowpass - K35 */
+    fut_k35_hp,             /**< Highpass - K35 */
+    fut_diode,              /**< Lowpass - Diode Ladder */
+    fut_cutoffwarp_lp,      /**< Lowpass - Cutoff Warp */
+    fut_cutoffwarp_hp,      /**< Higghpass - Cutoff Warp */
+    fut_cutoffwarp_n,       /**< Notch - Cutoff Warp */
+    fut_cutoffwarp_bp,      /**< Bandpass - Cutoff Warp */
+    fut_obxd_2pole_hp,      /**< Highpass - OB-Xd 12 dB */
+    fut_obxd_2pole_n,       /**< Notch - OB-Xd 12 dB */
+    fut_obxd_2pole_bp,      /**< Bandpass - OB-Xd 12 dB */
+    fut_bp24,               /**< Bandpass - 24 dB */
+    fut_notch24,            /**< Notch - 24 dB */
+    fut_comb_neg,           /**< Effect - Comb - */
+    fut_apf,                /**< Effect - Allpass */
+    fut_cutoffwarp_ap,      /**< Effect - Cutoff Warp Allpass */
+    fut_resonancewarp_lp,   /**< Lowpass - Resonance Warp */
+    fut_resonancewarp_hp,   /**< Highpass - Resonance Warp */
+    fut_resonancewarp_n,    /**< Notch - Resonance Warp */
+    fut_resonancewarp_bp,   /**< Bandpass - Resonance Warp */
+    fut_resonancewarp_ap,   /**< Effect - Resonance Warp Allpass */
+    fut_tripole,            /**< Multi - Tri-pole */
+    fut_cytomic_svf,        /**< Multi - Cytomic SVF */
+    fut_obxd_xpander,       /**< Multi - OB-Xd Xpander */
+    fut_cytomic_cascade_lp, /**< Lowpass - Cascade SVF */
+    fut_cytomic_cascade_hp, /**< Highpass - Cascade SVF */
+    fut_cytomic_cascade_bp, /**< Bandpass - Cascade SVF */
+    fut_cytomic_cascade_n,  /**< Notch - Cascade SVF */
+    fut_cytomic_cascade_pk, /**< Effect - Cascade SVF Peak */
+    fut_cytomic_cascade_ap, /**< Effect - Cascade SVF Allpass */
     num_filter_types,
 };
 
@@ -68,42 +74,48 @@ enum FilterType
  * grouped in submenus, and this is in fut_menu array
  */
 const char filter_type_names[num_filter_types][32] = {
-    "Off",               // fut_none
-    "LP 12 dB",          // fut_lp12
-    "LP 24 dB",          // fut_lp24
-    "LP Legacy Ladder",  // fut_lpmoog
-    "HP 12 dB",          // fut_hp12
-    "HP 24 dB",          // fut_hp24
-    "BP 12 dB",          // fut_bp12
-    "N 12 dB",           // fut_notch12
-    "FX Comb +",         // fut_comb_pos
-    "FX Sample & Hold",  // fut_SNH
-    "LP Vintage Ladder", // fut_vintageladder
-    "LP OB-Xd 12 dB",    // fut_obxd_2pole_lp
-    "LP OB-Xd 24 dB",    // fut_obxd_4pole
-    "LP K35",            // fut_k35_lp
-    "HP K35",            // fut_k35_hp
-    "LP Diode Ladder",   // fut_diode
-    "LP Cutoff Warp",    // fut_cutoffwarp_lp
-    "HP Cutoff Warp",    // fut_cutoffwarp_hp
-    "N Cutoff Warp",     // fut_cutoffwarp_n
-    "BP Cutoff Warp",    // fut_cutoffwarp_bp
-    "HP OB-Xd 12 dB",    // fut_obxd_2pole_hp
-    "N OB-Xd 12 dB",     // fut_obxd_2pole_n
-    "BP OB-Xd 12 dB",    // fut_obxd_2pole_bp
-    "BP 24 dB",          // fut_bp24
-    "N 24 dB",           // fut_notch24
-    "FX Comb -",         // fut_comb_neg
-    "FX Allpass",        // fut_apf
-    "FX Cutoff Warp AP", // fut_cutoffwarp_ap
-    "LP Res Warp",       // fut_resonancewarp_lp
-    "HP Res Warp",       // fut_resonancewarp_hp
-    "N Res Warp",        // fut_resonancewarp_n
-    "BP Res Warp",       // fut_resonancewarp_bp
-    "FX Res Warp AP",    // fut_resonancewarp_ap
-    "MULTI Tri-pole",    // fut_tripole
-    "MULTI Fast SVF",    // fut_cytomic_svf
-    "MULTI Xpander"      // fut_obxd_xpander
+    "Off",                 // fut_none
+    "LP 12 dB",            // fut_lp12
+    "LP 24 dB",            // fut_lp24
+    "LP Legacy Ladder",    // fut_lpmoog
+    "HP 12 dB",            // fut_hp12
+    "HP 24 dB",            // fut_hp24
+    "BP 12 dB",            // fut_bp12
+    "N 12 dB",             // fut_notch12
+    "FX Comb +",           // fut_comb_pos
+    "FX Sample & Hold",    // fut_SNH
+    "LP Vintage Ladder",   // fut_vintageladder
+    "LP OB-Xd 12 dB",      // fut_obxd_2pole_lp
+    "LP OB-Xd 24 dB",      // fut_obxd_4pole
+    "LP K35",              // fut_k35_lp
+    "HP K35",              // fut_k35_hp
+    "LP Diode Ladder",     // fut_diode
+    "LP Cutoff Warp",      // fut_cutoffwarp_lp
+    "HP Cutoff Warp",      // fut_cutoffwarp_hp
+    "N Cutoff Warp",       // fut_cutoffwarp_n
+    "BP Cutoff Warp",      // fut_cutoffwarp_bp
+    "HP OB-Xd 12 dB",      // fut_obxd_2pole_hp
+    "N OB-Xd 12 dB",       // fut_obxd_2pole_n
+    "BP OB-Xd 12 dB",      // fut_obxd_2pole_bp
+    "BP 24 dB",            // fut_bp24
+    "N 24 dB",             // fut_notch24
+    "FX Comb -",           // fut_comb_neg
+    "FX Allpass",          // fut_apf
+    "FX Cutoff Warp AP",   // fut_cutoffwarp_ap
+    "LP Res Warp",         // fut_resonancewarp_lp
+    "HP Res Warp",         // fut_resonancewarp_hp
+    "N Res Warp",          // fut_resonancewarp_n
+    "BP Res Warp",         // fut_resonancewarp_bp
+    "FX Res Warp AP",      // fut_resonancewarp_ap
+    "MULTI Tri-pole",      // fut_tripole
+    "MULTI Fast SVF",      // fut_cytomic_svf
+    "MULTI Xpander",       // fut_obxd_xpander
+    "LP Cascade SVF",      // fut_cytomic_cascade_lp
+    "HP Cascade SVF",      // fut_cytomic_cascade_hp
+    "BP Cascade SVF",      // fut_cytomic_cascade_bp
+    "N Cascade SVF",       // fut_cytomic_cascade_n
+    "FX Cascade SVF Peak", // fut_cytomic_cascade_pk
+    "FX Cascade SVF AP"    // fut_cytomic_cascade_ap
     /* this is a ruler to ensure names do not exceed 31 characters
      0123456789012345678901234567890
     */
@@ -145,7 +157,13 @@ const char filter_menu_names[num_filter_types][32] = {
     "Resonance Warp Allpass",
     "Tri-pole",
     "Fast SVF",
-    "Xpander"
+    "Xpander",
+    "Cascade SVF", // LP
+    "Cascade SVF", // HP
+    "Cascade SVF", // BP
+    "Cascade SVF", // N
+    "Cascade SVF Peak",
+    "Cascade SVF Allpass"
     /* this is a ruler to ensure names do not exceed 31 characters
      0123456789012345678901234567890
     */
@@ -224,6 +242,9 @@ const char fut_obxd_xpander_subtypes[15][32] = {"LP1", "LP2",     "LP3",     "LP
                                                 "HP2", "HP3",     "BP2",     "BP4",    "N2",
                                                 "PH3", "HP2+LP1", "HP3+LP1", "N2+LP1", "PH3+LP1"};
 
+const char fut_cytomic_cascade_subtypes[4][32] = {"Standard", "Driven", "Compensated",
+                                                  "Driven Compensated"};
+
 /** The number of sub-types for each filter type */
 const int fut_subcount[num_filter_types] = {
     0,  // fut_none
@@ -261,7 +282,13 @@ const int fut_subcount[num_filter_types] = {
     8,  // fut_resonancewarp_ap
     12, // fut_tripole
     9,  // fut_cytomic
-    15  // fit_obxd_xpander
+    15, // fit_obxd_xpander
+    4,  // fut_cytomic_cascade_lp
+    2,  // fut_cytomic_cascade_hp
+    2,  // fut_cytomic_cascade_bp
+    2,  // fut_cytomic_cascade_n
+    2,  // fut_cytomic_cascade_pk
+    2   // fut_cytomic_cascade_ap
 };
 
 /*
@@ -406,7 +433,13 @@ enum FilterSubType
     st_obxdxpander_hp2lp1 = 11,
     st_obxdxpander_hp3lp1 = 12,
     st_obxdxpander_n2lp1 = 13,
-    st_obxdxpander_ph3lp1 = 14
+    st_obxdxpander_ph3lp1 = 14,
+
+    // Cascade SVF; only lowpass has the compensated pair
+    st_cascade_standard = 0,
+    st_cascade_driven = 1,
+    st_cascade_compensated = 2,
+    st_cascade_driven_compensated = 3
 };
 
 } // namespace sst::filters

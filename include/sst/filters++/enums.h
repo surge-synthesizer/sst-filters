@@ -31,6 +31,7 @@ enum struct FilterModel : uint32_t
     VemberLadder = 0x18,
 
     CytomicSVF = 0x20,
+    CytomicCascade = 0x22,
 
     K35 = 0x30,
     DiodeLadder = 0x35,
@@ -161,6 +162,9 @@ enum struct FilterSubModel : uint32_t
     Warp_2Stage = 0x61,
     Warp_3Stage = 0x62,
     Warp_4Stage = 0x63,
+
+    // For Cascade SVF
+    Compensated = 0x70,
 };
 
 std::string toString(const FilterSubModel &s);

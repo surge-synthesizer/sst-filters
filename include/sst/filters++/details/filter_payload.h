@@ -180,6 +180,7 @@ struct FilterPayload
 #include "../models/Comb.h"
 #include "../models/Tripole.h"
 #include "../models/CytomicSVF.h"
+#include "../models/CytomicCascade.h"
 
 namespace sst::filtersplusplus::details
 {
@@ -236,6 +237,7 @@ FilterPayload::resolveLegacyTypeFor(const FilterModel &fm, const ModelConfig &mc
         FILTER_MODEL_CASE(FilterModel::Comb, models::comb);
         FILTER_MODEL_CASE(FilterModel::TriPole, models::tripole);
         FILTER_MODEL_CASE(FilterModel::CytomicSVF, models::cytomicsvf);
+        FILTER_MODEL_CASE(FilterModel::CytomicCascade, models::cytomiccascade);
     default:
         // remove this
         break;
@@ -278,6 +280,7 @@ inline std::vector<ModelConfig> FilterPayload::availableModelConfigurations(Filt
         FILTER_MODEL_CASE(FilterModel::Comb, models::comb);
         FILTER_MODEL_CASE(FilterModel::TriPole, models::tripole);
         FILTER_MODEL_CASE(FilterModel::CytomicSVF, models::cytomicsvf);
+        FILTER_MODEL_CASE(FilterModel::CytomicCascade, models::cytomiccascade);
     default:
         // remove this
         break;
