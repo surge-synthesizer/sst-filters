@@ -48,10 +48,6 @@ void makeCoefficients(FilterCoefficientMaker<TuningProvider> *cm, float freq, fl
     auto ufr = 440 * FilterCoefficientMaker<TuningProvider>::provider_note_to_pitch_ignoring_tuning(
                          provider, freq);
     auto conorm = std::clamp(ufr * sampleRateInv, 0.f, 0.499f); // stable until nyquist
-    static float lf{-1000}, lr{-1000};
-
-    lf = freq;
-    lr = res;
     res = std::clamp(res, 0.f, 0.99f);
 
     auto g = sst::basic_blocks::dsp::fasttan(M_PI * conorm);
