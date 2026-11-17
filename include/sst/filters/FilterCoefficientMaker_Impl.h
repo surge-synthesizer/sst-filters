@@ -15,6 +15,8 @@
 #ifndef INCLUDE_SST_FILTERS_FILTERCOEFFICIENTMAKER_IMPL_H
 #define INCLUDE_SST_FILTERS_FILTERCOEFFICIENTMAKER_IMPL_H
 
+#include <type_traits>
+
 #include "FilterCoefficientMaker.h"
 #include "sst/utilities/SincTable.h"
 #include "QuadFilterUnit.h"
@@ -32,9 +34,6 @@ constexpr float smooth = 0.2f;
 
 namespace details
 {
-// the careful reader will note that this doesnt distinguish between method and variable.
-// If you rpovide a tuning provider with static int note_to_pitch; it wil think it is callable
-// and not compile. Dont' do that.
 #define HAS_MEMBER(x)                                                                              \
     template <class T, class = void> struct has_member_##x : public std::false_type                \
     {                                                                                              \
@@ -44,19 +43,34 @@ namespace details
     {                                                                                              \
     };
 
-HAS_MEMBER(note_to_pitch)
-HAS_MEMBER(note_to_pitch_ignoring_tuning)
-HAS_MEMBER(note_to_pitch_inv_ignoring_tuning)
-HAS_MEMBER(note_to_omega_ignoring_tuning)
+// &T::f is a plain function pointer only when f is static
+template <class P>
+using if_static_fn_ptr = std::enable_if_t<std::is_function_v<std::remove_pointer_t<P>>>;
+
+// msvc 19.52 accepts decltype(T::f) for a non-static f, so test the pointer type instead
+#define HAS_STATIC_FN(x)                                                                           \
+    template <class T, class = void> struct has_static_fn_##x : public std::false_type             \
+    {                                                                                              \
+    };                                                                                             \
+    template <class T>                                                                             \
+    struct has_static_fn_##x<T, if_static_fn_ptr<decltype(&T::x)>> : public std::true_type         \
+    {                                                                                              \
+    };
+
+HAS_STATIC_FN(note_to_pitch)
+HAS_STATIC_FN(note_to_pitch_ignoring_tuning)
+HAS_STATIC_FN(note_to_pitch_inv_ignoring_tuning)
+HAS_STATIC_FN(note_to_omega_ignoring_tuning)
 HAS_MEMBER(tuningApplicationMode);
 HAS_MEMBER(_patch);
+#undef HAS_STATIC_FN
 #undef HAS_MEMBER
 } // namespace details
 template <typename TuningProvider>
 float FilterCoefficientMaker<TuningProvider>::provider_note_to_pitch(TuningProvider *provider,
                                                                      float note)
 {
-    if constexpr (details::has_member_note_to_pitch<TuningProvider>::value)
+    if constexpr (details::has_static_fn_note_to_pitch<TuningProvider>::value)
     {
         return TuningProvider::note_to_pitch(note);
     }
@@ -70,7 +84,7 @@ template <typename TuningProvider>
 float FilterCoefficientMaker<TuningProvider>::provider_note_to_pitch_ignoring_tuning(
     TuningProvider *provider, float note)
 {
-    if constexpr (details::has_member_note_to_pitch_ignoring_tuning<TuningProvider>::value)
+    if constexpr (details::has_static_fn_note_to_pitch_ignoring_tuning<TuningProvider>::value)
     {
         return TuningProvider::note_to_pitch_ignoring_tuning(note);
     }
@@ -84,7 +98,7 @@ template <typename TuningProvider>
 float FilterCoefficientMaker<TuningProvider>::provider_note_to_pitch_inv_ignoring_tuning(
     TuningProvider *provider, float note)
 {
-    if constexpr (details::has_member_note_to_pitch_inv_ignoring_tuning<TuningProvider>::value)
+    if constexpr (details::has_static_fn_note_to_pitch_inv_ignoring_tuning<TuningProvider>::value)
     {
         return TuningProvider::note_to_pitch_inv_ignoring_tuning(note);
     }
@@ -98,7 +112,7 @@ template <typename TuningProvider>
 void FilterCoefficientMaker<TuningProvider>::provider_note_to_omega_ignoring_tuning(
     TuningProvider *provider, float x, float &sinu, float &cosi, float sampleRate)
 {
-    if constexpr (details::has_member_note_to_pitch_inv_ignoring_tuning<TuningProvider>::value)
+    if constexpr (details::has_static_fn_note_to_omega_ignoring_tuning<TuningProvider>::value)
     {
         TuningProvider::note_to_omega_ignoring_tuning(x, sinu, cosi, sampleRate);
     }

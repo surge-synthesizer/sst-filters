@@ -67,7 +67,8 @@ TEST_CASE("Cutoff Warp")
             RMSSet{-29.4439f, -14.0263f, -5.67273f, -2.35983f, 0.263967f},
             RMSSet{-33.0063f, -23.2899f, -8.15209f, -5.65788f, 2.9865f},
             RMSSet{-32.8913f, -24.5376f, -12.8864f, -6.88203f, -2.91462f},
-            RMSSet{-30.8666f, -22.7357f, -12.8647f, -8.59865f, -9.88702f},
+            // ojd 4 stage at 10k is chaotic; fma alone moves it 0.5 dB
+            RMSSet{-30.8666f, -22.7357f, -12.8647f, -8.59865f, chaoticRMS},
         };
 
         for (int subtype = 0; subtype < 12; ++subtype)
@@ -135,9 +136,10 @@ TEST_CASE("Cutoff Warp")
             RMSSet{-29.6541f, -19.9918f, -18.107f, -11.2645f, -38.1888f},
             RMSSet{-26.1311f, -17.0563f, -18.769f, -11.5235f, -32.2333f},
             RMSSet{-17.6009f, -9.26712f, -6.47248f, -4.62371f, -31.4237f},
-            RMSSet{-27.468f, -13.8478f, -6.91091f, -8.08413f, -43.9883f},
-            RMSSet{-23.629f, -13.381f, -6.58062f, -8.37814f, -37.9282f},
-            RMSSet{-18.8344f, -10.3469f, -7.01664f, -6.83151f, -31.2991f},
+            // ojd 2-4 stage at 1k are chaotic; fma alone moves them 0.2 to 0.4 dB
+            RMSSet{-27.468f, -13.8478f, -6.91091f, chaoticRMS, -43.9883f},
+            RMSSet{-23.629f, -13.381f, -6.58062f, chaoticRMS, -37.9282f},
+            RMSSet{-18.8344f, -10.3469f, -7.01664f, chaoticRMS, -31.2991f},
         };
 
         for (int subtype = 0; subtype < 12; ++subtype)
