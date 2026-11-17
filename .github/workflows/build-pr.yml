@@ -68,7 +68,7 @@ jobs:
           cmake --build ./build --config Release
 
       - name: Run Smoke Test
-        if: ${{ matrix.runTest }}m
+        if: ${{ matrix.runTest }}
         run: |
           ls ${{ matrix.testExe }}
           ${{ matrix.testExe }}
