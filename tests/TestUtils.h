@@ -16,7 +16,9 @@
 #define TESTS_TESTUTILS_H
 
 #include <array>
+#include <cmath>
 #include <iostream>
+#include <limits>
 #include <numeric>
 #include <vector>
 
@@ -37,6 +39,9 @@ constexpr int blockSize = 2048;
 
 constexpr int numTestFreqs = 5;
 constexpr std::array<float, numTestFreqs> testFreqs{80.0f, 200.0f, 440.0f, 1000.0f, 10000.0f};
+
+// skips a chaotic point, where one ulp of rounding moves the rms by tenths of a db
+constexpr float chaoticRMS = std::numeric_limits<float>::quiet_NaN();
 
 inline float runSine(sst::filters::QuadFilterUnitState &filterState,
                      sst::filters::FilterUnitQFPtr &filterUnitPtr, float testFreq, int numSamples)
@@ -133,7 +138,8 @@ inline void runTestProvider(const TestConfig &testConfig, TuningProvider *tp)
         auto rmsDB = runSine(filterState, filterUnitPtr, testFreqs[i], blockSize);
 
         if constexpr (!printRMSs)
-            REQUIRE(rmsDB == Approx(testConfig.expRmsDBs[i]).margin(1.0e-2f));
+            if (!std::isnan(testConfig.expRmsDBs[i]))
+                REQUIRE(rmsDB == Approx(testConfig.expRmsDBs[i]).margin(1.0e-2f));
 
         actualRMSs[i] = rmsDB;
     }
@@ -180,6 +186,18 @@ struct NonStaticTuningProvider
     }
 };
 
+namespace fdet = sst::filters::details;
+using StaticTP = sst::filters::detail::BasicTuningProvider;
+using DynTP = NonStaticTuningProvider;
+static_assert(fdet::has_static_fn_note_to_pitch<StaticTP>::value);
+static_assert(fdet::has_static_fn_note_to_pitch_ignoring_tuning<StaticTP>::value);
+static_assert(fdet::has_static_fn_note_to_pitch_inv_ignoring_tuning<StaticTP>::value);
+static_assert(fdet::has_static_fn_note_to_omega_ignoring_tuning<StaticTP>::value);
+static_assert(!fdet::has_static_fn_note_to_pitch<DynTP>::value);
+static_assert(!fdet::has_static_fn_note_to_pitch_ignoring_tuning<DynTP>::value);
+static_assert(!fdet::has_static_fn_note_to_pitch_inv_ignoring_tuning<DynTP>::value);
+static_assert(!fdet::has_static_fn_note_to_omega_ignoring_tuning<DynTP>::value);
+
 inline void runTest(const TestConfig &testConfig)
 {
     runTestProvider<sst::filters::detail::BasicTuningProvider>(testConfig, nullptr);
@@ -214,6 +232,8 @@ inline void runTest(sst::filtersplusplus::FilterModel model,
 
         if constexpr (!printRMSs)
         {
+            if (std::isnan(answer[i]))
+                continue;
             INFO("Comparing at point " << i);
             REQUIRE(rmsDB == Approx(answer[i]).margin(1.0e-2f));
         }
