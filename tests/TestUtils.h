@@ -43,6 +43,9 @@ constexpr std::array<float, numTestFreqs> testFreqs{80.0f, 200.0f, 440.0f, 1000.
 // skips a chaotic point, where one ulp of rounding moves the rms by tenths of a db
 constexpr float chaoticRMS = std::numeric_limits<float>::quiet_NaN();
 
+// compilers differ by ~0.01 db on stable points; real regressions miss by whole db
+constexpr float rmsMarginDB = 0.05f;
+
 inline float runSine(sst::filters::QuadFilterUnitState &filterState,
                      sst::filters::FilterUnitQFPtr &filterUnitPtr, float testFreq, int numSamples)
 {
@@ -139,7 +142,7 @@ inline void runTestProvider(const TestConfig &testConfig, TuningProvider *tp)
 
         if constexpr (!printRMSs)
             if (!std::isnan(testConfig.expRmsDBs[i]))
-                REQUIRE(rmsDB == Approx(testConfig.expRmsDBs[i]).margin(1.0e-2f));
+                REQUIRE(rmsDB == Approx(testConfig.expRmsDBs[i]).margin(rmsMarginDB));
 
         actualRMSs[i] = rmsDB;
     }
@@ -235,7 +238,7 @@ inline void runTest(sst::filtersplusplus::FilterModel model,
             if (std::isnan(answer[i]))
                 continue;
             INFO("Comparing at point " << i);
-            REQUIRE(rmsDB == Approx(answer[i]).margin(1.0e-2f));
+            REQUIRE(rmsDB == Approx(answer[i]).margin(rmsMarginDB));
         }
         actualRMSs[i] = rmsDB;
     }
